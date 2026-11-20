@@ -5,10 +5,15 @@ import { TabStrip } from "./components/tabs/TabStrip";
 import { MenuBar } from "./components/menu/MenuBar";
 import { FileMenu } from "./components/menu/FileMenu";
 import { EditMenu } from "./components/menu/EditMenu";
+import { ViewMenu } from "./components/menu/ViewMenu";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
   const [showSignIn, setShowSignIn] = useState(false);
+  const [statusBarVisible, setStatusBarVisible] = useState(true);
+  const [wordWrap, setWordWrap] = useState(false);
+  const [markdownMode, setMarkdownMode] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(100);
   const {
     tabs,
     activeTabId,
@@ -88,6 +93,20 @@ export const App: React.FC = () => {
             }}
           />
         )}
+        renderViewDropdown={() => (
+          <ViewMenu
+            statusBarVisible={statusBarVisible}
+            wordWrap={wordWrap}
+            markdownMode={markdownMode}
+            zoomLevel={zoomLevel}
+            onToggleStatusBar={() => setStatusBarVisible((v) => !v)}
+            onToggleWordWrap={() => setWordWrap((w) => !w)}
+            onToggleMarkdown={() => setMarkdownMode((m) => !m)}
+            onZoomIn={() => setZoomLevel((z) => Math.min(500, z + 10))}
+            onZoomOut={() => setZoomLevel((z) => Math.max(10, z - 10))}
+            onResetZoom={() => setZoomLevel(100)}
+          />
+        )}
         childrenRight={
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <AccountMenu
@@ -126,6 +145,33 @@ export const App: React.FC = () => {
       <main style={{ flex: 1, backgroundColor: "var(--bg-surface)", padding: "16px" }}>
         {/* Editor placeholder */}
       </main>
+
+      {/* Line 3: Bottom Status Bar */}
+      {statusBarVisible && (
+        <footer
+          style={{
+            height: "24px",
+            borderTop: "1px solid var(--border-subtle)",
+            display: "flex",
+            alignItems: "center",
+            padding: "0 12px",
+            fontSize: "12px",
+            color: "var(--text-secondary)",
+            gap: "16px",
+            backgroundColor: "var(--bg-app)",
+            fontFamily: "var(--font-ui)",
+            userSelect: "none",
+          }}
+          aria-label="Status bar"
+        >
+          <span>Ln 1, Col 1</span>
+          <span>0 characters</span>
+          <span style={{ marginLeft: "auto" }}>{markdownMode ? "Markdown" : "Plain text"}</span>
+          <span>{zoomLevel}%</span>
+          <span>Windows (CRLF)</span>
+          <span>UTF-8</span>
+        </footer>
+      )}
 
       <SignInModal
         isOpen={showSignIn}
