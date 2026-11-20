@@ -1,0 +1,70 @@
+.menuBar {
+  height: 36px;
+  background-color: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 90;
+  user-select: none;
+}
+
+.leftGroup {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.menuBtn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.1s ease, border-color 0.1s ease;
+  line-height: 1.2;
+}
+
+.menuBtn:hover {
+  background-color: var(--bg-hover);
+}
+
+.menuBtn.active {
+  background-color: var(--bg-active);
+  border-color: var(--border-subtle);
+}
+
+.menuBtn:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -1px;
+}
+
+.collapsedMenuWrapper {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .leftGroup {
+    display: none;
+  }
+  .collapsedMenuWrapper {
+    display: block;
+  }
+}
+
+.toolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rightGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

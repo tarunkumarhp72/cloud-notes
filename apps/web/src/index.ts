@@ -5,6 +5,7 @@ export * from "./components/auth/SignInModal";
 export * from "./components/header/AccountMenu";
 export * from "./components/tabs/TabStrip";
 export * from "./components/tabs/TabItem";
+export * from "./components/menu/MenuBar";
 export * from "./stores/tabsStore";
 export * from "./auth/googleAuth";
 export * from "./auth/pkce";

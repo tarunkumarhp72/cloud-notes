@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
+import { MenuBar } from "./components/menu/MenuBar";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
@@ -51,6 +52,7 @@ export const App: React.FC = () => {
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-app)" }}>
+      {/* Line 1: Title Bar with TabStrip and Window Controls */}
       <TabStrip
         tabs={tabs}
         activeTabId={activeTabId}
@@ -58,6 +60,10 @@ export const App: React.FC = () => {
         onCloseTab={closeTab}
         onNewTab={() => createTab()}
         onReorderTabs={reorderTabs}
+      />
+
+      {/* Line 2: Menu Bar with File, Edit, View, Formatting Tools, Account & Settings */}
+      <MenuBar
         childrenRight={
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <AccountMenu
