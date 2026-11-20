@@ -1,14 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
-import { TabStrip, Tab } from "./components/tabs/TabStrip";
+import { TabStrip } from "./components/tabs/TabStrip";
+import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
   const [showSignIn, setShowSignIn] = useState(false);
-  const [tabs, setTabs] = useState<Tab[]>([
-    { id: "note-1", title: "Untitled", isDirty: false },
-  ]);
-  const [activeTabId, setActiveTabId] = useState("note-1");
+  const {
+    tabs,
+    activeTabId,
+    createTab,
+    closeTab,
+    selectTab,
+    reorderTabs,
+    cycleNextTab,
+    cyclePreviousTab,
+  } = useTabsStore();
 
   const [user, setUser] = useState<UserProfile | null>({
     id: "user-tarun",
@@ -17,32 +24,40 @@ export const App: React.FC = () => {
     avatarUrl: null,
   });
 
-  const handleNewTab = () => {
-    const newId = `note-${Date.now()}`;
-    const newTab: Tab = { id: newId, title: "Untitled", isDirty: false };
-    setTabs((prev) => [...prev, newTab]);
-    setActiveTabId(newId);
-  };
-
-  const handleCloseTab = (id: string) => {
-    setTabs((prev) => {
-      if (prev.length === 1) return prev;
-      const nextTabs = prev.filter((t) => t.id !== id);
-      if (activeTabId === id) {
-        setActiveTabId(nextTabs[nextTabs.length - 1].id);
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "Tab") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          cyclePreviousTab();
+        } else {
+          cycleNextTab();
+        }
+      } else if (e.ctrlKey && (e.key === "n" || e.key === "N")) {
+        e.preventDefault();
+        createTab();
+      } else if (e.ctrlKey && (e.key === "w" || e.key === "W")) {
+        e.preventDefault();
+        closeTab(activeTabId);
       }
-      return nextTabs;
-    });
-  };
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [cycleNextTab, cyclePreviousTab, createTab, closeTab, activeTabId]);
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-app)" }}>
       <TabStrip
         tabs={tabs}
         activeTabId={activeTabId}
-        onSelectTab={setActiveTabId}
-        onCloseTab={handleCloseTab}
-        onNewTab={handleNewTab}
+        onSelectTab={selectTab}
+        onCloseTab={closeTab}
+        onNewTab={() => createTab()}
+        onReorderTabs={reorderTabs}
         childrenRight={
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <AccountMenu
@@ -79,7 +94,7 @@ export const App: React.FC = () => {
 
       {/* Editor Body Surface */}
       <main style={{ flex: 1, backgroundColor: "var(--bg-surface)", padding: "16px" }}>
-        {/* Editor surface placeholder */}
+        {/* Editor placeholder */}
       </main>
 
       <SignInModal

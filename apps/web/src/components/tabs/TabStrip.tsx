@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./TabStrip.module.css";
+import { TabItem } from "./TabItem";
 
 export interface Tab {
   id: string;
@@ -13,6 +14,7 @@ export interface TabStripProps {
   onSelectTab: (id: string) => void;
   onCloseTab: (id: string) => void;
   onNewTab: () => void;
+  onReorderTabs?: (sourceIndex: number, destinationIndex: number) => void;
   childrenRight?: React.ReactNode;
 }
 
@@ -22,6 +24,7 @@ export const TabStrip: React.FC<TabStripProps> = ({
   onSelectTab,
   onCloseTab,
   onNewTab,
+  onReorderTabs,
   childrenRight,
 }) => {
   return (
@@ -41,45 +44,17 @@ export const TabStrip: React.FC<TabStripProps> = ({
 
         {/* Tab List */}
         <div className={styles.tabsContainer} role="tablist" aria-label="Note tabs">
-          {tabs.map((tab) => {
-            const isActive = tab.id === activeTabId;
-            return (
-              <div
-                key={tab.id}
-                role="tab"
-                aria-selected={isActive}
-                tabIndex={isActive ? 0 : -1}
-                className={`${styles.tab} ${isActive ? styles.active : ""}`}
-                onClick={() => onSelectTab(tab.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    onSelectTab(tab.id);
-                  }
-                }}
-              >
-                <span className={styles.tabTitle} title={tab.title}>
-                  {tab.title}
-                </span>
-
-                {tab.isDirty && (
-                  <span className={styles.dirtyDot} title="Unsaved changes" aria-label="Unsaved changes" />
-                )}
-
-                <button
-                  type="button"
-                  className={styles.closeBtn}
-                  aria-label={`Close tab ${tab.title}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCloseTab(tab.id);
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            );
-          })}
+          {tabs.map((tab, idx) => (
+            <TabItem
+              key={tab.id}
+              tab={tab}
+              isActive={tab.id === activeTabId}
+              index={idx}
+              onSelect={() => onSelectTab(tab.id)}
+              onClose={() => onCloseTab(tab.id)}
+              onReorder={onReorderTabs}
+            />
+          ))}
 
           {/* New Tab (+) Button */}
           <button

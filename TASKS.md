@@ -190,7 +190,7 @@
 - Tests to run: `pnpm --filter web test` (tab lifecycle, switching, reordering)
 - Viewports to screenshot: 1440x900
 - Depends on: T-011
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-012/summary.md)
 
 - ID: T-013
 - Title: Top menu bar container
