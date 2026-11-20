@@ -60,7 +60,7 @@
 - Tests to run: `pnpm --filter @notepad/core test` (crypto round-trip and tamper detection)
 - Viewports to screenshot: none
 - Depends on: T-001
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-004/summary.md)
 
 - ID: T-005
 - Title: Client-side IndexedDB note store
