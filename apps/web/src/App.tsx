@@ -3,6 +3,7 @@ import { SignInModal } from "./components/auth/SignInModal";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
 import { MenuBar } from "./components/menu/MenuBar";
+import { FileMenu } from "./components/menu/FileMenu";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
@@ -64,6 +65,15 @@ export const App: React.FC = () => {
 
       {/* Line 2: Menu Bar with File, Edit, View, Formatting Tools, Account & Settings */}
       <MenuBar
+        renderFileDropdown={() => (
+          <FileMenu
+            onNewTab={() => createTab()}
+            onNewWindow={() => window.open(window.location.href, "_blank")}
+            onNewMarkdownTab={() => createTab("Untitled.md", "", true)}
+            onCloseTab={() => closeTab(activeTabId)}
+            onPrint={() => window.print()}
+          />
+        )}
         childrenRight={
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <AccountMenu
