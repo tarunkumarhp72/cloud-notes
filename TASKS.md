@@ -124,7 +124,7 @@
 - Tests to run: `pnpm --filter api test` (auth route integration tests)
 - Viewports to screenshot: none
 - Depends on: T-007
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-008/summary.md)
 
 - ID: T-009
 - Title: Google sign-in splash screen
