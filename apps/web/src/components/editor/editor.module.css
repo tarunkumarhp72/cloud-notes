@@ -50,3 +50,91 @@
 .cmContainer :global(.cm-focused .cm-selectionBackground) {
   background-color: var(--accent-subtle) !important;
 }
+
+/* TipTap Prose Editor Surface */
+.proseContainer {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+  overflow: auto;
+  padding: 16px 20px;
+  outline: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.6;
+}
+
+.proseContainer :global(.tiptap) {
+  min-height: 100%;
+  outline: none;
+}
+
+.proseContainer :global(.tiptap p) {
+  margin: 0.4em 0;
+}
+
+.proseContainer :global(.tiptap h1) {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+}
+
+.proseContainer :global(.tiptap h2) {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0.5em 0 0.3em;
+}
+
+.proseContainer :global(.tiptap h3) {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0.5em 0 0.2em;
+}
+
+.proseContainer :global(.tiptap h4) {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0.4em 0 0.2em;
+}
+
+.proseContainer :global(.tiptap h5) {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0.4em 0 0.2em;
+}
+
+.proseContainer :global(.tiptap h6) {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0.4em 0 0.2em;
+}
+
+.proseContainer :global(.tiptap ul),
+.proseContainer :global(.tiptap ol) {
+  padding-left: 24px;
+  margin: 0.4em 0;
+}
+
+.proseContainer :global(.tiptap a) {
+  color: var(--accent-primary);
+  text-decoration: underline;
+}
+
+.proseContainer :global(.tiptap table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.proseContainer :global(.tiptap th),
+.proseContainer :global(.tiptap td) {
+  border: 1px solid var(--border-default);
+  padding: 6px 12px;
+  text-align: left;
+}
+
+.proseContainer :global(.tiptap th) {
+  background-color: var(--bg-hover);
+  font-weight: 600;
+}

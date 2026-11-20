@@ -355,7 +355,7 @@
 - Tests to run: `pnpm --filter web test` (Markdown serialization round-trip)
 - Viewports to screenshot: 1440x900 (light and dark)
 - Depends on: T-017, T-018, T-019, T-020
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-023/summary.md)
 
 - ID: T-024
 - Title: Find and replace floating bar & Go to line dialog

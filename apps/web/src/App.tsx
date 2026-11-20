@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
@@ -12,12 +12,19 @@ import { FormatButtons, ClearFormattingButton } from "./components/toolbar/Forma
 import { LinkModal, LinkButton } from "./components/toolbar/LinkModal";
 import { TableDropdown } from "./components/toolbar/TableDropdown";
 import { SettingsPage } from "./components/settings/SettingsPage";
+import { TipTapEditorRef } from "./components/editor/TipTapEditor";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
 
 const CodeMirrorEditor = lazy(() =>
   import("./components/editor/CodeMirrorEditor").then((m) => ({
     default: m.CodeMirrorEditor,
+  }))
+);
+
+const TipTapEditor = lazy(() =>
+  import("./components/editor/TipTapEditor").then((m) => ({
+    default: m.TipTapEditor,
   }))
 );
 
@@ -34,6 +41,7 @@ export const App: React.FC = () => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
+  const tipTapRef = useRef<TipTapEditorRef>(null);
 
   const { fontFamily, fontSize, wordWrap: settingsWordWrap } = useSettingsStore();
   const effectiveWordWrap = wordWrap || settingsWordWrap;
@@ -138,29 +146,54 @@ export const App: React.FC = () => {
           <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
             <HeadingDropdown
               activeLevel={headingLevel}
-              onSelectLevel={setHeadingLevel}
+              onSelectLevel={(level) => {
+                setHeadingLevel(level);
+                if (level === "body") {
+                  tipTapRef.current?.setParagraph();
+                } else {
+                  const levelMap: Record<string, 1 | 2 | 3 | 4 | 5 | 6> = {
+                    title: 1,
+                    subtitle: 2,
+                    heading: 3,
+                    subheading: 4,
+                    section: 5,
+                    subsection: 6,
+                  };
+                  tipTapRef.current?.setHeading(levelMap[level] || 1);
+                }
+              }}
             />
             <ListDropdown
-              onToggleBullet={() => console.warn("Bullet list")}
-              onToggleNumber={() => console.warn("Numbered list")}
+              onToggleBullet={() => tipTapRef.current?.toggleBulletList()}
+              onToggleNumber={() => tipTapRef.current?.toggleOrderedList()}
             />
             <FormatButtons
               isBold={isBold}
               isItalic={isItalic}
               isStrikethrough={isStrikethrough}
               showClearFormatting={false}
-              onToggleBold={() => setIsBold((b) => !b)}
-              onToggleItalic={() => setIsItalic((i) => !i)}
-              onToggleStrikethrough={() => setIsStrikethrough((s) => !s)}
+              onToggleBold={() => {
+                tipTapRef.current?.toggleBold();
+                setIsBold((b) => !b);
+              }}
+              onToggleItalic={() => {
+                tipTapRef.current?.toggleItalic();
+                setIsItalic((i) => !i);
+              }}
+              onToggleStrikethrough={() => {
+                tipTapRef.current?.toggleStrike();
+                setIsStrikethrough((s) => !s);
+              }}
             />
             <LinkButton onClick={() => setShowLinkModal(true)} />
             <TableDropdown
               onInsertTable={(rows, cols) => {
-                console.warn(`Table inserted: ${rows}x${cols}`);
+                tipTapRef.current?.insertTable(rows, cols);
               }}
             />
             <ClearFormattingButton
               onClick={() => {
+                tipTapRef.current?.clearFormatting();
                 setIsBold(false);
                 setIsItalic(false);
                 setIsStrikethrough(false);
@@ -206,6 +239,23 @@ export const App: React.FC = () => {
       {/* Body: Settings or Editor Surface */}
       {isSettingsOpen ? (
         <SettingsPage onBack={() => setIsSettingsOpen(false)} />
+      ) : activeTab?.isMarkdown || markdownMode ? (
+        <Suspense fallback={<div style={{ flex: 1, backgroundColor: "var(--bg-surface)" }} />}>
+          <TipTapEditor
+            ref={tipTapRef}
+            value={activeTab?.content || ""}
+            onChange={(val) => {
+              if (activeTabId) {
+                updateTabContent(activeTabId, val);
+              }
+            }}
+            onCursorChange={(line, col, charCount) => {
+              setCursorPos({ line, col, charCount });
+            }}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+          />
+        </Suspense>
       ) : (
         <Suspense fallback={<div style={{ flex: 1, backgroundColor: "var(--bg-surface)" }} />}>
           <CodeMirrorEditor
@@ -269,8 +319,8 @@ export const App: React.FC = () => {
       <LinkModal
         isOpen={showLinkModal}
         onClose={() => setShowLinkModal(false)}
-        onInsert={(text, url) => {
-          console.warn("Inserted link:", text, url);
+        onInsert={(_text, url) => {
+          tipTapRef.current?.setLink(url);
         }}
       />
     </div>

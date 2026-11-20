@@ -17,6 +17,8 @@ export * from "./components/toolbar/TableDropdown";
 export * from "./components/settings/SettingsPage";
 export * from "./stores/settingsStore";
 export * from "./components/editor/CodeMirrorEditor";
+export * from "./components/editor/TipTapEditor";
+export * from "./components/editor/markdownSerializer";
 export * from "./stores/tabsStore";
 export * from "./auth/googleAuth";
 export * from "./auth/pkce";
