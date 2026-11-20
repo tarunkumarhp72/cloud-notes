@@ -1,0 +1,18 @@
+{
+  "name": "notepad-cloud-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "pnpm -r --parallel run typecheck",
+    "lint": "eslint .",
+    "test": "pnpm -r --parallel run test",
+    "build": "pnpm -r run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "eslint": "^9.20.0",
+    "prettier": "^3.5.0",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.0"
+  }
+}

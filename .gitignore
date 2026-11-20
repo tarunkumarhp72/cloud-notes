@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+.playwright-mcp/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+src-tauri/target/
