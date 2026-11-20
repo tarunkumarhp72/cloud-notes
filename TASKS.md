@@ -280,7 +280,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 1440x900 (light and dark)
 - Depends on: T-017
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-018/summary.md)
 
 - ID: T-019
 - Title: Formatting toolbar: Link modal dialog

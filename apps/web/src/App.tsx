@@ -7,6 +7,8 @@ import { FileMenu } from "./components/menu/FileMenu";
 import { EditMenu } from "./components/menu/EditMenu";
 import { ViewMenu } from "./components/menu/ViewMenu";
 import { HeadingDropdown, HeadingLevel } from "./components/toolbar/HeadingDropdown";
+import { ListDropdown } from "./components/toolbar/ListDropdown";
+import { FormatButtons } from "./components/toolbar/FormatButtons";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
@@ -16,6 +18,9 @@ export const App: React.FC = () => {
   const [markdownMode, setMarkdownMode] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [headingLevel, setHeadingLevel] = useState<HeadingLevel>("title");
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isStrikethrough, setIsStrikethrough] = useState(false);
   const {
     tabs,
     activeTabId,
@@ -114,6 +119,23 @@ export const App: React.FC = () => {
             <HeadingDropdown
               activeLevel={headingLevel}
               onSelectLevel={setHeadingLevel}
+            />
+            <ListDropdown
+              onToggleBullet={() => console.warn("Bullet list")}
+              onToggleNumber={() => console.warn("Numbered list")}
+            />
+            <FormatButtons
+              isBold={isBold}
+              isItalic={isItalic}
+              isStrikethrough={isStrikethrough}
+              onToggleBold={() => setIsBold((b) => !b)}
+              onToggleItalic={() => setIsItalic((i) => !i)}
+              onToggleStrikethrough={() => setIsStrikethrough((s) => !s)}
+              onClearFormatting={() => {
+                setIsBold(false);
+                setIsItalic(false);
+                setIsStrikethrough(false);
+              }}
             />
           </div>
         }
