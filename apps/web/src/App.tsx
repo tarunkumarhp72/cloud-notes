@@ -6,6 +6,7 @@ import { MenuBar } from "./components/menu/MenuBar";
 import { FileMenu } from "./components/menu/FileMenu";
 import { EditMenu } from "./components/menu/EditMenu";
 import { ViewMenu } from "./components/menu/ViewMenu";
+import { HeadingDropdown, HeadingLevel } from "./components/toolbar/HeadingDropdown";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
@@ -14,6 +15,7 @@ export const App: React.FC = () => {
   const [wordWrap, setWordWrap] = useState(false);
   const [markdownMode, setMarkdownMode] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(100);
+  const [headingLevel, setHeadingLevel] = useState<HeadingLevel>("title");
   const {
     tabs,
     activeTabId,
@@ -107,6 +109,14 @@ export const App: React.FC = () => {
             onResetZoom={() => setZoomLevel(100)}
           />
         )}
+        childrenToolbar={
+          <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+            <HeadingDropdown
+              activeLevel={headingLevel}
+              onSelectLevel={setHeadingLevel}
+            />
+          </div>
+        }
         childrenRight={
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <AccountMenu

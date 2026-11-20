@@ -9,6 +9,7 @@ export * from "./components/menu/MenuBar";
 export * from "./components/menu/FileMenu";
 export * from "./components/menu/EditMenu";
 export * from "./components/menu/ViewMenu";
+export * from "./components/toolbar/HeadingDropdown";
 export * from "./stores/tabsStore";
 export * from "./auth/googleAuth";
 export * from "./auth/pkce";

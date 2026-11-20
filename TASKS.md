@@ -265,7 +265,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 1440x900 (light and dark)
 - Depends on: T-013
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-017/summary.md)
 
 - ID: T-018
 - Title: Formatting toolbar: Lists, Bold, Italic, Strikethrough, Clear formatting
