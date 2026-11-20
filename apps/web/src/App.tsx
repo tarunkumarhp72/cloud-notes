@@ -18,6 +18,7 @@ import { GoToDialog } from "./components/editor/GoToDialog";
 import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
 import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
+import { useLocalAutoSave } from "./sync/localAutoSave";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
 
@@ -63,12 +64,18 @@ export const App: React.FC = () => {
     closeTab,
     selectTab,
     updateTabContent,
+    setTabDirty,
     reorderTabs,
     cycleNextTab,
     cyclePreviousTab,
   } = useTabsStore();
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+
+  // Local auto-save to IndexedDB (1s debounce, 10s forced flush)
+  useLocalAutoSave(activeTab, (savedId) => {
+    setTabDirty(savedId, false);
+  });
 
   const [user, setUser] = useState<UserProfile | null>({
     id: "user-tarun",

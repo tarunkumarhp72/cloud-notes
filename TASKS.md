@@ -416,7 +416,7 @@
 - Tests to run: `pnpm --filter web test` (debounce timing and flush verification)
 - Viewports to screenshot: none
 - Depends on: T-005, T-022
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-027/summary.md)
 
 - ID: T-028
 - Title: File Open dialog, Save as export, and local file import
