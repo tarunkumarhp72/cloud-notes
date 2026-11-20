@@ -11,10 +11,12 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "fake-indexeddb": "^6.2.8",
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
   },
   "dependencies": {
-    "hash-wasm": "^4.13.0"
+    "hash-wasm": "^4.13.0",
+    "idb": "^8.0.4"
   }
 }

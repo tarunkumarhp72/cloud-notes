@@ -75,7 +75,7 @@
 - Tests to run: `pnpm --filter @notepad/core test` (IndexedDB CRUD and transaction rollback)
 - Viewports to screenshot: none
 - Depends on: T-001
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-005/summary.md)
 
 ---
 
