@@ -1,0 +1,129 @@
+import React from "react";
+import styles from "./TabStrip.module.css";
+
+export interface Tab {
+  id: string;
+  title: string;
+  isDirty?: boolean;
+}
+
+export interface TabStripProps {
+  tabs: Tab[];
+  activeTabId: string;
+  onSelectTab: (id: string) => void;
+  onCloseTab: (id: string) => void;
+  onNewTab: () => void;
+  childrenRight?: React.ReactNode;
+}
+
+export const TabStrip: React.FC<TabStripProps> = ({
+  tabs,
+  activeTabId,
+  onSelectTab,
+  onCloseTab,
+  onNewTab,
+  childrenRight,
+}) => {
+  return (
+    <header className={styles.titleBar} role="banner">
+      <div className={styles.leftSection}>
+        {/* Windows Notepad App Icon */}
+        <div className={styles.appIcon} aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="6" width="32" height="36" rx="4" fill="#0078D4" />
+            <rect x="12" y="10" width="24" height="28" rx="2" fill="#FFFFFF" />
+            <path d="M16 16H28" stroke="#0078D4" strokeWidth="2" strokeLinecap="round" />
+            <path d="M16 22H32" stroke="#A0A0A0" strokeWidth="2" strokeLinecap="round" />
+            <path d="M16 28H28" stroke="#A0A0A0" strokeWidth="2" strokeLinecap="round" />
+            <path d="M16 34H24" stroke="#A0A0A0" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        {/* Tab List */}
+        <div className={styles.tabsContainer} role="tablist" aria-label="Note tabs">
+          {tabs.map((tab) => {
+            const isActive = tab.id === activeTabId;
+            return (
+              <div
+                key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                tabIndex={isActive ? 0 : -1}
+                className={`${styles.tab} ${isActive ? styles.active : ""}`}
+                onClick={() => onSelectTab(tab.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectTab(tab.id);
+                  }
+                }}
+              >
+                <span className={styles.tabTitle} title={tab.title}>
+                  {tab.title}
+                </span>
+
+                {tab.isDirty && (
+                  <span className={styles.dirtyDot} title="Unsaved changes" aria-label="Unsaved changes" />
+                )}
+
+                <button
+                  type="button"
+                  className={styles.closeBtn}
+                  aria-label={`Close tab ${tab.title}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCloseTab(tab.id);
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+
+          {/* New Tab (+) Button */}
+          <button
+            type="button"
+            className={styles.newTabBtn}
+            onClick={onNewTab}
+            aria-label="New tab (Ctrl+N)"
+            title="New tab (Ctrl+N)"
+          >
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M6 1v10M1 6h10" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.rightSection}>
+        {/* Right side items (e.g. AccountMenu, Settings) */}
+        {childrenRight}
+
+        {/* Windows Caption Controls */}
+        <div className={styles.captionControls} aria-hidden="true">
+          <button type="button" className={styles.captionBtn} aria-label="Minimize" tabIndex={-1}>
+            <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
+              <rect width="10" height="1" />
+            </svg>
+          </button>
+          <button type="button" className={styles.captionBtn} aria-label="Maximize" tabIndex={-1}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
+              <rect x="0.5" y="0.5" width="9" height="9" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`${styles.captionBtn} ${styles.closeCaption}`}
+            aria-label="Close window"
+            tabIndex={-1}
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
+              <path d="M1 1L9 9M9 1L1 9" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};
