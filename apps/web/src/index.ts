@@ -24,6 +24,8 @@ export * from "./components/editor/GoToDialog";
 export * from "./components/statusbar/StatusBar";
 export * from "./shortcuts/shortcutsDispatcher";
 export * from "./sync/localAutoSave";
+export * from "./components/file/fileIo";
+export * from "./components/file/OpenNotesDialog";
 export * from "./stores/tabsStore";
 export * from "./auth/googleAuth";
 export * from "./auth/pkce";

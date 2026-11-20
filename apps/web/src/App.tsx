@@ -19,6 +19,8 @@ import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
 import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useLocalAutoSave } from "./sync/localAutoSave";
+import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
+import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
 
@@ -45,6 +47,7 @@ export const App: React.FC = () => {
   const [isItalic, setIsItalic] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
   const [isFindOpen, setIsFindOpen] = useState(false);
@@ -84,18 +87,25 @@ export const App: React.FC = () => {
     avatarUrl: null,
   });
 
+  // Native drag-and-drop file import (.txt, .md, etc.)
+  useFileDragAndDrop((imported) => {
+    createTab(imported.filename, imported.content, imported.isMarkdown);
+  });
+
   // Windows Notepad Global Shortcuts Dispatcher
   useNotepadShortcuts({
     onNewTab: () => createTab(),
     onNewWindow: () => window.open(window.location.href, "_blank"),
-    onOpen: () => {
-      console.warn("Open note picker triggered");
-    },
+    onOpen: () => setShowOpenDialog(true),
     onSave: () => {
-      console.warn("Save note triggered");
+      if (activeTab) {
+        exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
+      }
     },
     onSaveAs: () => {
-      console.warn("Save as triggered");
+      if (activeTab) {
+        exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
+      }
     },
     onCloseTab: () => closeTab(activeTabId),
     onFind: () => {
@@ -144,6 +154,17 @@ export const App: React.FC = () => {
             onNewTab={() => createTab()}
             onNewWindow={() => window.open(window.location.href, "_blank")}
             onNewMarkdownTab={() => createTab("Untitled.md", "", true)}
+            onOpen={() => setShowOpenDialog(true)}
+            onSave={() => {
+              if (activeTab) {
+                exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
+              }
+            }}
+            onSaveAs={() => {
+              if (activeTab) {
+                exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
+              }
+            }}
             onCloseTab={() => closeTab(activeTabId)}
             onPrint={() => window.print()}
           />
@@ -396,6 +417,18 @@ export const App: React.FC = () => {
             avatarUrl: null,
           });
           setShowSignIn(false);
+        }}
+      />
+
+      <OpenNotesDialog
+        isOpen={showOpenDialog}
+        onClose={() => setShowOpenDialog(false)}
+        onSelectNote={(saved) => {
+          createTab(saved.title, saved.content, saved.isMarkdown);
+        }}
+        onOpenFileFromDisk={async (file) => {
+          const imported = await readFileAsText(file);
+          createTab(imported.filename, imported.content, imported.isMarkdown);
         }}
       />
 
