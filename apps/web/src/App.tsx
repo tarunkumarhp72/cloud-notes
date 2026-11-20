@@ -8,8 +8,9 @@ import { EditMenu } from "./components/menu/EditMenu";
 import { ViewMenu } from "./components/menu/ViewMenu";
 import { HeadingDropdown, HeadingLevel } from "./components/toolbar/HeadingDropdown";
 import { ListDropdown } from "./components/toolbar/ListDropdown";
-import { FormatButtons } from "./components/toolbar/FormatButtons";
+import { FormatButtons, ClearFormattingButton } from "./components/toolbar/FormatButtons";
 import { LinkModal, LinkButton } from "./components/toolbar/LinkModal";
+import { TableDropdown } from "./components/toolbar/TableDropdown";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
@@ -130,16 +131,24 @@ export const App: React.FC = () => {
               isBold={isBold}
               isItalic={isItalic}
               isStrikethrough={isStrikethrough}
+              showClearFormatting={false}
               onToggleBold={() => setIsBold((b) => !b)}
               onToggleItalic={() => setIsItalic((i) => !i)}
               onToggleStrikethrough={() => setIsStrikethrough((s) => !s)}
-              onClearFormatting={() => {
+            />
+            <LinkButton onClick={() => setShowLinkModal(true)} />
+            <TableDropdown
+              onInsertTable={(rows, cols) => {
+                console.warn(`Table inserted: ${rows}x${cols}`);
+              }}
+            />
+            <ClearFormattingButton
+              onClick={() => {
                 setIsBold(false);
                 setIsItalic(false);
                 setIsStrikethrough(false);
               }}
             />
-            <LinkButton onClick={() => setShowLinkModal(true)} />
           </div>
         }
         childrenRight={
