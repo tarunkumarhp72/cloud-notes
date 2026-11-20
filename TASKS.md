@@ -139,7 +139,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 360x640, 1440x900 (light and dark)
 - Depends on: T-006, T-008
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-009/summary.md)
 
 - ID: T-010
 - Title: Right toolbar Account button and profile dropdown

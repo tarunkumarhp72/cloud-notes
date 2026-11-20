@@ -8,24 +8,29 @@ import {
 } from "./pkce";
 import { buildGoogleAuthUrl, validateGoogleCallback } from "./googleAuth";
 
-// Mock sessionStorage in node environment
-const mockStorage: Record<string, string> = {};
-globalThis.sessionStorage = {
-  getItem: (key: string) => mockStorage[key] || null,
-  setItem: (key: string, value: string) => {
-    mockStorage[key] = value;
-  },
-  removeItem: (key: string) => {
-    delete mockStorage[key];
-  },
-  clear: () => {
-    for (const k in mockStorage) delete mockStorage[k];
-  },
-  get length() {
-    return Object.keys(mockStorage).length;
-  },
-  key: (i: number) => Object.keys(mockStorage)[i] || null,
-};
+// Setup sessionStorage for testing
+if (typeof sessionStorage === "undefined") {
+  const mockStorage: Record<string, string> = {};
+  Object.defineProperty(globalThis, "sessionStorage", {
+    value: {
+      getItem: (key: string) => mockStorage[key] || null,
+      setItem: (key: string, value: string) => {
+        mockStorage[key] = value;
+      },
+      removeItem: (key: string) => {
+        delete mockStorage[key];
+      },
+      clear: () => {
+        for (const k in mockStorage) delete mockStorage[k];
+      },
+      get length() {
+        return Object.keys(mockStorage).length;
+      },
+      key: (i: number) => Object.keys(mockStorage)[i] || null,
+    },
+    configurable: true,
+  });
+}
 
 describe("PKCE Flow Utilities", () => {
   beforeEach(() => {
