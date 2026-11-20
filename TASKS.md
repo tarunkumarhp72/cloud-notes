@@ -30,7 +30,7 @@
 - Tests to run: `pnpm test:db`
 - Viewports to screenshot: none
 - Depends on: T-001
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-002/summary.md)
 
 - ID: T-003
 - Title: Hono API server boilerplate
