@@ -45,7 +45,7 @@
 - Tests to run: `pnpm --filter api test`
 - Viewports to screenshot: none
 - Depends on: T-002
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-003/summary.md)
 
 - ID: T-004
 - Title: Core cryptographic primitives
