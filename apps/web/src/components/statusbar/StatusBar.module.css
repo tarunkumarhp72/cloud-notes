@@ -1,0 +1,50 @@
+.statusBar {
+  height: 24px;
+  min-height: 24px;
+  background-color: var(--bg-app);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-family: var(--font-ui, "Segoe UI Variable", sans-serif);
+  font-size: 12px;
+  color: var(--text-secondary);
+  user-select: none;
+  z-index: 10;
+}
+
+.leftGroup,
+.rightGroup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.clickableItem {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.12s, color 0.12s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.clickableItem:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.clickableItem:active {
+  background-color: var(--bg-active);
+}
+
+.staticItem {
+  display: inline-flex;
+  align-items: center;
+}

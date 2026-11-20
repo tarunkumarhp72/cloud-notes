@@ -15,6 +15,7 @@ import { SettingsPage } from "./components/settings/SettingsPage";
 import { TipTapEditorRef } from "./components/editor/TipTapEditor";
 import { FindReplaceBar } from "./components/editor/FindReplaceBar";
 import { GoToDialog } from "./components/editor/GoToDialog";
+import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -367,31 +368,18 @@ export const App: React.FC = () => {
       )}
 
       {/* Line 3: Bottom Status Bar */}
-      {statusBarVisible && (
-        <footer
-          style={{
-            height: "24px",
-            borderTop: "1px solid var(--border-subtle)",
-            display: "flex",
-            alignItems: "center",
-            padding: "0 12px",
-            fontSize: "12px",
-            color: "var(--text-secondary)",
-            gap: "16px",
-            backgroundColor: "var(--bg-app)",
-            fontFamily: "var(--font-ui)",
-            userSelect: "none",
-          }}
-          aria-label="Status bar"
-        >
-          <span>Ln {cursorPos.line}, Col {cursorPos.col}</span>
-          <span>{cursorPos.charCount} characters</span>
-          <span style={{ marginLeft: "auto" }}>{markdownMode ? "Markdown" : "Plain text"}</span>
-          <span>{zoomLevel}%</span>
-          <span>Windows (CRLF)</span>
-          <span>UTF-8</span>
-        </footer>
-      )}
+      <StatusBar
+        visible={statusBarVisible}
+        line={cursorPos.line}
+        col={cursorPos.col}
+        charCount={cursorPos.charCount}
+        mode={markdownMode ? "markdown" : "plain"}
+        zoomLevel={zoomLevel}
+        lineEnding="Windows (CRLF)"
+        encoding="UTF-8"
+        onGoToClick={() => setIsGoToOpen(true)}
+        onZoomClick={() => setZoomLevel(100)}
+      />
 
       <SignInModal
         isOpen={showSignIn}

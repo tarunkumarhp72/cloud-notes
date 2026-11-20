@@ -385,7 +385,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 1440x900 (light and dark)
 - Depends on: T-022
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-025/summary.md)
 
 - ID: T-026
 - Title: Windows Notepad keyboard shortcuts dispatcher
