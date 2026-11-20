@@ -94,7 +94,7 @@
 - Tests to run: `pnpm --filter web test` (PKCE challenge generation & state validation)
 - Viewports to screenshot: none
 - Depends on: T-004
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-006/summary.md)
 
 - ID: T-007
 - Title: Custom JWT and rotating refresh token engine
