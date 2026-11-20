@@ -13,6 +13,9 @@ import { LinkModal, LinkButton } from "./components/toolbar/LinkModal";
 import { TableDropdown } from "./components/toolbar/TableDropdown";
 import { SettingsPage } from "./components/settings/SettingsPage";
 import { TipTapEditorRef } from "./components/editor/TipTapEditor";
+import { FindReplaceBar } from "./components/editor/FindReplaceBar";
+import { GoToDialog } from "./components/editor/GoToDialog";
+import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
 
@@ -41,7 +44,32 @@ export const App: React.FC = () => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
+  const [isFindOpen, setIsFindOpen] = useState(false);
+  const [isReplaceOpen, setIsReplaceOpen] = useState(false);
+  const [isGoToOpen, setIsGoToOpen] = useState(false);
+  const [findMatches, setFindMatches] = useState({ current: 0, total: 0 });
   const tipTapRef = useRef<TipTapEditorRef>(null);
+  const codeMirrorRef = useRef<CodeMirrorEditorRef>(null);
+
+  // Global shortcuts for Find, Replace, Go to
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        setIsFindOpen(true);
+        setIsReplaceOpen(false);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "h") {
+        e.preventDefault();
+        setIsFindOpen(true);
+        setIsReplaceOpen(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "g") {
+        e.preventDefault();
+        setIsGoToOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const { fontFamily, fontSize, wordWrap: settingsWordWrap } = useSettingsStore();
   const effectiveWordWrap = wordWrap || settingsWordWrap;
@@ -122,6 +150,15 @@ export const App: React.FC = () => {
             canCopy={false}
             canPaste={true}
             canDelete={false}
+            onFind={() => {
+              setIsFindOpen(true);
+              setIsReplaceOpen(false);
+            }}
+            onReplace={() => {
+              setIsFindOpen(true);
+              setIsReplaceOpen(true);
+            }}
+            onGoTo={() => setIsGoToOpen(true)}
             onTimeDate={() => {
               const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
               console.warn("Time/Date inserted:", now);
@@ -239,40 +276,94 @@ export const App: React.FC = () => {
       {/* Body: Settings or Editor Surface */}
       {isSettingsOpen ? (
         <SettingsPage onBack={() => setIsSettingsOpen(false)} />
-      ) : activeTab?.isMarkdown || markdownMode ? (
-        <Suspense fallback={<div style={{ flex: 1, backgroundColor: "var(--bg-surface)" }} />}>
-          <TipTapEditor
-            ref={tipTapRef}
-            value={activeTab?.content || ""}
-            onChange={(val) => {
-              if (activeTabId) {
-                updateTabContent(activeTabId, val);
-              }
-            }}
-            onCursorChange={(line, col, charCount) => {
-              setCursorPos({ line, col, charCount });
-            }}
-            fontFamily={fontFamily}
-            fontSize={fontSize}
-          />
-        </Suspense>
       ) : (
-        <Suspense fallback={<div style={{ flex: 1, backgroundColor: "var(--bg-surface)" }} />}>
-          <CodeMirrorEditor
-            value={activeTab?.content || ""}
-            onChange={(val) => {
-              if (activeTabId) {
-                updateTabContent(activeTabId, val);
+        <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          <FindReplaceBar
+            isOpen={isFindOpen}
+            isReplaceOpen={isReplaceOpen}
+            onClose={() => setIsFindOpen(false)}
+            onToggleReplace={() => setIsReplaceOpen((v) => !v)}
+            onQueryChange={(query, matchCase) => {
+              if (codeMirrorRef.current) {
+                const info = codeMirrorRef.current.getMatchesInfo(query, matchCase);
+                setFindMatches(info);
               }
             }}
-            onCursorChange={(line, col, charCount) => {
-              setCursorPos({ line, col, charCount });
+            onFindNext={(query, matchCase, wrapAround) => {
+              if (codeMirrorRef.current) {
+                const info = codeMirrorRef.current.findNext(query, matchCase, wrapAround);
+                setFindMatches(info);
+              }
             }}
-            wordWrap={effectiveWordWrap}
-            fontFamily={fontFamily}
-            fontSize={fontSize}
+            onFindPrevious={(query, matchCase, wrapAround) => {
+              if (codeMirrorRef.current) {
+                const info = codeMirrorRef.current.findPrevious(query, matchCase, wrapAround);
+                setFindMatches(info);
+              }
+            }}
+            onReplace={(query, replacement, matchCase, wrapAround) => {
+              if (codeMirrorRef.current) {
+                const info = codeMirrorRef.current.replace(query, replacement, matchCase, wrapAround);
+                setFindMatches(info);
+              }
+            }}
+            onReplaceAll={(query, replacement, matchCase) => {
+              if (codeMirrorRef.current) {
+                codeMirrorRef.current.replaceAll(query, replacement, matchCase);
+                setFindMatches({ current: 0, total: 0 });
+              }
+            }}
+            currentMatch={findMatches.current}
+            totalMatches={findMatches.total}
           />
-        </Suspense>
+
+          <GoToDialog
+            isOpen={isGoToOpen}
+            onClose={() => setIsGoToOpen(false)}
+            currentLine={cursorPos.line}
+            maxLine={codeMirrorRef.current?.getTotalLines() || 1}
+            onGoTo={(line) => {
+              codeMirrorRef.current?.goToLine(line);
+            }}
+          />
+
+          {activeTab?.isMarkdown || markdownMode ? (
+            <Suspense fallback={<div style={{ flex: 1, backgroundColor: "var(--bg-surface)" }} />}>
+              <TipTapEditor
+                ref={tipTapRef}
+                value={activeTab?.content || ""}
+                onChange={(val) => {
+                  if (activeTabId) {
+                    updateTabContent(activeTabId, val);
+                  }
+                }}
+                onCursorChange={(line, col, charCount) => {
+                  setCursorPos({ line, col, charCount });
+                }}
+                fontFamily={fontFamily}
+                fontSize={fontSize}
+              />
+            </Suspense>
+          ) : (
+            <Suspense fallback={<div style={{ flex: 1, backgroundColor: "var(--bg-surface)" }} />}>
+              <CodeMirrorEditor
+                ref={codeMirrorRef}
+                value={activeTab?.content || ""}
+                onChange={(val) => {
+                  if (activeTabId) {
+                    updateTabContent(activeTabId, val);
+                  }
+                }}
+                onCursorChange={(line, col, charCount) => {
+                  setCursorPos({ line, col, charCount });
+                }}
+                wordWrap={effectiveWordWrap}
+                fontFamily={fontFamily}
+                fontSize={fontSize}
+              />
+            </Suspense>
+          )}
+        </div>
       )}
 
       {/* Line 3: Bottom Status Bar */}
