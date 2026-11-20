@@ -22,6 +22,7 @@ export * from "./components/editor/markdownSerializer";
 export * from "./components/editor/FindReplaceBar";
 export * from "./components/editor/GoToDialog";
 export * from "./components/statusbar/StatusBar";
+export * from "./shortcuts/shortcutsDispatcher";
 export * from "./stores/tabsStore";
 export * from "./auth/googleAuth";
 export * from "./auth/pkce";

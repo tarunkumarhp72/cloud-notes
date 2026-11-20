@@ -400,7 +400,7 @@
 - Tests to run: `pnpm --filter web test` (shortcut dispatch tests)
 - Viewports to screenshot: none
 - Depends on: T-014, T-015, T-016
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-026/summary.md)
 
 - ID: T-027
 - Title: Local auto-save to IndexedDB

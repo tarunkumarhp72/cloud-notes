@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import React, { useState, useRef, lazy, Suspense } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
@@ -17,6 +17,7 @@ import { FindReplaceBar } from "./components/editor/FindReplaceBar";
 import { GoToDialog } from "./components/editor/GoToDialog";
 import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
+import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
 
@@ -52,26 +53,6 @@ export const App: React.FC = () => {
   const tipTapRef = useRef<TipTapEditorRef>(null);
   const codeMirrorRef = useRef<CodeMirrorEditorRef>(null);
 
-  // Global shortcuts for Find, Replace, Go to
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
-        e.preventDefault();
-        setIsFindOpen(true);
-        setIsReplaceOpen(false);
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "h") {
-        e.preventDefault();
-        setIsFindOpen(true);
-        setIsReplaceOpen(true);
-      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "g") {
-        e.preventDefault();
-        setIsGoToOpen(true);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   const { fontFamily, fontSize, wordWrap: settingsWordWrap } = useSettingsStore();
   const effectiveWordWrap = wordWrap || settingsWordWrap;
 
@@ -96,30 +77,46 @@ export const App: React.FC = () => {
     avatarUrl: null,
   });
 
-  // Global Keyboard Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === "Tab") {
-        e.preventDefault();
-        if (e.shiftKey) {
-          cyclePreviousTab();
-        } else {
-          cycleNextTab();
-        }
-      } else if (e.ctrlKey && (e.key === "n" || e.key === "N")) {
-        e.preventDefault();
-        createTab();
-      } else if (e.ctrlKey && (e.key === "w" || e.key === "W")) {
-        e.preventDefault();
-        closeTab(activeTabId);
+  // Windows Notepad Global Shortcuts Dispatcher
+  useNotepadShortcuts({
+    onNewTab: () => createTab(),
+    onNewWindow: () => window.open(window.location.href, "_blank"),
+    onOpen: () => {
+      console.warn("Open note picker triggered");
+    },
+    onSave: () => {
+      console.warn("Save note triggered");
+    },
+    onSaveAs: () => {
+      console.warn("Save as triggered");
+    },
+    onCloseTab: () => closeTab(activeTabId),
+    onFind: () => {
+      setIsFindOpen(true);
+      setIsReplaceOpen(false);
+    },
+    onReplace: () => {
+      setIsFindOpen(true);
+      setIsReplaceOpen(true);
+    },
+    onGoTo: () => setIsGoToOpen(true),
+    onTimeDate: () => {
+      const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
+      if (activeTabId) {
+        updateTabContent(activeTabId, (activeTab?.content || "") + " " + now);
       }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [cycleNextTab, cyclePreviousTab, createTab, closeTab, activeTabId]);
+    },
+    onZoomIn: () => setZoomLevel((z) => Math.min(500, z + 10)),
+    onZoomOut: () => setZoomLevel((z) => Math.max(10, z - 10)),
+    onResetZoom: () => setZoomLevel(100),
+    onNextTab: () => cycleNextTab(),
+    onPrevTab: () => cyclePreviousTab(),
+    onSelectTabByIndex: (index) => {
+      if (tabs[index]) {
+        selectTab(tabs[index].id);
+      }
+    },
+  });
 
   return (
     <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-app)" }}>
