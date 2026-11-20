@@ -109,7 +109,7 @@
 - Tests to run: `pnpm --filter api test` (token rotation, expiry, and replay detection)
 - Viewports to screenshot: none
 - Depends on: T-003
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-007/summary.md)
 
 - ID: T-008
 - Title: Backend Auth endpoints
