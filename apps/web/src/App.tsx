@@ -9,6 +9,7 @@ import { ViewMenu } from "./components/menu/ViewMenu";
 import { HeadingDropdown, HeadingLevel } from "./components/toolbar/HeadingDropdown";
 import { ListDropdown } from "./components/toolbar/ListDropdown";
 import { FormatButtons } from "./components/toolbar/FormatButtons";
+import { LinkModal, LinkButton } from "./components/toolbar/LinkModal";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
@@ -21,6 +22,7 @@ export const App: React.FC = () => {
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
   const {
     tabs,
     activeTabId,
@@ -137,6 +139,7 @@ export const App: React.FC = () => {
                 setIsStrikethrough(false);
               }}
             />
+            <LinkButton onClick={() => setShowLinkModal(true)} />
           </div>
         }
         childrenRight={
@@ -216,6 +219,14 @@ export const App: React.FC = () => {
             avatarUrl: null,
           });
           setShowSignIn(false);
+        }}
+      />
+
+      <LinkModal
+        isOpen={showLinkModal}
+        onClose={() => setShowLinkModal(false)}
+        onInsert={(text, url) => {
+          console.warn("Inserted link:", text, url);
         }}
       />
     </div>

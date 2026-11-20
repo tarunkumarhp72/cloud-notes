@@ -12,6 +12,7 @@ export * from "./components/menu/ViewMenu";
 export * from "./components/toolbar/HeadingDropdown";
 export * from "./components/toolbar/ListDropdown";
 export * from "./components/toolbar/FormatButtons";
+export * from "./components/toolbar/LinkModal";
 export * from "./stores/tabsStore";
 export * from "./auth/googleAuth";
 export * from "./auth/pkce";
