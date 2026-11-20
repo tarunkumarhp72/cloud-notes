@@ -325,7 +325,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 1440x900 (light and dark)
 - Depends on: T-010
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-021/summary.md)
 
 - ID: T-022
 - Title: Plain-text editor surface (CodeMirror 6)

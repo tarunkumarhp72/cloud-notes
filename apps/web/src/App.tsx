@@ -11,6 +11,7 @@ import { ListDropdown } from "./components/toolbar/ListDropdown";
 import { FormatButtons, ClearFormattingButton } from "./components/toolbar/FormatButtons";
 import { LinkModal, LinkButton } from "./components/toolbar/LinkModal";
 import { TableDropdown } from "./components/toolbar/TableDropdown";
+import { SettingsPage } from "./components/settings/SettingsPage";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
@@ -24,6 +25,7 @@ export const App: React.FC = () => {
   const [isItalic, setIsItalic] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const {
     tabs,
     activeTabId,
@@ -168,13 +170,14 @@ export const App: React.FC = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "none",
+                background: isSettingsOpen ? "var(--bg-active)" : "none",
                 border: "none",
                 borderRadius: "4px",
                 color: "var(--text-primary)",
                 cursor: "pointer",
               }}
               aria-label="Settings"
+              onClick={() => setIsSettingsOpen((prev) => !prev)}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 4.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5zM5.75 8a2.25 2.25 0 1 1 4.5 0 2.25 2.25 0 0 1-4.5 0z" />
@@ -185,10 +188,14 @@ export const App: React.FC = () => {
         }
       />
 
-      {/* Editor Body Surface */}
-      <main style={{ flex: 1, backgroundColor: "var(--bg-surface)", padding: "16px" }}>
-        {/* Editor placeholder */}
-      </main>
+      {/* Body: Settings or Editor Surface */}
+      {isSettingsOpen ? (
+        <SettingsPage onBack={() => setIsSettingsOpen(false)} />
+      ) : (
+        <main style={{ flex: 1, backgroundColor: "var(--bg-surface)", padding: "16px" }}>
+          {/* Editor placeholder */}
+        </main>
+      )}
 
       {/* Line 3: Bottom Status Bar */}
       {statusBarVisible && (
