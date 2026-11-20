@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
@@ -13,6 +13,13 @@ import { LinkModal, LinkButton } from "./components/toolbar/LinkModal";
 import { TableDropdown } from "./components/toolbar/TableDropdown";
 import { SettingsPage } from "./components/settings/SettingsPage";
 import { useTabsStore } from "./stores/tabsStore";
+import { useSettingsStore } from "./stores/settingsStore";
+
+const CodeMirrorEditor = lazy(() =>
+  import("./components/editor/CodeMirrorEditor").then((m) => ({
+    default: m.CodeMirrorEditor,
+  }))
+);
 
 export const App: React.FC = () => {
   const [showSignIn, setShowSignIn] = useState(false);
@@ -26,16 +33,24 @@ export const App: React.FC = () => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
+
+  const { fontFamily, fontSize, wordWrap: settingsWordWrap } = useSettingsStore();
+  const effectiveWordWrap = wordWrap || settingsWordWrap;
+
   const {
     tabs,
     activeTabId,
     createTab,
     closeTab,
     selectTab,
+    updateTabContent,
     reorderTabs,
     cycleNextTab,
     cyclePreviousTab,
   } = useTabsStore();
+
+  const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
 
   const [user, setUser] = useState<UserProfile | null>({
     id: "user-tarun",
@@ -192,9 +207,22 @@ export const App: React.FC = () => {
       {isSettingsOpen ? (
         <SettingsPage onBack={() => setIsSettingsOpen(false)} />
       ) : (
-        <main style={{ flex: 1, backgroundColor: "var(--bg-surface)", padding: "16px" }}>
-          {/* Editor placeholder */}
-        </main>
+        <Suspense fallback={<div style={{ flex: 1, backgroundColor: "var(--bg-surface)" }} />}>
+          <CodeMirrorEditor
+            value={activeTab?.content || ""}
+            onChange={(val) => {
+              if (activeTabId) {
+                updateTabContent(activeTabId, val);
+              }
+            }}
+            onCursorChange={(line, col, charCount) => {
+              setCursorPos({ line, col, charCount });
+            }}
+            wordWrap={effectiveWordWrap}
+            fontFamily={fontFamily}
+            fontSize={fontSize}
+          />
+        </Suspense>
       )}
 
       {/* Line 3: Bottom Status Bar */}
@@ -215,8 +243,8 @@ export const App: React.FC = () => {
           }}
           aria-label="Status bar"
         >
-          <span>Ln 1, Col 1</span>
-          <span>0 characters</span>
+          <span>Ln {cursorPos.line}, Col {cursorPos.col}</span>
+          <span>{cursorPos.charCount} characters</span>
           <span style={{ marginLeft: "auto" }}>{markdownMode ? "Markdown" : "Plain text"}</span>
           <span>{zoomLevel}%</span>
           <span>Windows (CRLF)</span>
