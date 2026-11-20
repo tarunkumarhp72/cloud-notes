@@ -4,6 +4,7 @@ import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
 import { MenuBar } from "./components/menu/MenuBar";
 import { FileMenu } from "./components/menu/FileMenu";
+import { EditMenu } from "./components/menu/EditMenu";
 import { useTabsStore } from "./stores/tabsStore";
 
 export const App: React.FC = () => {
@@ -72,6 +73,19 @@ export const App: React.FC = () => {
             onNewMarkdownTab={() => createTab("Untitled.md", "", true)}
             onCloseTab={() => closeTab(activeTabId)}
             onPrint={() => window.print()}
+          />
+        )}
+        renderEditDropdown={() => (
+          <EditMenu
+            canUndo={true}
+            canCut={false}
+            canCopy={false}
+            canPaste={true}
+            canDelete={false}
+            onTimeDate={() => {
+              const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
+              console.warn("Time/Date inserted:", now);
+            }}
           />
         )}
         childrenRight={
