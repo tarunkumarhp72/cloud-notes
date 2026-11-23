@@ -613,7 +613,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 768x1024, 820x1180, 844x390 (light and dark)
 - Depends on: T-011, T-017
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-039/summary.md)
 
 - ID: T-040
 - Title: Mobile menu collapsing (<600px)
