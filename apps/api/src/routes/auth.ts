@@ -136,6 +136,104 @@ authRouter.post("/google", async (c) => {
   });
 });
 
+authRouter.get("/callback", async (c) => {
+  const code = c.req.query("code");
+  const error = c.req.query("error");
+  const errorDesc = c.req.query("error_description");
+
+  const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:3000";
+
+  if (error) {
+    return c.redirect(`${frontendOrigin}/?error=${encodeURIComponent(errorDesc || error)}`);
+  }
+
+  if (!code) {
+    return c.redirect(`${frontendOrigin}/?error=Missing+authorization+code`);
+  }
+
+  try {
+    const reqUrl = new URL(c.req.url);
+    const redirectUri = `${reqUrl.origin}/auth/callback`;
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+
+    if (!clientId || !clientSecret) {
+      throw new Error("Google OAuth credentials not configured on server");
+    }
+
+    const response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return c.redirect(`${frontendOrigin}/?error=${encodeURIComponent("Google token exchange error: " + errText)}`);
+    }
+
+    const tokens = (await response.json()) as GoogleTokenResponse;
+    const parts = tokens.id_token.split(".");
+    if (parts.length !== 3) {
+      throw new Error("Invalid ID token format returned by Google");
+    }
+
+    const claims = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8")) as GoogleIdTokenClaims;
+
+    const userId = crypto.randomUUID();
+    const email = claims.email;
+    const displayName = claims.name || email.split("@")[0];
+    const avatarUrl = claims.picture || null;
+
+    if (sql) {
+      try {
+        await sql`
+          INSERT INTO users (id, google_sub, email, display_name, avatar_url, updated_at)
+          VALUES (${userId}, ${claims.sub}, ${email}, ${displayName}, ${avatarUrl}, NOW())
+          ON CONFLICT (google_sub) DO UPDATE SET
+            display_name = EXCLUDED.display_name,
+            avatar_url = EXCLUDED.avatar_url,
+            updated_at = NOW()
+          RETURNING id
+        `;
+      } catch {}
+    }
+
+    const accessToken = await signAccessToken(userId, email);
+    const { token: refreshToken } = await signRefreshToken(userId);
+
+    const cookieOpts = getRefreshCookieOptions(refreshToken);
+    setCookie(c, cookieOpts.name, cookieOpts.value, {
+      httpOnly: cookieOpts.httpOnly,
+      secure: cookieOpts.secure,
+      sameSite: cookieOpts.sameSite,
+      maxAge: cookieOpts.maxAge,
+      path: cookieOpts.path,
+    });
+
+    const userParam = encodeURIComponent(
+      JSON.stringify({
+        id: userId,
+        email,
+        displayName,
+        avatarUrl,
+      })
+    );
+
+    return c.redirect(`${frontendOrigin}/?token=${accessToken}&user=${userParam}`);
+  } catch (err) {
+    return c.redirect(
+      `${frontendOrigin}/?error=${encodeURIComponent(err instanceof Error ? err.message : "Authentication failed")}`
+    );
+  }
+});
+
 authRouter.post("/refresh", async (c) => {
   const refreshToken = getCookie(c, "refresh_token") || c.req.header("X-Refresh-Token");
   if (!refreshToken) {

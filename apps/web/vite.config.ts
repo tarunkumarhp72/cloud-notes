@@ -64,6 +64,11 @@ export default defineConfig({
       "/auth": {
         target: "http://localhost:3001",
         changeOrigin: true,
+        bypass: (req) => {
+          if (req.url && (req.url.startsWith("/auth/callback") || req.url === "/auth/callback")) {
+            return "/index.html";
+          }
+        },
       },
       "/sync": {
         target: "http://localhost:3001",

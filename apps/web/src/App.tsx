@@ -252,13 +252,39 @@ export const App: React.FC = () => {
     return null;
   });
 
-  // Handle Google OAuth callback (?code=...&state=...)
+  // Handle Google OAuth callback (?code=...&state=... or ?token=...&user=...)
   useEffect(() => {
     async function handleOAuthCallback() {
       const searchParams = new URLSearchParams(window.location.search);
       const code = searchParams.get("code");
       const state = searchParams.get("state");
+      const token = searchParams.get("token");
+      const userJson = searchParams.get("user");
+      const errorParam = searchParams.get("error");
 
+      // Flow 1: Backend redirect (from http://localhost:3001/auth/callback)
+      if (token && userJson) {
+        try {
+          const parsedUser = JSON.parse(decodeURIComponent(userJson));
+          setUser(parsedUser);
+          localStorage.setItem("notepad_user", JSON.stringify(parsedUser));
+          localStorage.setItem("notepad_token", token);
+          setShowSignIn(false);
+        } catch (e) {
+          console.error("Failed to parse user from query:", e);
+        } finally {
+          window.history.replaceState({}, document.title, window.location.pathname.replace(/\/auth\/callback\/?$/, "/") || "/");
+        }
+        return;
+      }
+
+      if (errorParam) {
+        console.error("OAuth error:", errorParam);
+        window.history.replaceState({}, document.title, window.location.pathname.replace(/\/auth\/callback\/?$/, "/") || "/");
+        return;
+      }
+
+      // Flow 2: Frontend PKCE redirect (from http://localhost:3000/auth/callback)
       if (code && state) {
         try {
           const redirectUri =
