@@ -1,7 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { EditorState, Compartment } from "@codemirror/state";
 import { EditorView, keymap, drawSelection } from "@codemirror/view";
-import { defaultKeymap, history, historyKeymap, selectAll } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap, selectAll, undo, redo } from "@codemirror/commands";
 import styles from "./editor.module.css";
 
 export interface CodeMirrorEditorRef {
@@ -24,6 +24,13 @@ export interface CodeMirrorEditorRef {
   insertLink: (text: string, url: string) => void;
   insertTable: (rows: number, cols: number) => void;
   clearFormatting: () => void;
+  undo: () => void;
+  redo: () => void;
+  cut: () => Promise<void>;
+  copy: () => Promise<void>;
+  paste: () => Promise<void>;
+  deleteSelection: () => void;
+  insertText: (text: string) => void;
 }
 
 export interface CodeMirrorEditorProps {
@@ -36,7 +43,7 @@ export interface CodeMirrorEditorProps {
   readOnly?: boolean;
 }
 
-const findAllMatches = (text: string, query: string, matchCase: boolean) => {
+export const findAllMatches = (text: string, query: string, matchCase: boolean) => {
   if (!query) return [];
   const matches: Array<{ from: number; to: number }> = [];
   const src = matchCase ? text : text.toLowerCase();
@@ -418,6 +425,61 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
           changes: { from, to, insert: cleaned },
           selection: { anchor: from, head: from + cleaned.length },
         });
+        view.focus();
+      },
+      undo: () => {
+        if (viewRef.current) {
+          undo({ state: viewRef.current.state, dispatch: viewRef.current.dispatch });
+          viewRef.current.focus();
+        }
+      },
+      redo: () => {
+        if (viewRef.current) {
+          redo({ state: viewRef.current.state, dispatch: viewRef.current.dispatch });
+          viewRef.current.focus();
+        }
+      },
+      cut: async () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        if (from === to) return;
+        const text = view.state.sliceDoc(from, to);
+        await navigator.clipboard.writeText(text);
+        view.dispatch({ changes: { from, to, insert: "" } });
+        view.focus();
+      },
+      copy: async () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        if (from === to) return;
+        const text = view.state.sliceDoc(from, to);
+        await navigator.clipboard.writeText(text);
+      },
+      paste: async () => {
+        const view = viewRef.current;
+        if (!view) return;
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            view.dispatch(view.state.replaceSelection(text));
+            view.focus();
+          }
+        } catch {
+          view.focus();
+        }
+      },
+      deleteSelection: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        view.dispatch(view.state.replaceSelection(""));
+        view.focus();
+      },
+      insertText: (text: string) => {
+        const view = viewRef.current;
+        if (!view) return;
+        view.dispatch(view.state.replaceSelection(text));
         view.focus();
       },
     }));

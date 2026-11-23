@@ -70,6 +70,8 @@ export const App: React.FC = () => {
   const [isReplaceOpen, setIsReplaceOpen] = useState(false);
   const [isGoToOpen, setIsGoToOpen] = useState(false);
   const [findMatches, setFindMatches] = useState({ current: 0, total: 0 });
+  const [findQuery, setFindQuery] = useState("");
+  const [findMatchCase, setFindMatchCase] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("saved");
   const tipTapRef = useRef<TipTapEditorRef>(null);
   const codeMirrorRef = useRef<CodeMirrorEditorRef>(null);
@@ -193,6 +195,14 @@ export const App: React.FC = () => {
   } = useTabsStore();
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+  const isMarkdownActive = activeTab ? activeTab.isMarkdown : markdownMode;
+
+  const getActiveEditor = useCallback(() => {
+    if (isMarkdownActive) {
+      return tipTapRef.current;
+    }
+    return codeMirrorRef.current;
+  }, [isMarkdownActive]);
 
   const handleNewTab = (title?: string, content?: string, isMarkdown = true) => {
     const newId = createTab(title, content, isMarkdown);
@@ -384,28 +394,26 @@ export const App: React.FC = () => {
             canPaste={true}
             canDelete={true}
             onUndo={() => {
-              document.execCommand("undo");
+              getActiveEditor()?.undo();
             }}
             onCut={() => {
-              document.execCommand("cut");
+              getActiveEditor()?.cut();
             }}
             onCopy={() => {
-              document.execCommand("copy");
+              getActiveEditor()?.copy();
             }}
             onPaste={async () => {
-              try {
-                const text = await navigator.clipboard.readText();
-                document.execCommand("insertText", false, text);
-              } catch {
-                document.execCommand("paste");
-              }
+              await getActiveEditor()?.paste();
             }}
             onDelete={() => {
-              document.execCommand("delete");
+              getActiveEditor()?.deleteSelection();
             }}
             onClearFormatting={() => {
-              tipTapRef.current?.clearFormatting();
-              codeMirrorRef.current?.clearFormatting();
+              getActiveEditor()?.clearFormatting();
+              setIsBold(false);
+              setIsItalic(false);
+              setIsStrikethrough(false);
+              setHeadingLevel("body");
             }}
             onFind={() => {
               setIsFindOpen(true);
@@ -413,9 +421,19 @@ export const App: React.FC = () => {
             }}
             onFindNext={() => {
               setIsFindOpen(true);
+              const editor = getActiveEditor();
+              if (editor && findQuery) {
+                const info = editor.findNext(findQuery, findMatchCase, true);
+                setFindMatches(info);
+              }
             }}
             onFindPrevious={() => {
               setIsFindOpen(true);
+              const editor = getActiveEditor();
+              if (editor && findQuery) {
+                const info = editor.findPrevious(findQuery, findMatchCase, true);
+                setFindMatches(info);
+              }
             }}
             onReplace={() => {
               setIsFindOpen(true);
@@ -424,8 +442,11 @@ export const App: React.FC = () => {
             onGoTo={() => setIsGoToOpen(true)}
             onSelectAll={handleSelectAll}
             onTimeDate={() => {
-              const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
-              document.execCommand("insertText", false, now);
+              const now =
+                new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) +
+                " " +
+                new Date().toLocaleDateString();
+              getActiveEditor()?.insertText(now);
             }}
             onFont={() => setIsSettingsOpen(true)}
           />
@@ -435,12 +456,12 @@ export const App: React.FC = () => {
             isDesktop={isDesktop}
             statusBarVisible={statusBarVisible}
             wordWrap={wordWrap}
-            markdownMode={markdownMode}
+            markdownMode={isMarkdownActive}
             zoomLevel={zoomLevel}
             onToggleStatusBar={() => setStatusBarVisible((v) => !v)}
             onToggleWordWrap={() => setWordWrap((w) => !w)}
             onToggleMarkdown={() => {
-              const next = !markdownMode;
+              const next = !isMarkdownActive;
               setMarkdownMode(next);
               if (activeTabId) {
                 useTabsStore.getState().setTabMarkdown(activeTabId, next);
@@ -580,6 +601,7 @@ export const App: React.FC = () => {
             backgroundColor: "var(--bg-surface)",
             width: "100%",
             maxWidth: "100%",
+            zoom: zoomLevel !== 100 ? `${zoomLevel}%` : undefined,
           }}
         >
           <FindReplaceBar
@@ -588,32 +610,43 @@ export const App: React.FC = () => {
             onClose={() => setIsFindOpen(false)}
             onToggleReplace={() => setIsReplaceOpen((v) => !v)}
             onQueryChange={(query, matchCase) => {
-              if (codeMirrorRef.current) {
-                const info = codeMirrorRef.current.getMatchesInfo(query, matchCase);
+              setFindQuery(query);
+              setFindMatchCase(matchCase);
+              const editor = getActiveEditor();
+              if (editor) {
+                const info = editor.getMatchesInfo(query, matchCase);
                 setFindMatches(info);
               }
             }}
             onFindNext={(query, matchCase, wrapAround) => {
-              if (codeMirrorRef.current) {
-                const info = codeMirrorRef.current.findNext(query, matchCase, wrapAround);
+              setFindQuery(query);
+              setFindMatchCase(matchCase);
+              const editor = getActiveEditor();
+              if (editor) {
+                const info = editor.findNext(query, matchCase, wrapAround);
                 setFindMatches(info);
               }
             }}
             onFindPrevious={(query, matchCase, wrapAround) => {
-              if (codeMirrorRef.current) {
-                const info = codeMirrorRef.current.findPrevious(query, matchCase, wrapAround);
+              setFindQuery(query);
+              setFindMatchCase(matchCase);
+              const editor = getActiveEditor();
+              if (editor) {
+                const info = editor.findPrevious(query, matchCase, wrapAround);
                 setFindMatches(info);
               }
             }}
             onReplace={(query, replacement, matchCase, wrapAround) => {
-              if (codeMirrorRef.current) {
-                const info = codeMirrorRef.current.replace(query, replacement, matchCase, wrapAround);
+              const editor = getActiveEditor();
+              if (editor) {
+                const info = editor.replace(query, replacement, matchCase, wrapAround);
                 setFindMatches(info);
               }
             }}
             onReplaceAll={(query, replacement, matchCase) => {
-              if (codeMirrorRef.current) {
-                codeMirrorRef.current.replaceAll(query, replacement, matchCase);
+              const editor = getActiveEditor();
+              if (editor) {
+                editor.replaceAll(query, replacement, matchCase);
                 setFindMatches({ current: 0, total: 0 });
               }
             }}
@@ -625,13 +658,13 @@ export const App: React.FC = () => {
             isOpen={isGoToOpen}
             onClose={() => setIsGoToOpen(false)}
             currentLine={cursorPos.line}
-            maxLine={codeMirrorRef.current?.getTotalLines() || 1}
+            maxLine={getActiveEditor()?.getTotalLines() || 1}
             onGoTo={(line) => {
-              codeMirrorRef.current?.goToLine(line);
+              getActiveEditor()?.goToLine(line);
             }}
           />
 
-          {activeTab?.isMarkdown || markdownMode ? (
+          {isMarkdownActive ? (
             <Suspense fallback={<div style={{ flex: 1, backgroundColor: "var(--bg-surface)" }} />}>
               <TipTapEditor
                 ref={tipTapRef}
@@ -684,7 +717,7 @@ export const App: React.FC = () => {
         line={cursorPos.line}
         col={cursorPos.col}
         charCount={cursorPos.charCount}
-        mode={activeTab?.isMarkdown ?? markdownMode ? "markdown" : "plain"}
+        mode={isMarkdownActive ? "markdown" : "plain"}
         zoomLevel={zoomLevel}
         lineEnding="Windows (CRLF)"
         encoding="UTF-8"

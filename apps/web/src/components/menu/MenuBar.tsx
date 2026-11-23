@@ -86,11 +86,22 @@ export const MenuBar: React.FC<MenuBarProps> = ({
     }
   };
 
+  const handleDropdownItemClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button[role='menuitem']") || target.closest("button[role='menuitemcheckbox']")) {
+      if (!target.closest("[aria-haspopup]")) {
+        setTimeout(() => {
+          setActive(null);
+        }, 0);
+      }
+    }
+  };
+
   return (
     <nav className={styles.menuBar} ref={barRef} onKeyDown={handleKeyDown} aria-label="Menu bar">
       {/* Left Menu Items: File, Edit, View */}
       <div className={styles.leftGroup} role="menubar">
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative" }} onClick={handleDropdownItemClick}>
           <button
             type="button"
             role="menuitem"
@@ -105,7 +116,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           {activeMenu === "file" && renderFileDropdown && renderFileDropdown()}
         </div>
 
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative" }} onClick={handleDropdownItemClick}>
           <button
             type="button"
             role="menuitem"
@@ -120,7 +131,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           {activeMenu === "edit" && renderEditDropdown && renderEditDropdown()}
         </div>
 
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative" }} onClick={handleDropdownItemClick}>
           <button
             type="button"
             role="menuitem"

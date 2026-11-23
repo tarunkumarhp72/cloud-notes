@@ -7,6 +7,7 @@ import { Markdown } from "tiptap-markdown";
 import styles from "./editor.module.css";
 import { sanitizeUrl } from "../../security/sanitize";
 import type { HeadingLevel } from "../toolbar/HeadingDropdown";
+import { findAllMatches } from "./CodeMirrorEditor";
 
 export interface TipTapEditorRef {
   toggleBold: () => void;
@@ -22,6 +23,21 @@ export interface TipTapEditorRef {
   setLink: (url: string, text?: string) => void;
   clearFormatting: () => void;
   selectAll: () => void;
+  undo: () => void;
+  redo: () => void;
+  cut: () => Promise<void>;
+  copy: () => Promise<void>;
+  paste: () => Promise<void>;
+  deleteSelection: () => void;
+  insertText: (text: string) => void;
+  focus: () => void;
+  goToLine: (line: number) => boolean;
+  getTotalLines: () => number;
+  findNext: (query: string, matchCase: boolean, wrapAround: boolean) => { current: number; total: number };
+  findPrevious: (query: string, matchCase: boolean, wrapAround: boolean) => { current: number; total: number };
+  replace: (query: string, replacement: string, matchCase: boolean, wrapAround: boolean) => { current: number; total: number };
+  replaceAll: (query: string, replacement: string, matchCase: boolean) => number;
+  getMatchesInfo: (query: string, matchCase: boolean) => { current: number; total: number };
 }
 
 export interface TipTapEditorProps {
@@ -222,6 +238,149 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         if (editor) updateActiveFormats(editor);
       },
       selectAll: () => editor?.chain().focus().selectAll().run(),
+      undo: () => {
+        editor?.chain().focus().undo().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      redo: () => {
+        editor?.chain().focus().redo().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      cut: async () => {
+        if (!editor || editor.isDestroyed) return;
+        const { from, to } = editor.state.selection;
+        if (from === to) return;
+        const text = editor.state.doc.textBetween(from, to, "\n");
+        await navigator.clipboard.writeText(text);
+        editor.chain().focus().deleteSelection().run();
+        updateActiveFormats(editor);
+      },
+      copy: async () => {
+        if (!editor || editor.isDestroyed) return;
+        const { from, to } = editor.state.selection;
+        if (from === to) return;
+        const text = editor.state.doc.textBetween(from, to, "\n");
+        await navigator.clipboard.writeText(text);
+      },
+      paste: async () => {
+        if (!editor || editor.isDestroyed) return;
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            editor.chain().focus().insertContent(text).run();
+            updateActiveFormats(editor);
+          }
+        } catch {
+          editor.chain().focus().run();
+        }
+      },
+      deleteSelection: () => {
+        editor?.chain().focus().deleteSelection().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      insertText: (text: string) => {
+        editor?.chain().focus().insertContent(text).run();
+        if (editor) updateActiveFormats(editor);
+      },
+      focus: () => {
+        editor?.chain().focus().run();
+      },
+      goToLine: (line: number) => {
+        if (!editor || editor.isDestroyed) return false;
+        const text = editor.state.doc.textContent;
+        const lines = text.split("\n");
+        const targetLine = Math.max(1, Math.min(lines.length, line));
+        let charPos = 0;
+        for (let i = 0; i < targetLine - 1; i++) {
+          charPos += lines[i].length + 1;
+        }
+        const pos = Math.min(charPos + 1, editor.state.doc.content.size);
+        editor.chain().focus().setTextSelection(pos).run();
+        return true;
+      },
+      getTotalLines: () => {
+        if (!editor || editor.isDestroyed) return 1;
+        return editor.state.doc.textContent.split("\n").length;
+      },
+      getMatchesInfo: (query: string, matchCase: boolean) => {
+        if (!editor || editor.isDestroyed || !query) return { current: 0, total: 0 };
+        const text = editor.state.doc.textContent;
+        const matches = findAllMatches(text, query, matchCase);
+        return { current: matches.length > 0 ? 1 : 0, total: matches.length };
+      },
+      findNext: (query: string, matchCase: boolean, wrapAround: boolean) => {
+        if (!editor || editor.isDestroyed || !query) return { current: 0, total: 0 };
+        const text = editor.state.doc.textContent;
+        const matches = findAllMatches(text, query, matchCase);
+        if (matches.length === 0) return { current: 0, total: 0 };
+        const curPos = editor.state.selection.to;
+        let target = matches.find((m) => m.from >= curPos);
+        if (!target && wrapAround) target = matches[0];
+        if (target) {
+          const from = Math.min(target.from + 1, editor.state.doc.content.size);
+          const to = Math.min(target.to + 1, editor.state.doc.content.size);
+          editor.chain().focus().setTextSelection({ from, to }).run();
+          return { current: matches.indexOf(target) + 1, total: matches.length };
+        }
+        return { current: 0, total: matches.length };
+      },
+      findPrevious: (query: string, matchCase: boolean, wrapAround: boolean) => {
+        if (!editor || editor.isDestroyed || !query) return { current: 0, total: 0 };
+        const text = editor.state.doc.textContent;
+        const matches = findAllMatches(text, query, matchCase);
+        if (matches.length === 0) return { current: 0, total: 0 };
+        const curPos = editor.state.selection.from;
+        let target: { from: number; to: number } | undefined;
+        for (let i = matches.length - 1; i >= 0; i--) {
+          if (matches[i].to <= curPos) {
+            target = matches[i];
+            break;
+          }
+        }
+        if (!target && wrapAround) target = matches[matches.length - 1];
+        if (target) {
+          const from = Math.min(target.from + 1, editor.state.doc.content.size);
+          const to = Math.min(target.to + 1, editor.state.doc.content.size);
+          editor.chain().focus().setTextSelection({ from, to }).run();
+          return { current: matches.indexOf(target) + 1, total: matches.length };
+        }
+        return { current: 0, total: matches.length };
+      },
+      replace: (query: string, replacement: string, matchCase: boolean, wrapAround: boolean) => {
+        if (!editor || editor.isDestroyed || !query) return { current: 0, total: 0 };
+        const text = editor.state.doc.textContent;
+        const matches = findAllMatches(text, query, matchCase);
+        if (matches.length === 0) return { current: 0, total: 0 };
+        const selFrom = editor.state.selection.from - 1;
+        const selTo = editor.state.selection.to - 1;
+        const currentMatch = matches.find((m) => m.from === selFrom && m.to === selTo);
+        if (currentMatch) {
+          editor.chain().focus().insertContent(replacement).run();
+          const nextMatches = findAllMatches(editor.state.doc.textContent, query, matchCase);
+          return { current: 1, total: nextMatches.length };
+        } else {
+          let target = matches.find((m) => m.from >= selTo);
+          if (!target && wrapAround) target = matches[0];
+          if (target) {
+            const from = Math.min(target.from + 1, editor.state.doc.content.size);
+            const to = Math.min(target.to + 1, editor.state.doc.content.size);
+            editor.chain().focus().setTextSelection({ from, to }).run();
+            return { current: matches.indexOf(target) + 1, total: matches.length };
+          }
+        }
+        return { current: 0, total: matches.length };
+      },
+      replaceAll: (query: string, replacement: string, matchCase: boolean) => {
+        if (!editor || editor.isDestroyed || !query) return 0;
+        const current = getDocMarkdown(editor);
+        const regex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), matchCase ? "g" : "gi");
+        const count = (current.match(regex) || []).length;
+        if (count > 0) {
+          const replaced = current.replace(regex, replacement);
+          editor.commands.setContent(replaced, { emitUpdate: true });
+        }
+        return count;
+      },
     }));
 
     // Synchronize external value changes if markdown differs

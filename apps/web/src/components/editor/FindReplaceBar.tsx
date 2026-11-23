@@ -55,10 +55,15 @@ export const FindReplaceBar: React.FC<FindReplaceBarProps> = ({
     }
   }, [isOpen, isReplaceOpen]);
 
+  const onQueryChangeRef = useRef(onQueryChange);
+  useEffect(() => {
+    onQueryChangeRef.current = onQueryChange;
+  }, [onQueryChange]);
+
   // Notify parent on query or matchCase change
   useEffect(() => {
-    onQueryChange?.(query, matchCase);
-  }, [query, matchCase, onQueryChange]);
+    onQueryChangeRef.current?.(query, matchCase);
+  }, [query, matchCase]);
 
   if (!isOpen) return null;
 
