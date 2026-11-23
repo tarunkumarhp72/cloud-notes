@@ -499,7 +499,7 @@
 - Tests to run: `pnpm --filter @notepad/core test`
 - Viewports to screenshot: none
 - Depends on: T-005, T-031
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-032/summary.md)
 
 - ID: T-033
 - Title: Backend sync push and pull endpoints
