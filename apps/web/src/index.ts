@@ -22,6 +22,8 @@ export * from "./components/editor/markdownSerializer";
 export * from "./components/editor/FindReplaceBar";
 export * from "./components/editor/GoToDialog";
 export * from "./components/statusbar/StatusBar";
+export * from "./components/statusbar/SyncIndicator";
+export * from "./sync/syncEngine";
 export * from "./shortcuts/shortcutsDispatcher";
 export * from "./sync/localAutoSave";
 export * from "./components/file/fileIo";

@@ -67,4 +67,51 @@ describe("StatusBar Component", () => {
     expect(screen.getByText("12 selected, 50 characters")).toBeDefined();
     expect(screen.getByText("120%")).toBeDefined();
   });
+
+  it("renders distinct sync status indicators: Saving, Saved, Offline, Sync failed", () => {
+    const onRetry = vi.fn();
+    const { rerender } = render(
+      <StatusBar
+        line={1}
+        col={1}
+        charCount={0}
+        syncStatus="saving"
+      />
+    );
+    expect(screen.getByText("Saving")).toBeDefined();
+
+    rerender(
+      <StatusBar
+        line={1}
+        col={1}
+        charCount={0}
+        syncStatus="saved"
+      />
+    );
+    expect(screen.getByText("Saved")).toBeDefined();
+
+    rerender(
+      <StatusBar
+        line={1}
+        col={1}
+        charCount={0}
+        syncStatus="offline"
+      />
+    );
+    expect(screen.getByText("Offline")).toBeDefined();
+
+    rerender(
+      <StatusBar
+        line={1}
+        col={1}
+        charCount={0}
+        syncStatus="sync_failed"
+        onRetrySync={onRetry}
+      />
+    );
+    const retryBtn = screen.getByRole("button", { name: /Sync failed/ });
+    expect(retryBtn).toBeDefined();
+    fireEvent.click(retryBtn);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
 });

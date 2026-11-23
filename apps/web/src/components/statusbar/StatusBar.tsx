@@ -1,4 +1,6 @@
 import React from "react";
+import { SyncIndicator } from "./SyncIndicator";
+import type { SyncStatus } from "../../sync/syncEngine";
 import styles from "./StatusBar.module.css";
 
 export interface StatusBarProps {
@@ -13,6 +15,8 @@ export interface StatusBarProps {
   onGoToClick?: () => void;
   onZoomClick?: () => void;
   visible?: boolean;
+  syncStatus?: SyncStatus;
+  onRetrySync?: () => void;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -27,6 +31,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   onGoToClick,
   onZoomClick,
   visible = true,
+  syncStatus = "saved",
+  onRetrySync,
 }) => {
   if (!visible) return null;
 
@@ -53,6 +59,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
       </div>
 
       <div className={styles.rightGroup}>
+        {syncStatus && <SyncIndicator status={syncStatus} onRetry={onRetrySync} />}
         <span className={styles.staticItem}>{modeLabel}</span>
         <button
           type="button"

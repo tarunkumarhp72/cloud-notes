@@ -529,7 +529,7 @@
 - Tests to run: `pnpm --filter web test` (sync retry and status transitions)
 - Viewports to screenshot: 1440x900
 - Depends on: T-025, T-032, T-033
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-034/summary.md)
 
 - ID: T-035
 - Title: Sync conflict resolution

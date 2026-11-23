@@ -19,6 +19,7 @@ import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
 import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useLocalAutoSave } from "./sync/localAutoSave";
+import { SyncEngine, type SyncStatus } from "./sync/syncEngine";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
@@ -61,8 +62,25 @@ export const App: React.FC = () => {
   const [isReplaceOpen, setIsReplaceOpen] = useState(false);
   const [isGoToOpen, setIsGoToOpen] = useState(false);
   const [findMatches, setFindMatches] = useState({ current: 0, total: 0 });
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("saved");
   const tipTapRef = useRef<TipTapEditorRef>(null);
   const codeMirrorRef = useRef<CodeMirrorEditorRef>(null);
+  const syncEngineRef = useRef<SyncEngine | null>(null);
+
+  useEffect(() => {
+    syncEngineRef.current = new SyncEngine({
+      getAccessToken: () => "demo-token",
+    });
+
+    const unsubscribe = syncEngineRef.current.subscribe((status) => {
+      setSyncStatus(status);
+    });
+
+    return () => {
+      unsubscribe();
+      syncEngineRef.current?.destroy();
+    };
+  }, []);
 
   const { isInitialized: isVaultInitialized, isLocked: isVaultLocked, checkVaultStatus } = useVaultStore();
 
@@ -91,6 +109,14 @@ export const App: React.FC = () => {
   // Local auto-save to IndexedDB (1s debounce, 10s forced flush)
   useLocalAutoSave(activeTab, (savedId) => {
     setTabDirty(savedId, false);
+    syncEngineRef.current?.onLocalNoteSaved(
+      savedId,
+      JSON.stringify({
+        title: activeTab?.title,
+        content: activeTab?.content,
+        isMarkdown: activeTab?.isMarkdown,
+      })
+    );
   });
 
   const [user, setUser] = useState<UserProfile | null>({
@@ -417,6 +443,8 @@ export const App: React.FC = () => {
         zoomLevel={zoomLevel}
         lineEnding="Windows (CRLF)"
         encoding="UTF-8"
+        syncStatus={syncStatus}
+        onRetrySync={() => syncEngineRef.current?.push()}
         onGoToClick={() => setIsGoToOpen(true)}
         onZoomClick={() => setZoomLevel(100)}
       />
