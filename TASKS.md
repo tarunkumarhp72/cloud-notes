@@ -560,7 +560,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: none
 - Depends on: T-035
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-036/summary.md)
 
 ---
 

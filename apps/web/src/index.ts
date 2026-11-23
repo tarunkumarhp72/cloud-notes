@@ -25,6 +25,7 @@ export * from "./components/statusbar/StatusBar";
 export * from "./components/statusbar/SyncIndicator";
 export * from "./sync/syncEngine";
 export * from "./sync/conflictHandler";
+export * from "./sync/broadcast";
 export * from "./shortcuts/shortcutsDispatcher";
 export * from "./sync/localAutoSave";
 export * from "./components/file/fileIo";
