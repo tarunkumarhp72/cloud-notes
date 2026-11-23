@@ -450,7 +450,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 1440x900 (light and dark)
 - Depends on: T-004
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-029/summary.md)
 
 - ID: T-030
 - Title: Recovery key generation and display modal

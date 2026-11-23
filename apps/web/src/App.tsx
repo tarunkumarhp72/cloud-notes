@@ -1,4 +1,4 @@
-import React, { useState, useRef, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
@@ -21,6 +21,8 @@ import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useLocalAutoSave } from "./sync/localAutoSave";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
+import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
+import { useVaultStore } from "./stores/vaultStore";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
 
@@ -48,6 +50,7 @@ export const App: React.FC = () => {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showOpenDialog, setShowOpenDialog] = useState(false);
+  const [showVaultModal, setShowVaultModal] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
   const [isFindOpen, setIsFindOpen] = useState(false);
@@ -56,6 +59,12 @@ export const App: React.FC = () => {
   const [findMatches, setFindMatches] = useState({ current: 0, total: 0 });
   const tipTapRef = useRef<TipTapEditorRef>(null);
   const codeMirrorRef = useRef<CodeMirrorEditorRef>(null);
+
+  const { isInitialized: isVaultInitialized, isLocked: isVaultLocked, checkVaultStatus } = useVaultStore();
+
+  useEffect(() => {
+    checkVaultStatus();
+  }, [checkVaultStatus]);
 
   const { fontFamily, fontSize, wordWrap: settingsWordWrap } = useSettingsStore();
   const effectiveWordWrap = wordWrap || settingsWordWrap;
@@ -270,6 +279,8 @@ export const App: React.FC = () => {
               user={user}
               onSignInClick={() => setShowSignIn(true)}
               onSignOut={() => setUser(null)}
+              onManageVault={() => setShowVaultModal(true)}
+              isVaultLocked={isVaultLocked}
             />
 
             {/* Settings Button */}
@@ -437,6 +448,15 @@ export const App: React.FC = () => {
         onClose={() => setShowLinkModal(false)}
         onInsert={(_text, url) => {
           tipTapRef.current?.setLink(url);
+        }}
+      />
+
+      <VaultUnlockModal
+        isOpen={showVaultModal}
+        isInitialSetup={!isVaultInitialized}
+        onClose={() => setShowVaultModal(false)}
+        onSuccess={() => {
+          setShowVaultModal(false);
         }}
       />
     </div>

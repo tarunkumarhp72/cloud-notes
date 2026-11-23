@@ -12,12 +12,16 @@ export interface AccountMenuProps {
   user: UserProfile | null;
   onSignInClick?: () => void;
   onSignOut?: () => Promise<void> | void;
+  onManageVault?: () => void;
+  isVaultLocked?: boolean;
 }
 
 export const AccountMenu: React.FC<AccountMenuProps> = ({
   user,
   onSignInClick,
   onSignOut,
+  onManageVault,
+  isVaultLocked = true,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -94,6 +98,23 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
           </div>
 
           <hr className={styles.divider} />
+
+          {onManageVault && (
+            <button
+              type="button"
+              className={styles.menuItem}
+              onClick={() => {
+                setIsOpen(false);
+                onManageVault();
+              }}
+              aria-label="Vault & Encryption"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-.5V4.5A3.5 3.5 0 0 0 8 1zm2 5H6V4.5a2 2 0 1 1 4 0V6z" />
+              </svg>
+              <span>{isVaultLocked ? "Unlock Vault" : "Vault Settings"}</span>
+            </button>
+          )}
 
           <button
             type="button"
