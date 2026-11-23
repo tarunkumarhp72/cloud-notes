@@ -692,7 +692,7 @@
 - Tests to run: `pnpm --filter api test`
 - Viewports to screenshot: none
 - Depends on: T-008, T-033
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-044/summary.md)
 
 - ID: T-045
 - Title: Account deletion and data purge
