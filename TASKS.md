@@ -480,7 +480,7 @@
 - Tests to run: `pnpm --filter @notepad/core test` (envelope encryption & integrity checks)
 - Viewports to screenshot: none
 - Depends on: T-004, T-029
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-031/summary.md)
 
 ---
 
