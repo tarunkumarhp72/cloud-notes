@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./TabStrip.module.css";
 import { TabItem } from "./TabItem";
 import { Tooltip } from "../ui/Tooltip";
@@ -37,6 +37,74 @@ export const TabStrip: React.FC<TabStripProps> = ({
   showCaptionControls,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = tabsContainerRef.current;
+    if (!el) return;
+    const hasOverflow = el.scrollWidth > el.clientWidth + 2;
+    if (!hasOverflow) {
+      setCanScrollLeft(false);
+      setCanScrollRight(false);
+      return;
+    }
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = tabsContainerRef.current;
+    if (!el) return;
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(() => checkScroll());
+      observer.observe(el);
+    }
+    window.addEventListener("resize", checkScroll);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [tabs, checkScroll]);
+
+  // Smoothly scroll active tab into view when activeTabId changes
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (!container) return;
+    const activeEl = container.querySelector(`[aria-selected="true"]`) as HTMLElement;
+    if (activeEl) {
+      if (typeof activeEl.scrollIntoView === "function") {
+        activeEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+      }
+      setTimeout(checkScroll, 350);
+    }
+  }, [activeTabId, checkScroll]);
+
+  const handleScrollLeft = () => {
+    if (tabsContainerRef.current) {
+      tabsContainerRef.current.scrollBy({ left: -160, behavior: "smooth" });
+      setTimeout(checkScroll, 300);
+    }
+  };
+
+  const handleScrollRight = () => {
+    if (tabsContainerRef.current) {
+      tabsContainerRef.current.scrollBy({ left: 160, behavior: "smooth" });
+      setTimeout(checkScroll, 300);
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (tabsContainerRef.current) {
+      tabsContainerRef.current.scrollLeft += e.deltaY || e.deltaX;
+      checkScroll();
+    }
+  };
 
   const isDesktopEnv =
     typeof window !== "undefined" &&
@@ -99,8 +167,15 @@ export const TabStrip: React.FC<TabStripProps> = ({
           </svg>
         </div>
 
-        {/* Tab List */}
-        <div className={styles.tabsContainer} role="tablist" aria-label="Note tabs">
+        {/* Tab List: scrollable container */}
+        <div
+          ref={tabsContainerRef}
+          className={styles.tabsContainer}
+          role="tablist"
+          aria-label="Note tabs"
+          onScroll={checkScroll}
+          onWheel={handleWheel}
+        >
           {tabs.map((tab, idx) => (
             <TabItem
               key={tab.id}
@@ -112,6 +187,39 @@ export const TabStrip: React.FC<TabStripProps> = ({
               onReorder={onReorderTabs}
             />
           ))}
+        </div>
+
+        {/* Fixed Action Controls: Scroll navigation & New Tab button */}
+        <div className={styles.tabActionsFixed}>
+          {canScrollLeft && (
+            <Tooltip content="Scroll tabs left" position="bottom" align="center">
+              <button
+                type="button"
+                className={styles.scrollBtn}
+                onClick={handleScrollLeft}
+                aria-label="Scroll tabs left"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+                  <path d="M7 1.5L2.5 5L7 8.5V1.5Z" />
+                </svg>
+              </button>
+            </Tooltip>
+          )}
+
+          {canScrollRight && (
+            <Tooltip content="Scroll tabs right" position="bottom" align="center">
+              <button
+                type="button"
+                className={styles.scrollBtn}
+                onClick={handleScrollRight}
+                aria-label="Scroll tabs right"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+                  <path d="M3 1.5L7.5 5L3 8.5V1.5Z" />
+                </svg>
+              </button>
+            </Tooltip>
+          )}
 
           {/* New Tab (+) Button */}
           <Tooltip content="New tab (Ctrl+N)" position="bottom" align="start">
