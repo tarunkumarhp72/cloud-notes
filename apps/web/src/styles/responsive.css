@@ -1,0 +1,41 @@
+/* Responsive Layout Styles for Tablet, Laptop, and Mobile Viewports */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Tablet & Laptop layout adaptation (<1024px) */
+@media (max-width: 1024px) {
+  .responsiveToolbar,
+  div[class*="toolbarGroup"],
+  div[class*="childrenToolbar"] {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    flex-shrink: 1;
+    max-width: 100%;
+  }
+
+  .responsiveToolbar::-webkit-scrollbar,
+  div[class*="toolbarGroup"]::-webkit-scrollbar,
+  div[class*="childrenToolbar"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Caption controls size adaptation on touch / tablet */
+  button[class*="captionBtn"] {
+    width: 40px;
+  }
+}
+
+/* Smooth horizontal scroll behavior for tabs */
+div[class*="tabsContainer"] {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}

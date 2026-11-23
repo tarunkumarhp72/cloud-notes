@@ -36,8 +36,12 @@
   align-items: flex-end;
   height: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
   gap: 2px;
+  flex: 1;
 }
 
 .tabsContainer::-webkit-scrollbar {

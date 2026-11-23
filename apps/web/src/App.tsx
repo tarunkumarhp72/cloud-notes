@@ -355,7 +355,17 @@ export const App: React.FC = () => {
           />
         )}
         childrenToolbar={
-          <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+          <div
+            className="responsiveToolbar"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "2px",
+              overflowX: "auto",
+              scrollbarWidth: "none",
+              maxWidth: "100%",
+            }}
+          >
             <HeadingDropdown
               activeLevel={headingLevel}
               onSelectLevel={(level) => {
