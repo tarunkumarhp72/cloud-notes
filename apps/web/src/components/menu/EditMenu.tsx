@@ -2,6 +2,7 @@ import React from "react";
 import styles from "./MenuDropdown.module.css";
 
 export interface EditMenuProps {
+  isDesktop?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
   canCut?: boolean;
@@ -28,6 +29,7 @@ export interface EditMenuProps {
 }
 
 export const EditMenu: React.FC<EditMenuProps> = ({
+  isDesktop = false,
   canUndo = true,
   canCut = false,
   canCopy = false,
@@ -119,15 +121,17 @@ export const EditMenu: React.FC<EditMenuProps> = ({
         <span className={styles.label}>Clear formatting</span>
       </button>
 
-      <button
-        type="button"
-        role="menuitem"
-        className={styles.item}
-        onClick={onSearchWithBing}
-      >
-        <span className={styles.label}>Search with Bing</span>
-        <span className={styles.shortcut}>Ctrl+E</span>
-      </button>
+      {isDesktop && (
+        <button
+          type="button"
+          role="menuitem"
+          className={styles.item}
+          onClick={onSearchWithBing}
+        >
+          <span className={styles.label}>Search with Bing</span>
+          <span className={styles.shortcut}>Ctrl+E</span>
+        </button>
+      )}
 
       <hr className={styles.divider} />
 
@@ -203,16 +207,19 @@ export const EditMenu: React.FC<EditMenuProps> = ({
         <span className={styles.shortcut}>F5</span>
       </button>
 
-      <hr className={styles.divider} />
-
-      <button
-        type="button"
-        role="menuitem"
-        className={styles.item}
-        onClick={onFont}
-      >
-        <span className={styles.label}>Font</span>
-      </button>
+      {isDesktop && (
+        <>
+          <hr className={styles.divider} />
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.item}
+            onClick={onFont}
+          >
+            <span className={styles.label}>Font</span>
+          </button>
+        </>
+      )}
     </div>
   );
 };

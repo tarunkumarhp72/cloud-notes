@@ -2,6 +2,7 @@ import React from "react";
 import styles from "./MenuDropdown.module.css";
 
 export interface FileMenuProps {
+  isDesktop?: boolean;
   onNewTab?: () => void;
   onNewWindow?: () => void;
   onNewMarkdownTab?: () => void;
@@ -17,6 +18,7 @@ export interface FileMenuProps {
 }
 
 export const FileMenu: React.FC<FileMenuProps> = ({
+  isDesktop = false,
   onNewTab,
   onNewWindow,
   onNewMarkdownTab,
@@ -42,15 +44,17 @@ export const FileMenu: React.FC<FileMenuProps> = ({
         <span className={styles.shortcut}>Ctrl+N</span>
       </button>
 
-      <button
-        type="button"
-        role="menuitem"
-        className={styles.item}
-        onClick={onNewWindow}
-      >
-        <span className={styles.label}>New window</span>
-        <span className={styles.shortcut}>Ctrl+Shift+N</span>
-      </button>
+      {isDesktop && (
+        <button
+          type="button"
+          role="menuitem"
+          className={styles.item}
+          onClick={onNewWindow}
+        >
+          <span className={styles.label}>New window</span>
+          <span className={styles.shortcut}>Ctrl+Shift+N</span>
+        </button>
+      )}
 
       <button
         type="button"
@@ -115,14 +119,16 @@ export const FileMenu: React.FC<FileMenuProps> = ({
 
       <hr className={styles.divider} />
 
-      <button
-        type="button"
-        role="menuitem"
-        className={styles.item}
-        onClick={onPageSetup}
-      >
-        <span className={styles.label}>Page setup</span>
-      </button>
+      {isDesktop && (
+        <button
+          type="button"
+          role="menuitem"
+          className={styles.item}
+          onClick={onPageSetup}
+        >
+          <span className={styles.label}>Page setup</span>
+        </button>
+      )}
 
       <button
         type="button"
@@ -146,24 +152,28 @@ export const FileMenu: React.FC<FileMenuProps> = ({
         <span className={styles.shortcut}>Ctrl+W</span>
       </button>
 
-      <button
-        type="button"
-        role="menuitem"
-        className={styles.item}
-        onClick={onCloseWindow}
-      >
-        <span className={styles.label}>Close window</span>
-        <span className={styles.shortcut}>Ctrl+Shift+W</span>
-      </button>
+      {isDesktop && (
+        <>
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.item}
+            onClick={onCloseWindow}
+          >
+            <span className={styles.label}>Close window</span>
+            <span className={styles.shortcut}>Ctrl+Shift+W</span>
+          </button>
 
-      <button
-        type="button"
-        role="menuitem"
-        className={styles.item}
-        onClick={onExit}
-      >
-        <span className={styles.label}>Exit</span>
-      </button>
+          <button
+            type="button"
+            role="menuitem"
+            className={styles.item}
+            onClick={onExit}
+          >
+            <span className={styles.label}>Exit</span>
+          </button>
+        </>
+      )}
     </div>
   );
 };

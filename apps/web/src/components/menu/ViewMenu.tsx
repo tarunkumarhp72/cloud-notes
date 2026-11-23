@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styles from "./MenuDropdown.module.css";
 
 export interface ViewMenuProps {
+  isDesktop?: boolean;
   statusBarVisible?: boolean;
   wordWrap?: boolean;
   markdownMode?: boolean;

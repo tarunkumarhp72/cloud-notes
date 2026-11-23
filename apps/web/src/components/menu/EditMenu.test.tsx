@@ -3,8 +3,17 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { EditMenu } from "./EditMenu";
 
 describe("EditMenu Component", () => {
-  it("renders all Edit items matching image copy 2.png", () => {
-    render(<EditMenu canUndo={true} canPaste={true} canCut={true} canCopy={true} canDelete={true} />);
+  it("renders all Edit items matching image copy 2.png on desktop", () => {
+    render(
+      <EditMenu
+        isDesktop={true}
+        canUndo={true}
+        canPaste={true}
+        canCut={true}
+        canCopy={true}
+        canDelete={true}
+      />
+    );
 
     expect(screen.getByRole("menuitem", { name: "UndoCtrl+Z" })).toBeDefined();
     expect(screen.getByRole("menuitem", { name: "CutCtrl+X" })).toBeDefined();
@@ -21,6 +30,24 @@ describe("EditMenu Component", () => {
     expect(screen.getByRole("menuitem", { name: "Select allCtrl+A" })).toBeDefined();
     expect(screen.getByRole("menuitem", { name: "Time/DateF5" })).toBeDefined();
     expect(screen.getByRole("menuitem", { name: "Font" })).toBeDefined();
+  });
+
+  it("hides desktop-only items when isDesktop is false (Web mode)", () => {
+    render(<EditMenu isDesktop={false} />);
+
+    expect(screen.queryByRole("menuitem", { name: "Search with BingCtrl+E" })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "Font" })).toBeNull();
+
+    // Web options are present
+    expect(screen.getByRole("menuitem", { name: "UndoCtrl+Z" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "CutCtrl+X" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "CopyCtrl+C" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "PasteCtrl+V" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "DeleteDel" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "Clear formatting" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "FindCtrl+F" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "Select allCtrl+A" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "Time/DateF5" })).toBeDefined();
   });
 
   it("disables unavailable actions dynamically", () => {

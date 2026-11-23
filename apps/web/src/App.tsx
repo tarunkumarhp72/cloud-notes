@@ -351,6 +351,7 @@ export const App: React.FC = () => {
       <MenuBar
         renderFileDropdown={() => (
           <FileMenu
+            isDesktop={isDesktop}
             onNewTab={() => handleNewTab()}
             onNewWindow={() => window.open(window.location.href, "_blank")}
             onNewMarkdownTab={() => handleNewTab("Untitled.md", "", true)}
@@ -365,20 +366,56 @@ export const App: React.FC = () => {
                 exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
               }
             }}
+            onSaveAll={() => {
+              tabs.forEach((tab) => {
+                exportNoteToFile(tab.title, tab.content, tab.isMarkdown);
+              });
+            }}
             onCloseTab={() => handleCloseTab(activeTabId)}
             onPrint={() => window.print()}
           />
         )}
         renderEditDropdown={() => (
           <EditMenu
+            isDesktop={isDesktop}
             canUndo={true}
-            canCut={false}
-            canCopy={false}
+            canCut={true}
+            canCopy={true}
             canPaste={true}
-            canDelete={false}
+            canDelete={true}
+            onUndo={() => {
+              document.execCommand("undo");
+            }}
+            onCut={() => {
+              document.execCommand("cut");
+            }}
+            onCopy={() => {
+              document.execCommand("copy");
+            }}
+            onPaste={async () => {
+              try {
+                const text = await navigator.clipboard.readText();
+                document.execCommand("insertText", false, text);
+              } catch {
+                document.execCommand("paste");
+              }
+            }}
+            onDelete={() => {
+              document.execCommand("delete");
+            }}
+            onClearFormatting={() => {
+              tipTapRef.current?.clearFormatting();
+              codeMirrorRef.current?.clearFormatting();
+            }}
             onFind={() => {
               setIsFindOpen(true);
               setIsReplaceOpen(false);
+            }}
+            onFindNext={() => {
+              setIsFindOpen(true);
+            }}
+            onFindPrevious={() => {
+              setIsFindOpen(true);
             }}
             onReplace={() => {
               setIsFindOpen(true);
@@ -388,12 +425,14 @@ export const App: React.FC = () => {
             onSelectAll={handleSelectAll}
             onTimeDate={() => {
               const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
-              console.warn("Time/Date inserted:", now);
+              document.execCommand("insertText", false, now);
             }}
+            onFont={() => setIsSettingsOpen(true)}
           />
         )}
         renderViewDropdown={() => (
           <ViewMenu
+            isDesktop={isDesktop}
             statusBarVisible={statusBarVisible}
             wordWrap={wordWrap}
             markdownMode={markdownMode}

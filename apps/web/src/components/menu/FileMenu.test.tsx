@@ -3,8 +3,8 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { FileMenu } from "./FileMenu";
 
 describe("FileMenu Component", () => {
-  it("renders all items with exact labels and shortcuts matching Windows 11 Notepad", () => {
-    render(<FileMenu />);
+  it("renders all items with exact labels and shortcuts matching Windows 11 Notepad on desktop", () => {
+    render(<FileMenu isDesktop={true} />);
 
     expect(screen.getByRole("menuitem", { name: /^New tab/i })).toBeDefined();
     expect(screen.getByText("Ctrl+N")).toBeDefined();
@@ -21,6 +21,7 @@ describe("FileMenu Component", () => {
     expect(screen.getByRole("menuitem", { name: "Save asCtrl+Shift+S" })).toBeDefined();
     expect(screen.getByRole("menuitem", { name: "Save allCtrl+Alt+S" })).toBeDefined();
 
+    expect(screen.getByRole("menuitem", { name: /^Page setup/i })).toBeDefined();
     expect(screen.getByRole("menuitem", { name: /^Print/i })).toBeDefined();
     expect(screen.getByText("Ctrl+P")).toBeDefined();
 
@@ -29,6 +30,25 @@ describe("FileMenu Component", () => {
 
     expect(screen.getByRole("menuitem", { name: /^Close window/i })).toBeDefined();
     expect(screen.getByRole("menuitem", { name: /^Exit/i })).toBeDefined();
+  });
+
+  it("hides desktop-only items when isDesktop is false (Web mode)", () => {
+    render(<FileMenu isDesktop={false} />);
+
+    expect(screen.queryByRole("menuitem", { name: /^New window/i })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /^Page setup/i })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /^Close window/i })).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /^Exit/i })).toBeNull();
+
+    // Web options are present
+    expect(screen.getByRole("menuitem", { name: /^New tab/i })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: /^New Markdown tab/i })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: /^Open/i })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "SaveCtrl+S" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "Save asCtrl+Shift+S" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: "Save allCtrl+Alt+S" })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: /^Print/i })).toBeDefined();
+    expect(screen.getByRole("menuitem", { name: /^Close tab/i })).toBeDefined();
   });
 
   it("triggers callbacks on action click", () => {
