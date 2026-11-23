@@ -18,6 +18,7 @@ export interface TipTapEditorRef {
   insertTable: (rows: number, cols: number) => void;
   setLink: (url: string) => void;
   clearFormatting: () => void;
+  selectAll: () => void;
 }
 
 export interface TipTapEditorProps {
@@ -138,6 +139,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         }
       },
       clearFormatting: () => editor?.chain().focus().unsetAllMarks().clearNodes().run(),
+      selectAll: () => editor?.chain().focus().selectAll().run(),
     }));
 
     // Synchronize external value changes if markdown differs

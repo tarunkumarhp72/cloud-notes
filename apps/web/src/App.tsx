@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
@@ -242,6 +242,21 @@ export const App: React.FC = () => {
     handleNewTab(imported.filename, imported.content, imported.isMarkdown);
   });
 
+  const isDesktop =
+    typeof window !== "undefined" &&
+    Boolean(
+      (window as unknown as { __TAURI__?: unknown; __TAURI_INTERNALS__?: unknown }).__TAURI__ ||
+        (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__
+    );
+
+  const handleSelectAll = useCallback(() => {
+    if (activeTab?.isMarkdown || markdownMode) {
+      tipTapRef.current?.selectAll();
+    } else {
+      codeMirrorRef.current?.selectAll();
+    }
+  }, [activeTab?.isMarkdown, markdownMode]);
+
   // Windows Notepad Global Shortcuts Dispatcher
   useNotepadShortcuts({
     onNewTab: () => handleNewTab(),
@@ -267,6 +282,7 @@ export const App: React.FC = () => {
       setIsReplaceOpen(true);
     },
     onGoTo: () => setIsGoToOpen(true),
+    onSelectAll: handleSelectAll,
     onTimeDate: () => {
       const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
       if (activeTabId) {
@@ -297,6 +313,7 @@ export const App: React.FC = () => {
         onCloseTab={handleCloseTab}
         onNewTab={() => handleNewTab()}
         onReorderTabs={reorderTabs}
+        showCaptionControls={isDesktop}
       />
 
       {/* Line 2: Menu Bar with File, Edit, View, Formatting Tools, Account & Settings */}
@@ -337,6 +354,7 @@ export const App: React.FC = () => {
               setIsReplaceOpen(true);
             }}
             onGoTo={() => setIsGoToOpen(true)}
+            onSelectAll={handleSelectAll}
             onTimeDate={() => {
               const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
               console.warn("Time/Date inserted:", now);
@@ -475,7 +493,9 @@ export const App: React.FC = () => {
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            backgroundColor: "var(--bg-app)",
+            backgroundColor: "var(--bg-surface)",
+            width: "100%",
+            maxWidth: "100%",
           }}
         >
           <FindReplaceBar

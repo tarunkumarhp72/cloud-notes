@@ -19,6 +19,7 @@ export interface TabStripProps {
   onMaximize?: () => void;
   onCloseWindow?: () => void;
   childrenRight?: React.ReactNode;
+  showCaptionControls?: boolean;
 }
 
 export const TabStrip: React.FC<TabStripProps> = ({
@@ -32,8 +33,21 @@ export const TabStrip: React.FC<TabStripProps> = ({
   onMaximize,
   onCloseWindow,
   childrenRight,
+  showCaptionControls,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const isDesktopEnv =
+    typeof window !== "undefined" &&
+    Boolean(
+      (window as unknown as { __TAURI__?: unknown; __TAURI_INTERNALS__?: unknown }).__TAURI__ ||
+        (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__
+    );
+
+  const shouldShowCaption =
+    showCaptionControls !== undefined
+      ? showCaptionControls
+      : isDesktopEnv || onMinimize !== undefined || onMaximize !== undefined || onCloseWindow !== undefined;
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -117,49 +131,51 @@ export const TabStrip: React.FC<TabStripProps> = ({
         {/* Right side items (e.g. AccountMenu, Settings) */}
         {childrenRight}
 
-        {/* Windows Caption Controls */}
-        <div className={styles.captionControls}>
-          <button
-            type="button"
-            className={styles.captionBtn}
-            onClick={handleMinimize}
-            aria-label="Minimize"
-            title="Minimize"
-          >
-            <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
-              <rect width="10" height="1" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className={styles.captionBtn}
-            onClick={handleMaximize}
-            aria-label={isFullscreen ? "Restore down" : "Maximize"}
-            title={isFullscreen ? "Restore down" : "Maximize"}
-          >
-            {isFullscreen ? (
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
-                <rect x="0.5" y="2.5" width="7" height="7" strokeWidth="1" />
-                <path d="M2.5 2.5V0.5H9.5V7.5H7.5" strokeWidth="1" />
+        {/* Windows Caption Controls (rendered only for desktop shells) */}
+        {shouldShowCaption && (
+          <div className={styles.captionControls}>
+            <button
+              type="button"
+              className={styles.captionBtn}
+              onClick={handleMinimize}
+              aria-label="Minimize"
+              title="Minimize"
+            >
+              <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
+                <rect width="10" height="1" />
               </svg>
-            ) : (
+            </button>
+            <button
+              type="button"
+              className={styles.captionBtn}
+              onClick={handleMaximize}
+              aria-label={isFullscreen ? "Restore down" : "Maximize"}
+              title={isFullscreen ? "Restore down" : "Maximize"}
+            >
+              {isFullscreen ? (
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
+                  <rect x="0.5" y="2.5" width="7" height="7" strokeWidth="1" />
+                  <path d="M2.5 2.5V0.5H9.5V7.5H7.5" strokeWidth="1" />
+                </svg>
+              ) : (
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
+                  <rect x="0.5" y="0.5" width="9" height="9" strokeWidth="1" />
+                </svg>
+              )}
+            </button>
+            <button
+              type="button"
+              className={`${styles.captionBtn} ${styles.closeCaption}`}
+              onClick={handleClose}
+              aria-label="Close"
+              title="Close"
+            >
               <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
-                <rect x="0.5" y="0.5" width="9" height="9" strokeWidth="1" />
+                <path d="M1 1L9 9M9 1L1 9" />
               </svg>
-            )}
-          </button>
-          <button
-            type="button"
-            className={`${styles.captionBtn} ${styles.closeCaption}`}
-            onClick={handleClose}
-            aria-label="Close"
-            title="Close"
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
-              <path d="M1 1L9 9M9 1L1 9" />
-            </svg>
-          </button>
-        </div>
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

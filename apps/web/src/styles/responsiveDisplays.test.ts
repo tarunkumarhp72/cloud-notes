@@ -18,7 +18,7 @@ describe("T-042 Dual-screen and Ultra-wide Display Styles", () => {
     expect(content).toContain("responsiveToolbar");
   });
 
-  it("ultrawide.css clamps toolbar stretching and maintains readable editor proportions", () => {
+  it("ultrawide.css clamps toolbar stretching and maintains full-width edge-to-edge editor", () => {
     const cssPath = path.resolve(__dirname, "ultrawide.css");
     expect(fs.existsSync(cssPath)).toBe(true);
     const content = fs.readFileSync(cssPath, "utf-8");
@@ -28,8 +28,8 @@ describe("T-042 Dual-screen and Ultra-wide Display Styles", () => {
     expect(content).toContain("min-width: 2560px");
     // Clamps toolbar
     expect(content).toContain(".responsiveToolbar");
-    // Maintains readable editor margins
-    expect(content).toContain("max-width: 1500px");
-    expect(content).toContain("max-width: 1680px");
+    // Full width edge-to-edge
+    expect(content).toContain("width: 100%");
+    expect(content).toContain("editorWrapper");
   });
 });

@@ -1,7 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { EditorState, Compartment } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
-import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap, selectAll } from "@codemirror/commands";
 import styles from "./editor.module.css";
 
 export interface CodeMirrorEditorRef {
@@ -13,6 +13,7 @@ export interface CodeMirrorEditorRef {
   goToLine: (line: number) => boolean;
   getTotalLines: () => number;
   focus: () => void;
+  selectAll: () => void;
 }
 
 export interface CodeMirrorEditorProps {
@@ -208,6 +209,15 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
         view.focus();
         return true;
       },
+      selectAll: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        view.dispatch({
+          selection: { anchor: 0, head: view.state.doc.length },
+          scrollIntoView: false,
+        });
+        view.focus();
+      },
     }));
 
     // Initialize CodeMirror 6 View
@@ -225,7 +235,11 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
         doc: value,
         extensions: [
           history(),
-          keymap.of([...defaultKeymap, ...historyKeymap]),
+          keymap.of([
+            { key: "Mod-a", run: selectAll },
+            ...defaultKeymap,
+            ...historyKeymap,
+          ]),
           wrapCompartment.current.of(wordWrap ? EditorView.lineWrapping : []),
           themeCompartment.current.of(baseTheme),
           readOnlyCompartment.current.of(EditorState.readOnly.of(readOnly)),
