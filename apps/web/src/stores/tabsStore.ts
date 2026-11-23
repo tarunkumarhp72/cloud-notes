@@ -22,6 +22,7 @@ export interface TabsState {
   reorderTabs: (sourceIndex: number, destinationIndex: number) => void;
   cycleNextTab: () => void;
   cyclePreviousTab: () => void;
+  resetTabs: () => void;
 }
 
 const initialTabId = "note-initial";
@@ -165,5 +166,23 @@ export const useTabsStore = create<TabsState>((set, get) => ({
     const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
     const prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
     set({ activeTabId: tabs[prevIndex].id });
+  },
+
+  resetTabs: () => {
+    const id = "note-initial";
+    set({
+      tabs: [
+        {
+          id,
+          title: "Untitled",
+          content: "",
+          isDirty: false,
+          isMarkdown: false,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        },
+      ],
+      activeTabId: id,
+    });
   },
 }));

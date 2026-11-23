@@ -75,3 +75,10 @@ export async function closeDb(): Promise<void> {
     dbInstance = null;
   }
 }
+
+export async function clearAllLocalData(): Promise<void> {
+  const db = await getDb();
+  await db.clear("notes");
+  await db.clear("vault");
+  await db.clear("outbox");
+}

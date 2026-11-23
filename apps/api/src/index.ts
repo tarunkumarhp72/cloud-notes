@@ -3,6 +3,7 @@ import { handle } from "hono/vercel";
 import { checkDbConnection } from "./db";
 import { authRouter } from "./routes/auth";
 import { syncRouter } from "./routes/sync";
+import { accountRouter } from "./routes/account";
 import { cspMiddleware } from "./security/csp";
 import { rateLimitMiddleware } from "./middleware/rateLimit";
 
@@ -40,6 +41,8 @@ app.use(
 app.route("/auth", authRouter);
 app.route("/sync", syncRouter);
 app.route("/api/sync", syncRouter);
+app.route("/account", accountRouter);
+app.route("/api/account", accountRouter);
 
 app.get("/health", async (c) => {
   const dbStatus = await checkDbConnection();

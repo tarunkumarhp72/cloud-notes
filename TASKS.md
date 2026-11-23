@@ -707,7 +707,7 @@
 - Tests to run: `pnpm --filter api test`
 - Viewports to screenshot: 1440x900
 - Depends on: T-021, T-044
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-045/summary.md)
 
 ---
 

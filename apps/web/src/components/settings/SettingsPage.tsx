@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "./SettingsPage.module.css";
 import { useSettingsStore, AppTheme } from "../../stores/settingsStore";
+import { DeleteAccountModal } from "./DeleteAccountModal";
 
 export interface SettingsPageProps {
   onBack: () => void;
+  accessToken?: string;
+  onAccountDeleted?: () => void;
 }
 
 const BackArrowIcon: React.FC = () => (
@@ -12,7 +15,12 @@ const BackArrowIcon: React.FC = () => (
   </svg>
 );
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = ({
+  onBack,
+  accessToken,
+  onAccountDeleted,
+}) => {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const {
     theme,
     fontFamily,
@@ -186,7 +194,48 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
             </p>
           </div>
         </section>
+
+        {/* Account & Data */}
+        <section className={styles.card}>
+          <div className={styles.cardRow}>
+            <div className={styles.cardMeta}>
+              <h2 className={styles.cardTitle} style={{ color: "#e81123" }}>
+                Account & Privacy
+              </h2>
+              <p className={styles.cardDescription}>
+                Permanently purge all cloud notes, encryption keys, and account records.
+              </p>
+            </div>
+            <button
+              type="button"
+              className={styles.select}
+              style={{
+                width: "auto",
+                backgroundColor: "rgba(232, 17, 35, 0.1)",
+                color: "#e81123",
+                borderColor: "rgba(232, 17, 35, 0.3)",
+                fontWeight: 600,
+                cursor: "pointer",
+                padding: "6px 14px",
+              }}
+              onClick={() => setIsDeleteModalOpen(true)}
+            >
+              Delete Account
+            </button>
+          </div>
+        </section>
       </div>
+
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onDeleted={() => {
+          setIsDeleteModalOpen(false);
+          onAccountDeleted?.();
+          onBack();
+        }}
+        accessToken={accessToken}
+      />
     </div>
   );
 };

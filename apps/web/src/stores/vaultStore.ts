@@ -33,6 +33,7 @@ export interface VaultState {
   unlockVault: (passphrase: string) => Promise<boolean>;
   recoverVault: (recoveryKey: string) => Promise<boolean>;
   lockVault: () => void;
+  resetVault: () => void;
   setError: (err: string | null) => void;
 }
 
@@ -186,6 +187,16 @@ export const useVaultStore = create<VaultState>((set) => ({
     set({
       vaultKey: null,
       isLocked: true,
+    });
+  },
+
+  resetVault: () => {
+    set({
+      isInitialized: false,
+      isLocked: true,
+      vaultKey: null,
+      salt: null,
+      error: null,
     });
   },
 }));

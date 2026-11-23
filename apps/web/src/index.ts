@@ -16,6 +16,7 @@ export * from "./components/toolbar/FormatButtons";
 export * from "./components/toolbar/LinkModal";
 export * from "./components/toolbar/TableDropdown";
 export * from "./components/settings/SettingsPage";
+export * from "./components/settings/DeleteAccountModal";
 export * from "./stores/settingsStore";
 export * from "./components/editor/CodeMirrorEditor";
 export * from "./components/editor/TipTapEditor";
