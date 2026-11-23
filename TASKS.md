@@ -514,7 +514,7 @@
 - Tests to run: `pnpm --filter api test`
 - Viewports to screenshot: none
 - Depends on: T-003, T-008
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-033/summary.md)
 
 - ID: T-034
 - Title: Background sync worker and status-bar sync states
