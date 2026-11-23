@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import styles from "./LinkModal.module.css";
 import toolbarStyles from "./Toolbar.module.css";
 import { sanitizeUrl } from "../../security/sanitize";
+import { Tooltip } from "../ui/Tooltip";
 
 export interface LinkModalProps {
   isOpen: boolean;
@@ -15,18 +16,20 @@ export const LinkButton: React.FC<{ onClick?: () => void; disabled?: boolean }> 
   onClick,
   disabled = false,
 }) => (
-  <button
-    type="button"
-    className={toolbarStyles.toolbarBtn}
-    aria-label="Link"
-    disabled={disabled}
-    onClick={onClick}
-    style={{ width: "28px", justifyContent: "center" }}
-  >
-    <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-      <path d="M6.88 9.12a3 3 0 0 1 0-4.24l2.12-2.12a3 3 0 0 1 4.24 4.24l-1.06 1.06a.75.75 0 0 1-1.06-1.06l1.06-1.06a1.5 1.5 0 1 0-2.12-2.12L7.94 5.94a1.5 1.5 0 0 0 0 2.12.75.75 0 0 1-1.06 1.06zm2.24-2.24a3 3 0 0 1 0 4.24l-2.12 2.12a3 3 0 1 1-4.24-4.24l1.06-1.06a.75.75 0 0 1 1.06 1.06L3.82 11.06a1.5 1.5 0 1 0 2.12 2.12l2.12-2.12a1.5 1.5 0 0 0 0-2.12.75.75 0 0 1 1.06-1.06z" />
-    </svg>
-  </button>
+  <Tooltip content="Insert link" position="top">
+    <button
+      type="button"
+      className={toolbarStyles.toolbarBtn}
+      aria-label="Link"
+      disabled={disabled}
+      onClick={onClick}
+      style={{ width: "28px", justifyContent: "center" }}
+    >
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M6.88 9.12a3 3 0 0 1 0-4.24l2.12-2.12a3 3 0 0 1 4.24 4.24l-1.06 1.06a.75.75 0 0 1-1.06-1.06l1.06-1.06a1.5 1.5 0 1 0-2.12-2.12L7.94 5.94a1.5 1.5 0 0 0 0 2.12.75.75 0 0 1-1.06 1.06zm2.24-2.24a3 3 0 0 1 0 4.24l-2.12 2.12a3 3 0 1 1-4.24-4.24l1.06-1.06a.75.75 0 0 1 1.06 1.06L3.82 11.06a1.5 1.5 0 1 0 2.12 2.12l2.12-2.12a1.5 1.5 0 0 0 0-2.12.75.75 0 0 1 1.06-1.06z" />
+      </svg>
+    </button>
+  </Tooltip>
 );
 
 export const LinkModal: React.FC<LinkModalProps> = ({

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./TableDropdown.module.css";
 import toolbarStyles from "./Toolbar.module.css";
+import { Tooltip } from "../ui/Tooltip";
 
 export interface TableDropdownProps {
   onInsertTable?: (rows: number, cols: number) => void;
@@ -78,20 +79,22 @@ export const TableDropdown: React.FC<TableDropdownProps> = ({
 
   return (
     <div className={toolbarStyles.dropdownWrapper} ref={containerRef}>
-      <button
-        type="button"
-        className={`${toolbarStyles.toolbarBtn} ${isOpen ? toolbarStyles.active : ""}`}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-label="Table"
-        disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
-      >
-        <TableIcon />
-        <span className={toolbarStyles.chevron}>
-          <ChevronDownIcon />
-        </span>
-      </button>
+      <Tooltip content="Insert table" position="top">
+        <button
+          type="button"
+          className={`${toolbarStyles.toolbarBtn} ${isOpen ? toolbarStyles.active : ""}`}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          aria-label="Table"
+          disabled={disabled}
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          <TableIcon />
+          <span className={toolbarStyles.chevron}>
+            <ChevronDownIcon />
+          </span>
+        </button>
+      </Tooltip>
 
       {isOpen && (
         <div className={styles.dropdown} role="menu" aria-label="Table menu">

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styles from "./TabStrip.module.css";
 import { Tab } from "./TabStrip";
+import { Tooltip } from "../ui/Tooltip";
 
 export interface TabItemProps {
   tab: Tab;
@@ -78,17 +79,19 @@ export const TabItem: React.FC<TabItemProps> = ({
         <span className={styles.dirtyDot} title="Unsaved changes" aria-label="Unsaved changes" />
       )}
 
-      <button
-        type="button"
-        className={styles.closeBtn}
-        aria-label={`Close tab ${tab.title}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-      >
-        ×
-      </button>
+      <Tooltip content="Close tab (Ctrl+W)" position="bottom">
+        <button
+          type="button"
+          className={styles.closeBtn}
+          aria-label={`Close tab ${tab.title}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+        >
+          ×
+        </button>
+      </Tooltip>
     </div>
   );
 };

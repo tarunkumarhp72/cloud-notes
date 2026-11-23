@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./Toolbar.module.css";
+import { Tooltip } from "../ui/Tooltip";
 
 export interface ListDropdownProps {
   activeList?: "bullet" | "number" | null;
@@ -68,20 +69,22 @@ export const ListDropdown: React.FC<ListDropdownProps> = ({
 
   return (
     <div className={styles.dropdownWrapper} ref={containerRef}>
-      <button
-        type="button"
-        className={`${styles.toolbarBtn} ${isOpen ? styles.active : ""}`}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-label="Lists"
-        disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
-      >
-        <BulletListIcon />
-        <span className={styles.chevron}>
-          <ChevronDownIcon />
-        </span>
-      </button>
+      <Tooltip content="Lists" position="top">
+        <button
+          type="button"
+          className={`${styles.toolbarBtn} ${isOpen ? styles.active : ""}`}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          aria-label="Lists"
+          disabled={disabled}
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          <BulletListIcon />
+          <span className={styles.chevron}>
+            <ChevronDownIcon />
+          </span>
+        </button>
+      </Tooltip>
 
       {isOpen && (
         <div className={styles.dropdown} role="menu" aria-label="Lists menu" style={{ minWidth: "150px" }}>

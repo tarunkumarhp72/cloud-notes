@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./TabStrip.module.css";
 import { TabItem } from "./TabItem";
+import { Tooltip } from "../ui/Tooltip";
 
 export interface Tab {
   id: string;
@@ -113,17 +114,18 @@ export const TabStrip: React.FC<TabStripProps> = ({
           ))}
 
           {/* New Tab (+) Button */}
-          <button
-            type="button"
-            className={styles.newTabBtn}
-            onClick={onNewTab}
-            aria-label="New tab (Ctrl+N)"
-            title="New tab (Ctrl+N)"
-          >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M6 1v10M1 6h10" strokeLinecap="round" />
-            </svg>
-          </button>
+          <Tooltip content="New tab (Ctrl+N)" position="bottom" align="start">
+            <button
+              type="button"
+              className={styles.newTabBtn}
+              onClick={onNewTab}
+              aria-label="New tab (Ctrl+N)"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M6 1v10M1 6h10" strokeLinecap="round" />
+              </svg>
+            </button>
+          </Tooltip>
         </div>
       </div>
 

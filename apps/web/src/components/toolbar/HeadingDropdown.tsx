@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./Toolbar.module.css";
+import { Tooltip } from "../ui/Tooltip";
 
 export type HeadingLevel =
   | "title"
@@ -83,20 +84,22 @@ export const HeadingDropdown: React.FC<HeadingDropdownProps> = ({
 
   return (
     <div className={styles.dropdownWrapper} ref={containerRef}>
-      <button
-        type="button"
-        className={`${styles.toolbarBtn} ${isOpen ? styles.active : ""}`}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-        aria-label="Style"
-        disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
-      >
-        <span>{activeOption.shortLabel}</span>
-        <span className={styles.chevron}>
-          <ChevronDownIcon />
-        </span>
-      </button>
+      <Tooltip content="Style" position="top">
+        <button
+          type="button"
+          className={`${styles.toolbarBtn} ${isOpen ? styles.active : ""}`}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+          aria-label="Style"
+          disabled={disabled}
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          <span>{activeOption.shortLabel}</span>
+          <span className={styles.chevron}>
+            <ChevronDownIcon />
+          </span>
+        </button>
+      </Tooltip>
 
       {isOpen && (
         <div className={styles.dropdown} role="menu" aria-label="Style menu">

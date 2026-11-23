@@ -12,6 +12,8 @@ import { FormatButtons, ClearFormattingButton } from "./components/toolbar/Forma
 import { LinkModal, LinkButton } from "./components/toolbar/LinkModal";
 import { TableDropdown } from "./components/toolbar/TableDropdown";
 import { SettingsPage } from "./components/settings/SettingsPage";
+import { Tooltip } from "./components/ui/Tooltip";
+import { SettingsIcon } from "./components/icons/SettingsIcon";
 import { TipTapEditorRef } from "./components/editor/TipTapEditor";
 import { FindReplaceBar } from "./components/editor/FindReplaceBar";
 import { GoToDialog } from "./components/editor/GoToDialog";
@@ -455,28 +457,27 @@ export const App: React.FC = () => {
             />
 
             {/* Settings Button */}
-            <button
-              type="button"
-              style={{
-                width: "32px",
-                height: "32px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: isSettingsOpen ? "var(--bg-active)" : "none",
-                border: "none",
-                borderRadius: "4px",
-                color: "var(--text-primary)",
-                cursor: "pointer",
-              }}
-              aria-label="Settings"
-              onClick={() => setIsSettingsOpen((prev) => !prev)}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 4.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5zM5.75 8a2.25 2.25 0 1 1 4.5 0 2.25 2.25 0 0 1-4.5 0z" />
-                <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34z" />
-              </svg>
-            </button>
+            <Tooltip content="Settings" position="bottom" align="end">
+              <button
+                type="button"
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: isSettingsOpen ? "var(--bg-active)" : "none",
+                  border: "none",
+                  borderRadius: "4px",
+                  color: "var(--text-primary)",
+                  cursor: "pointer",
+                }}
+                aria-label="Settings"
+                onClick={() => setIsSettingsOpen((prev) => !prev)}
+              >
+                <SettingsIcon size={16} />
+              </button>
+            </Tooltip>
           </div>
         }
       />
