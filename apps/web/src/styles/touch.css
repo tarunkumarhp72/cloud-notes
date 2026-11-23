@@ -1,0 +1,78 @@
+/* Touch Target Sizing & Virtual Keyboard Mobile Viewport Layout */
+
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+}
+
+.appContainer {
+  min-height: 100dvh;
+  height: 100dvh;
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
+  padding-right: var(--safe-area-inset-right);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Minimum 44x44 CSS px touch target when pointer is coarse (Touch screens / mobile) */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  select,
+  input[type="checkbox"],
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Specific toolbar buttons */
+  div[class*="toolbarGroup"] button,
+  div[class*="childrenToolbar"] button,
+  div[class*="rightGroup"] button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Tabs on touch devices */
+  div[class*="tab"] {
+    min-height: 44px;
+    padding: 0 12px;
+  }
+
+  /* Close button on tab */
+  button[class*="closeBtn"] {
+    min-height: 36px;
+    min-width: 36px;
+  }
+
+  /* New tab button */
+  button[class*="newTabBtn"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Caption buttons on touch */
+  button[class*="captionBtn"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Status bar touch elements */
+  footer button,
+  div[class*="statusBar"] button {
+    min-height: 36px;
+  }
+}

@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { App } from "./App";
 import "./styles/theme.css";
 import "./styles/responsive.css";
+import "./styles/touch.css";
 import { useTabsStore } from "./stores/tabsStore";
 import { handleSyncConflict } from "./sync/conflictHandler";
 import { registerServiceWorker } from "./sw";

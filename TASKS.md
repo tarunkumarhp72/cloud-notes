@@ -643,7 +643,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 390x844 (touch mode)
 - Depends on: T-040
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-041/summary.md)
 
 - ID: T-042
 - Title: Dual-screen and ultra-wide display adaptation

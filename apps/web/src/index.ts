@@ -29,6 +29,7 @@ export * from "./sync/conflictHandler";
 export * from "./sync/broadcast";
 export * from "./sync/networkStatus";
 export * from "./sw";
+export * from "./hooks/useVisualViewport";
 export * from "./shortcuts/shortcutsDispatcher";
 export * from "./sync/localAutoSave";
 export * from "./components/file/fileIo";

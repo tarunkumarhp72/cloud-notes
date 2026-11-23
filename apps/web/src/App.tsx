@@ -23,6 +23,7 @@ import { useLocalAutoSave } from "./sync/localAutoSave";
 import { SyncEngine, type SyncStatus } from "./sync/syncEngine";
 import { TabBroadcastSync } from "./sync/broadcast";
 import { networkMonitor } from "./sync/networkStatus";
+import { useVisualViewport } from "./hooks/useVisualViewport";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
@@ -284,8 +285,10 @@ export const App: React.FC = () => {
     },
   });
 
+  useVisualViewport();
+
   return (
-    <div style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", backgroundColor: "var(--bg-app)" }}>
+    <div className="appContainer" style={{ backgroundColor: "var(--bg-app)" }}>
       {/* Line 1: Title Bar with TabStrip and Window Controls */}
       <TabStrip
         tabs={tabs}
