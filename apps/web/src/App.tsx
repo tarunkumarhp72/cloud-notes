@@ -50,12 +50,14 @@ export const App: React.FC = () => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [statusBarVisible, setStatusBarVisible] = useState(true);
   const [wordWrap, setWordWrap] = useState(false);
-  const [markdownMode, setMarkdownMode] = useState(false);
+  const [markdownMode, setMarkdownMode] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [headingLevel, setHeadingLevel] = useState<HeadingLevel>("title");
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
+  const [canIndent, setCanIndent] = useState(false);
+  const [canOutdent, setCanOutdent] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
@@ -135,21 +137,21 @@ export const App: React.FC = () => {
             const first = sorted[0];
             let title = "Untitled";
             let content = "";
-            let isMarkdown = false;
+            let isMarkdown = true;
             try {
               const parsed = JSON.parse(first.encryptedEnvelope);
               title = parsed.title || "Untitled";
               content = parsed.content || "";
-              isMarkdown = !!parsed.isMarkdown;
+              isMarkdown = true; // Always default to rich text WYSIWYG
             } catch {
               content = first.encryptedEnvelope;
+              isMarkdown = true;
             }
             useTabsStore.getState().updateTabContent(currentTabs[0].id, content);
             useTabsStore.getState().setTabTitle(currentTabs[0].id, title);
             useTabsStore.getState().setTabDirty(currentTabs[0].id, false);
-            if (isMarkdown) {
-              setMarkdownMode(true);
-            }
+            useTabsStore.getState().setTabMarkdown(currentTabs[0].id, isMarkdown);
+            setMarkdownMode(isMarkdown);
           }
         }
       } catch (err) {
@@ -192,11 +194,11 @@ export const App: React.FC = () => {
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
 
-  const handleNewTab = (title?: string, content?: string, isMarkdown?: boolean) => {
+  const handleNewTab = (title?: string, content?: string, isMarkdown = true) => {
     const newId = createTab(title, content, isMarkdown);
     broadcastRef.current?.broadcast({
       type: "TAB_CREATED",
-      payload: { noteId: newId, title: title || "Untitled", content: content || "", isMarkdown: !!isMarkdown },
+      payload: { noteId: newId, title: title || "Untitled", content: content || "", isMarkdown: isMarkdown },
     });
     return newId;
   };
@@ -259,32 +261,29 @@ export const App: React.FC = () => {
     }
   }, [activeTab?.isMarkdown, markdownMode]);
 
-  const handleToggleBold = useCallback(() => {
-    if (activeTab?.isMarkdown || markdownMode) {
-      tipTapRef.current?.toggleBold();
-    } else {
-      codeMirrorRef.current?.toggleBold();
+  const ensureRichText = useCallback(() => {
+    if (!activeTab?.isMarkdown || !markdownMode) {
+      setMarkdownMode(true);
+      if (activeTabId) {
+        useTabsStore.getState().setTabMarkdown(activeTabId, true);
+      }
     }
-    setIsBold((b) => !b);
-  }, [activeTab?.isMarkdown, markdownMode]);
+  }, [activeTab?.isMarkdown, markdownMode, activeTabId]);
+
+  const handleToggleBold = useCallback(() => {
+    ensureRichText();
+    tipTapRef.current?.toggleBold();
+  }, [ensureRichText]);
 
   const handleToggleItalic = useCallback(() => {
-    if (activeTab?.isMarkdown || markdownMode) {
-      tipTapRef.current?.toggleItalic();
-    } else {
-      codeMirrorRef.current?.toggleItalic();
-    }
-    setIsItalic((i) => !i);
-  }, [activeTab?.isMarkdown, markdownMode]);
+    ensureRichText();
+    tipTapRef.current?.toggleItalic();
+  }, [ensureRichText]);
 
   const handleToggleStrike = useCallback(() => {
-    if (activeTab?.isMarkdown || markdownMode) {
-      tipTapRef.current?.toggleStrike();
-    } else {
-      codeMirrorRef.current?.toggleStrike();
-    }
-    setIsStrikethrough((s) => !s);
-  }, [activeTab?.isMarkdown, markdownMode]);
+    ensureRichText();
+    tipTapRef.current?.toggleStrike();
+  }, [ensureRichText]);
 
   // Windows Notepad Global Shortcuts Dispatcher
   useNotepadShortcuts({
@@ -400,7 +399,13 @@ export const App: React.FC = () => {
             zoomLevel={zoomLevel}
             onToggleStatusBar={() => setStatusBarVisible((v) => !v)}
             onToggleWordWrap={() => setWordWrap((w) => !w)}
-            onToggleMarkdown={() => setMarkdownMode((m) => !m)}
+            onToggleMarkdown={() => {
+              const next = !markdownMode;
+              setMarkdownMode(next);
+              if (activeTabId) {
+                useTabsStore.getState().setTabMarkdown(activeTabId, next);
+              }
+            }}
             onZoomIn={() => setZoomLevel((z) => Math.min(500, z + 10))}
             onZoomOut={() => setZoomLevel((z) => Math.max(10, z - 10))}
             onResetZoom={() => setZoomLevel(100)}
@@ -421,14 +426,10 @@ export const App: React.FC = () => {
             <HeadingDropdown
               activeLevel={headingLevel}
               onSelectLevel={(level) => {
+                ensureRichText();
                 setHeadingLevel(level);
-                const isMd = activeTab?.isMarkdown || markdownMode;
                 if (level === "body") {
-                  if (isMd) {
-                    tipTapRef.current?.setParagraph();
-                  } else {
-                    codeMirrorRef.current?.setParagraph();
-                  }
+                  tipTapRef.current?.setParagraph();
                 } else {
                   const levelMap: Record<string, 1 | 2 | 3 | 4 | 5 | 6> = {
                     title: 1,
@@ -439,28 +440,26 @@ export const App: React.FC = () => {
                     subsection: 6,
                   };
                   const num = levelMap[level] || 1;
-                  if (isMd) {
-                    tipTapRef.current?.setHeading(num);
-                  } else {
-                    codeMirrorRef.current?.setHeading(num);
-                  }
+                  tipTapRef.current?.setHeading(num);
                 }
               }}
             />
             <ListDropdown
+              canIndent={canIndent}
+              canOutdent={canOutdent}
               onToggleBullet={() => {
-                if (activeTab?.isMarkdown || markdownMode) {
-                  tipTapRef.current?.toggleBulletList();
-                } else {
-                  codeMirrorRef.current?.toggleBulletList();
-                }
+                ensureRichText();
+                tipTapRef.current?.toggleBulletList();
               }}
               onToggleNumber={() => {
-                if (activeTab?.isMarkdown || markdownMode) {
-                  tipTapRef.current?.toggleOrderedList();
-                } else {
-                  codeMirrorRef.current?.toggleOrderedList();
-                }
+                ensureRichText();
+                tipTapRef.current?.toggleOrderedList();
+              }}
+              onIndent={() => {
+                tipTapRef.current?.indent?.();
+              }}
+              onOutdent={() => {
+                tipTapRef.current?.outdent?.();
               }}
             />
             <FormatButtons
@@ -475,23 +474,18 @@ export const App: React.FC = () => {
             <LinkButton onClick={() => setShowLinkModal(true)} />
             <TableDropdown
               onInsertTable={(rows, cols) => {
-                if (activeTab?.isMarkdown || markdownMode) {
-                  tipTapRef.current?.insertTable(rows, cols);
-                } else {
-                  codeMirrorRef.current?.insertTable(rows, cols);
-                }
+                ensureRichText();
+                tipTapRef.current?.insertTable(rows, cols);
               }}
             />
             <ClearFormattingButton
               onClick={() => {
-                if (activeTab?.isMarkdown || markdownMode) {
-                  tipTapRef.current?.clearFormatting();
-                } else {
-                  codeMirrorRef.current?.clearFormatting();
-                }
+                ensureRichText();
+                tipTapRef.current?.clearFormatting();
                 setIsBold(false);
                 setIsItalic(false);
                 setIsStrikethrough(false);
+                setHeadingLevel("body");
               }}
             />
           </div>
@@ -611,6 +605,14 @@ export const App: React.FC = () => {
                 onCursorChange={(line, col, charCount) => {
                   setCursorPos({ line, col, charCount });
                 }}
+                onActiveFormatsChange={({ isBold, isItalic, isStrikethrough, headingLevel, canIndent, canOutdent }) => {
+                  setIsBold(isBold);
+                  setIsItalic(isItalic);
+                  setIsStrikethrough(isStrikethrough);
+                  setHeadingLevel(headingLevel);
+                  setCanIndent(canIndent);
+                  setCanOutdent(canOutdent);
+                }}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
               />
@@ -643,7 +645,7 @@ export const App: React.FC = () => {
         line={cursorPos.line}
         col={cursorPos.col}
         charCount={cursorPos.charCount}
-        mode={markdownMode ? "markdown" : "plain"}
+        mode={activeTab?.isMarkdown ?? markdownMode ? "markdown" : "plain"}
         zoomLevel={zoomLevel}
         lineEnding="Windows (CRLF)"
         encoding="UTF-8"
@@ -683,11 +685,8 @@ export const App: React.FC = () => {
         isOpen={showLinkModal}
         onClose={() => setShowLinkModal(false)}
         onInsert={(text, url) => {
-          if (activeTab?.isMarkdown || markdownMode) {
-            tipTapRef.current?.setLink(url);
-          } else {
-            codeMirrorRef.current?.insertLink(text, url);
-          }
+          ensureRichText();
+          tipTapRef.current?.setLink(url, text);
           setShowLinkModal(false);
         }}
       />

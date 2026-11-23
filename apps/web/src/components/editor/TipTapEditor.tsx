@@ -6,6 +6,7 @@ import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table
 import { Markdown } from "tiptap-markdown";
 import styles from "./editor.module.css";
 import { sanitizeUrl } from "../../security/sanitize";
+import type { HeadingLevel } from "../toolbar/HeadingDropdown";
 
 export interface TipTapEditorRef {
   toggleBold: () => void;
@@ -15,8 +16,10 @@ export interface TipTapEditorRef {
   setParagraph: () => void;
   toggleBulletList: () => void;
   toggleOrderedList: () => void;
+  indent?: () => void;
+  outdent?: () => void;
   insertTable: (rows: number, cols: number) => void;
-  setLink: (url: string) => void;
+  setLink: (url: string, text?: string) => void;
   clearFormatting: () => void;
   selectAll: () => void;
 }
@@ -25,6 +28,14 @@ export interface TipTapEditorProps {
   value: string;
   onChange?: (markdown: string) => void;
   onCursorChange?: (line: number, col: number, charCount: number) => void;
+  onActiveFormatsChange?: (formats: {
+    isBold: boolean;
+    isItalic: boolean;
+    isStrikethrough: boolean;
+    headingLevel: HeadingLevel;
+    canIndent: boolean;
+    canOutdent: boolean;
+  }) => void;
   fontFamily?: string;
   fontSize?: number;
   readOnly?: boolean;
@@ -46,12 +57,43 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       value,
       onChange,
       onCursorChange,
+      onActiveFormatsChange,
       fontFamily = "Segoe UI Variable",
       fontSize = 14,
       readOnly = false,
     },
     ref
   ) => {
+    const updateActiveFormats = (ed: NonNullable<ReturnType<typeof useEditor>>) => {
+      if (ed.isDestroyed || !ed.state?.doc || !ed.state?.selection) return;
+      try {
+        const isBold = ed.isActive("bold");
+        const isItalic = ed.isActive("italic");
+        const isStrike = ed.isActive("strike");
+        let headingLevel: HeadingLevel = "body";
+        if (ed.isActive("heading", { level: 1 })) headingLevel = "title";
+        else if (ed.isActive("heading", { level: 2 })) headingLevel = "subtitle";
+        else if (ed.isActive("heading", { level: 3 })) headingLevel = "heading";
+        else if (ed.isActive("heading", { level: 4 })) headingLevel = "subheading";
+        else if (ed.isActive("heading", { level: 5 })) headingLevel = "section";
+        else if (ed.isActive("heading", { level: 6 })) headingLevel = "subsection";
+
+        const canIndent = Boolean(ed.can().sinkListItem("listItem"));
+        const canOutdent = Boolean(ed.can().liftListItem("listItem"));
+
+        onActiveFormatsChange?.({
+          isBold,
+          isItalic,
+          isStrikethrough: isStrike,
+          headingLevel,
+          canIndent,
+          canOutdent,
+        });
+      } catch {
+        // ignore
+      }
+    };
+
     const editor = useEditor({
       extensions: [
         StarterKit.configure({
@@ -100,6 +142,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             // ignore
           }
         }
+        updateActiveFormats(editor);
       },
       onSelectionUpdate: ({ editor }) => {
         if (!editor.isDestroyed && editor.state?.doc && editor.state?.selection) {
@@ -115,30 +158,69 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             // ignore
           }
         }
+        updateActiveFormats(editor);
       },
     });
 
     useImperativeHandle(ref, () => ({
-      toggleBold: () => editor?.chain().focus().toggleBold().run(),
-      toggleItalic: () => editor?.chain().focus().toggleItalic().run(),
-      toggleStrike: () => editor?.chain().focus().toggleStrike().run(),
-      setHeading: (level) => editor?.chain().focus().toggleHeading({ level }).run(),
-      setParagraph: () => editor?.chain().focus().setParagraph().run(),
-      toggleBulletList: () => editor?.chain().focus().toggleBulletList().run(),
-      toggleOrderedList: () => editor?.chain().focus().toggleOrderedList().run(),
+      toggleBold: () => {
+        editor?.chain().focus().toggleBold().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      toggleItalic: () => {
+        editor?.chain().focus().toggleItalic().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      toggleStrike: () => {
+        editor?.chain().focus().toggleStrike().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      setHeading: (level) => {
+        editor?.chain().focus().toggleHeading({ level }).run();
+        if (editor) updateActiveFormats(editor);
+      },
+      setParagraph: () => {
+        editor?.chain().focus().setParagraph().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      toggleBulletList: () => {
+        editor?.chain().focus().toggleBulletList().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      toggleOrderedList: () => {
+        editor?.chain().focus().toggleOrderedList().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      indent: () => {
+        editor?.chain().focus().sinkListItem("listItem").run();
+        if (editor) updateActiveFormats(editor);
+      },
+      outdent: () => {
+        editor?.chain().focus().liftListItem("listItem").run();
+        if (editor) updateActiveFormats(editor);
+      },
       insertTable: (rows, cols) =>
         editor
           ?.chain()
           .focus()
           .insertTable({ rows, cols, withHeaderRow: true })
           .run(),
-      setLink: (url) => {
+      setLink: (url, text) => {
         const cleanUrl = sanitizeUrl(url);
-        if (cleanUrl) {
-          editor?.chain().focus().setLink({ href: cleanUrl }).run();
+        if (cleanUrl && editor) {
+          if (editor.state.selection.empty) {
+            const displayText = text || cleanUrl;
+            editor.chain().focus().insertContent(`<a href="${cleanUrl}">${displayText}</a>`).run();
+          } else {
+            editor.chain().focus().setLink({ href: cleanUrl }).run();
+          }
+          updateActiveFormats(editor);
         }
       },
-      clearFormatting: () => editor?.chain().focus().unsetAllMarks().clearNodes().run(),
+      clearFormatting: () => {
+        editor?.chain().focus().unsetAllMarks().clearNodes().run();
+        if (editor) updateActiveFormats(editor);
+      },
       selectAll: () => editor?.chain().focus().selectAll().run(),
     }));
 

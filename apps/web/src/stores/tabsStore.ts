@@ -19,6 +19,7 @@ export interface TabsState {
   updateTabContent: (id: string, content: string) => void;
   setTabDirty: (id: string, isDirty: boolean) => void;
   setTabTitle: (id: string, title: string) => void;
+  setTabMarkdown: (id: string, isMarkdown: boolean) => void;
   reorderTabs: (sourceIndex: number, destinationIndex: number) => void;
   cycleNextTab: () => void;
   cyclePreviousTab: () => void;
@@ -31,7 +32,7 @@ const initialTab: TabData = {
   title: "Untitled",
   content: "",
   isDirty: false,
-  isMarkdown: false,
+  isMarkdown: true,
   createdAt: Date.now(),
   updatedAt: Date.now(),
 };
@@ -40,7 +41,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   tabs: [initialTab],
   activeTabId: initialTabId,
 
-  createTab: (title = "Untitled", content = "", isMarkdown = false) => {
+  createTab: (title = "Untitled", content = "", isMarkdown = true) => {
     const id = `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const newTab: TabData = {
       id,
@@ -72,7 +73,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
             title: "Untitled",
             content: "",
             isDirty: false,
-            isMarkdown: false,
+            isMarkdown: true,
             createdAt: Date.now(),
             updatedAt: Date.now(),
           },
@@ -131,6 +132,12 @@ export const useTabsStore = create<TabsState>((set, get) => ({
     }));
   },
 
+  setTabMarkdown: (id: string, isMarkdown: boolean) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) => (tab.id === id ? { ...tab, isMarkdown, updatedAt: Date.now() } : tab)),
+    }));
+  },
+
   reorderTabs: (sourceIndex: number, destinationIndex: number) => {
     set((state) => {
       const { tabs } = state;
@@ -177,7 +184,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
           title: "Untitled",
           content: "",
           isDirty: false,
-          isMarkdown: false,
+          isMarkdown: true,
           createdAt: Date.now(),
           updatedAt: Date.now(),
         },
