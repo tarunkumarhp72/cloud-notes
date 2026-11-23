@@ -10,6 +10,17 @@ import {
   VAULT_AUTH_CHECK_TOKEN,
   type EncryptedData,
 } from "@notepad/core";
+import {
+  generateRawRecoveryKey,
+  formatRecoveryKey,
+  wrapVaultKeyWithRecovery,
+  unwrapVaultKeyWithRecovery,
+} from "../components/vault/vaultRecovery";
+
+export interface VaultSetupResult {
+  cryptoKey: CryptoKey;
+  recoveryKey: string;
+}
 
 export interface VaultState {
   isInitialized: boolean;
@@ -18,8 +29,9 @@ export interface VaultState {
   salt: string | null;
   error: string | null;
   checkVaultStatus: () => Promise<boolean>;
-  setupVault: (passphrase: string) => Promise<CryptoKey>;
+  setupVault: (passphrase: string) => Promise<VaultSetupResult>;
   unlockVault: (passphrase: string) => Promise<boolean>;
+  recoverVault: (recoveryKey: string) => Promise<boolean>;
   lockVault: () => void;
   setError: (err: string | null) => void;
 }
@@ -64,11 +76,16 @@ export const useVaultStore = create<VaultState>((set) => ({
         VAULT_AUTH_CHECK_TOKEN
       );
 
+      // Generate 256-bit emergency recovery key and wrap master key
+      const recoveryBytes = generateRawRecoveryKey();
+      const recoveryKeyFormatted = formatRecoveryKey(recoveryBytes);
+      const recoveryVerifier = await wrapVaultKeyWithRecovery(cryptoKey, recoveryBytes);
+
       await saveVaultMetadata({
         id: PRIMARY_VAULT_ID,
         salt: derived.salt,
         authCheck: JSON.stringify(authCheckData),
-        recoveryVerifier: "",
+        recoveryVerifier,
         createdAt: new Date().toISOString(),
       });
 
@@ -80,7 +97,10 @@ export const useVaultStore = create<VaultState>((set) => ({
         error: null,
       });
 
-      return cryptoKey;
+      return {
+        cryptoKey,
+        recoveryKey: recoveryKeyFormatted,
+      };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to setup vault";
       set({ error: msg });
@@ -119,6 +139,44 @@ export const useVaultStore = create<VaultState>((set) => ({
       return true;
     } catch {
       const msg = "Incorrect passphrase. Please try again.";
+      set({ error: msg });
+      throw new Error(msg);
+    }
+  },
+
+  recoverVault: async (recoveryKeyInput: string) => {
+    try {
+      const record = await getVaultMetadata(PRIMARY_VAULT_ID);
+      if (!record || !record.recoveryVerifier) {
+        throw new Error("No recovery verifier found for this vault");
+      }
+
+      const recoveredKey = await unwrapVaultKeyWithRecovery(
+        recoveryKeyInput,
+        record.recoveryVerifier
+      );
+
+      let authCheckData: EncryptedData;
+      try {
+        authCheckData = JSON.parse(record.authCheck);
+      } catch {
+        throw new Error("Corrupted vault authentication record");
+      }
+
+      const decrypted = await decryptAesGcm(recoveredKey, authCheckData);
+      if (decrypted !== VAULT_AUTH_CHECK_TOKEN) {
+        throw new Error("Recovery verification failed");
+      }
+
+      set({
+        vaultKey: recoveredKey,
+        isLocked: false,
+        error: null,
+      });
+
+      return true;
+    } catch {
+      const msg = "Invalid recovery key. Unable to unlock vault.";
       set({ error: msg });
       throw new Error(msg);
     }

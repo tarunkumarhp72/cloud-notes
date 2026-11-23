@@ -22,6 +22,7 @@ import { useLocalAutoSave } from "./sync/localAutoSave";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
+import { RecoveryKeyModal } from "./components/vault/RecoveryKeyModal";
 import { useVaultStore } from "./stores/vaultStore";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -51,6 +52,9 @@ export const App: React.FC = () => {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryModalMode, setRecoveryModalMode] = useState<"display" | "recover">("display");
+  const [activeRecoveryKey, setActiveRecoveryKey] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
   const [isFindOpen, setIsFindOpen] = useState(false);
@@ -455,8 +459,30 @@ export const App: React.FC = () => {
         isOpen={showVaultModal}
         isInitialSetup={!isVaultInitialized}
         onClose={() => setShowVaultModal(false)}
+        onSetupSuccess={(key) => {
+          if (key) {
+            setActiveRecoveryKey(key);
+            setRecoveryModalMode("display");
+            setShowRecoveryModal(true);
+          }
+        }}
+        onForgotPassphrase={() => {
+          setShowVaultModal(false);
+          setRecoveryModalMode("recover");
+          setShowRecoveryModal(true);
+        }}
         onSuccess={() => {
           setShowVaultModal(false);
+        }}
+      />
+
+      <RecoveryKeyModal
+        isOpen={showRecoveryModal}
+        mode={recoveryModalMode}
+        recoveryKey={activeRecoveryKey}
+        onClose={() => setShowRecoveryModal(false)}
+        onSuccess={() => {
+          setShowRecoveryModal(false);
         }}
       />
     </div>

@@ -465,7 +465,7 @@
 - Tests to run: `pnpm --filter web test` (recovery unlock test)
 - Viewports to screenshot: 1440x900
 - Depends on: T-029
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-030/summary.md)
 
 - ID: T-031
 - Title: Note envelope encryption pipeline

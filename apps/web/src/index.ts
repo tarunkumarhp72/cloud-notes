@@ -27,6 +27,8 @@ export * from "./sync/localAutoSave";
 export * from "./components/file/fileIo";
 export * from "./components/file/OpenNotesDialog";
 export * from "./components/vault/VaultUnlockModal";
+export * from "./components/vault/RecoveryKeyModal";
+export * from "./components/vault/vaultRecovery";
 export * from "./stores/vaultStore";
 export * from "./stores/tabsStore";
 export * from "./auth/googleAuth";

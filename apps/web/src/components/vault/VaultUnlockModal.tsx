@@ -7,6 +7,7 @@ export interface VaultUnlockModalProps {
   onClose: () => void;
   isInitialSetup?: boolean;
   onSuccess?: () => void;
+  onSetupSuccess?: (recoveryKey: string) => void;
   onForgotPassphrase?: () => void;
   customSetupHandler?: (passphrase: string) => Promise<unknown>;
   customUnlockHandler?: (passphrase: string) => Promise<unknown>;
@@ -17,6 +18,7 @@ export const VaultUnlockModal: React.FC<VaultUnlockModalProps> = ({
   onClose,
   isInitialSetup = false,
   onSuccess,
+  onSetupSuccess,
   onForgotPassphrase,
   customSetupHandler,
   customUnlockHandler,
@@ -61,22 +63,30 @@ export const VaultUnlockModal: React.FC<VaultUnlockModalProps> = ({
 
     try {
       if (isInitialSetup) {
+        let generatedRecKey = "";
         if (customSetupHandler) {
-          await customSetupHandler(passphrase);
+          const res = await customSetupHandler(passphrase);
+          if (res && typeof res === "object" && "recoveryKey" in res) {
+            generatedRecKey = (res as { recoveryKey: string }).recoveryKey;
+          }
         } else {
-          await setupVault(passphrase);
+          const res = await setupVault(passphrase);
+          generatedRecKey = res.recoveryKey;
         }
+        setLoading(false);
+        onSetupSuccess?.(generatedRecKey);
+        onSuccess?.();
+        onClose();
       } else {
         if (customUnlockHandler) {
           await customUnlockHandler(passphrase);
         } else {
           await unlockVault(passphrase);
         }
+        setLoading(false);
+        onSuccess?.();
+        onClose();
       }
-
-      setLoading(false);
-      onSuccess?.();
-      onClose();
     } catch (err: unknown) {
       setLoading(false);
       const msg = err instanceof Error ? err.message : "Authentication failed";
