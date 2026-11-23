@@ -521,8 +521,14 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
       });
     }, [fontFamily, fontSize]);
 
+    const handleContainerClick = (e: React.MouseEvent) => {
+      if (viewRef.current && (e.target === e.currentTarget || e.target === containerRef.current)) {
+        viewRef.current.focus();
+      }
+    };
+
     return (
-      <div className={styles.editorWrapper}>
+      <div className={styles.editorWrapper} onClick={handleContainerClick}>
         <div
           ref={containerRef}
           className={styles.cmContainer}
@@ -530,6 +536,7 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
             fontFamily: `${fontFamily}, Consolas, monospace`,
             fontSize: `${fontSize}px`,
           }}
+          onClick={handleContainerClick}
         />
       </div>
     );

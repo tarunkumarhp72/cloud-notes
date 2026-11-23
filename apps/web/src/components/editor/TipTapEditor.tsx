@@ -233,14 +233,22 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       }
     }, [value, editor]);
 
+    const handleContainerClick = (e: React.MouseEvent) => {
+      if (!editor || editor.isDestroyed) return;
+      if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === "DIV") {
+        editor.commands.focus("end");
+      }
+    };
+
     return (
-      <div className={styles.editorWrapper}>
+      <div className={styles.editorWrapper} onClick={handleContainerClick}>
         <div
           className={styles.proseContainer}
           style={{
             fontFamily: `${fontFamily}, Segoe UI Variable, sans-serif`,
             fontSize: `${fontSize}px`,
           }}
+          onClick={handleContainerClick}
         >
           <EditorContent editor={editor} />
         </div>

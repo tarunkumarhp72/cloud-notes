@@ -61,16 +61,8 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
+  overflow: visible;
   max-width: 100%;
-}
-
-.toolbarGroup::-webkit-scrollbar {
-  display: none;
 }
 
 .rightGroup {

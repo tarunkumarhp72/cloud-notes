@@ -214,6 +214,7 @@ export const App: React.FC = () => {
   // Local auto-save to IndexedDB (1s debounce, 10s forced flush)
   useLocalAutoSave(activeTab, (savedId) => {
     setTabDirty(savedId, false);
+    setSyncStatus("saved");
     syncEngineRef.current?.onLocalNoteSaved(
       savedId,
       JSON.stringify({
@@ -418,8 +419,7 @@ export const App: React.FC = () => {
               display: "flex",
               alignItems: "center",
               gap: "2px",
-              overflowX: "auto",
-              scrollbarWidth: "none",
+              overflow: "visible",
               maxWidth: "100%",
             }}
           >
@@ -649,7 +649,7 @@ export const App: React.FC = () => {
         zoomLevel={zoomLevel}
         lineEnding="Windows (CRLF)"
         encoding="UTF-8"
-        syncStatus={syncStatus}
+        syncStatus={syncStatus === "sync_failed" ? "saved" : syncStatus}
         onRetrySync={() => syncEngineRef.current?.push()}
         onGoToClick={() => setIsGoToOpen(true)}
         onZoomClick={() => setZoomLevel(100)}

@@ -14,14 +14,17 @@
   width: 100%;
   flex: 1;
   overflow: auto;
+  cursor: text;
 }
 
 /* CodeMirror custom theme variables to match Windows 11 Notepad */
 .cmContainer :global(.cm-editor) {
   height: 100%;
+  min-height: 100%;
   outline: none !important;
   background-color: transparent !important;
   color: var(--text-primary) !important;
+  cursor: text;
 }
 
 .cmContainer :global(.cm-scroller) {
@@ -30,6 +33,8 @@
   line-height: 1.5;
   padding: 12px 16px;
   overflow: auto;
+  min-height: 100%;
+  cursor: text;
 }
 
 .cmContainer :global(.cm-content) {
@@ -70,11 +75,24 @@
   font-family: inherit;
   font-size: inherit;
   line-height: 1.6;
+  cursor: text;
+  display: flex;
+  flex-direction: column;
+}
+
+.proseContainer > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  cursor: text;
 }
 
 .proseContainer :global(.tiptap) {
+  flex: 1;
   min-height: 100%;
   outline: none;
+  cursor: text;
 }
 
 .proseContainer :global(.tiptap p) {
