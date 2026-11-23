@@ -41,4 +41,14 @@ describe("SignInModal Component", () => {
     });
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
+
+  it("triggers onClose when top-right close button is clicked", async () => {
+    const handleClose = vi.fn();
+    render(<SignInModal isOpen={true} onClose={handleClose} />);
+    const closeBtn = screen.getByLabelText("Close dialog");
+    await act(async () => {
+      fireEvent.click(closeBtn);
+    });
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
 });

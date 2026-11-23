@@ -4,6 +4,7 @@ import { VitePWA } from "vite-plugin-pwa";
 import path from "node:path";
 
 export default defineConfig({
+  envDir: path.resolve(import.meta.dirname, "../../"),
   plugins: [
     react(),
     VitePWA({
@@ -59,6 +60,24 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      "/auth": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+      "/sync": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+      "/account": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+      "/api": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+    },
   },
   test: {
     environment: "jsdom",

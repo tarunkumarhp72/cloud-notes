@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
+import { validateGoogleCallback } from "./auth/googleAuth";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
 import { MenuBar } from "./components/menu/MenuBar";
@@ -243,12 +244,67 @@ export const App: React.FC = () => {
     }
   });
 
-  const [user, setUser] = useState<UserProfile | null>({
-    id: "user-tarun",
-    displayName: "Tarun Kumar",
-    email: "tarunkumar@csdevhub.com",
-    avatarUrl: null,
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    try {
+      const stored = localStorage.getItem("notepad_user");
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return null;
   });
+
+  // Handle Google OAuth callback (?code=...&state=...)
+  useEffect(() => {
+    async function handleOAuthCallback() {
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get("code");
+      const state = searchParams.get("state");
+
+      if (code && state) {
+        try {
+          const redirectUri =
+            (typeof import.meta !== "undefined" && import.meta.env?.VITE_GOOGLE_REDIRECT_URI) ||
+            `${window.location.origin}/auth/callback`;
+
+          const { verifier } = validateGoogleCallback(searchParams, state);
+
+          const res = await fetch("/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              code,
+              codeVerifier: verifier,
+              redirectUri,
+            }),
+          });
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Google authentication failed");
+          }
+
+          const data = await res.json();
+          if (data.user) {
+            setUser(data.user);
+            localStorage.setItem("notepad_user", JSON.stringify(data.user));
+            if (data.accessToken) {
+              localStorage.setItem("notepad_token", data.accessToken);
+            }
+            setShowSignIn(false);
+          }
+        } catch (err) {
+          console.error("Google sign in callback error:", err);
+        } finally {
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname.replace(/\/auth\/callback\/?$/, "/") || "/"
+          );
+        }
+      }
+    }
+
+    handleOAuthCallback();
+  }, []);
 
   // Native drag-and-drop file import (.txt, .md, etc.)
   useFileDragAndDrop((imported) => {
@@ -553,7 +609,13 @@ export const App: React.FC = () => {
             <AccountMenu
               user={user}
               onSignInClick={() => setShowSignIn(true)}
-              onSignOut={() => setUser(null)}
+              onSignOut={() => {
+                setUser(null);
+                try {
+                  localStorage.removeItem("notepad_user");
+                  localStorage.removeItem("notepad_token");
+                } catch {}
+              }}
               onManageVault={() => setShowVaultModal(true)}
               isVaultLocked={isVaultLocked}
             />
@@ -729,15 +791,6 @@ export const App: React.FC = () => {
       <SignInModal
         isOpen={showSignIn}
         onClose={() => setShowSignIn(false)}
-        onGoogleSignIn={() => {
-          setUser({
-            id: "user-tarun",
-            displayName: "Tarun Kumar",
-            email: "tarunkumar@csdevhub.com",
-            avatarUrl: null,
-          });
-          setShowSignIn(false);
-        }}
       />
 
       <OpenNotesDialog
