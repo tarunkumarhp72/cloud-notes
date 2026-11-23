@@ -545,7 +545,7 @@
 - Tests to run: `pnpm --filter @notepad/core test` (three-way divergence test)
 - Viewports to screenshot: 1440x900
 - Depends on: T-012, T-034
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-035/summary.md)
 
 - ID: T-036
 - Title: Multi-tab synchronization via BroadcastChannel
