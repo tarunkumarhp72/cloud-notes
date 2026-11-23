@@ -4,6 +4,8 @@ import { App } from "./App";
 import "./styles/theme.css";
 import "./styles/responsive.css";
 import "./styles/touch.css";
+import "./styles/dualscreen.css";
+import "./styles/ultrawide.css";
 import { useTabsStore } from "./stores/tabsStore";
 import { handleSyncConflict } from "./sync/conflictHandler";
 import { registerServiceWorker } from "./sw";

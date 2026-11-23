@@ -467,7 +467,17 @@ export const App: React.FC = () => {
       {isSettingsOpen ? (
         <SettingsPage onBack={() => setIsSettingsOpen(false)} />
       ) : (
-        <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div
+          className="editorAreaContainer"
+          style={{
+            position: "relative",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            backgroundColor: "var(--bg-app)",
+          }}
+        >
           <FindReplaceBar
             isOpen={isFindOpen}
             isReplaceOpen={isReplaceOpen}

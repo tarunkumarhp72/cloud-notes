@@ -1,0 +1,92 @@
+/* Dual-screen and Foldable Display Adaptation */
+
+/* Dual-screen horizontal split (Surface Duo, foldables in horizontal posture) */
+@media (horizontal-viewport-segments: 2), (screen-spanning: single-fold-vertical) {
+  :root {
+    --fold-left: env(viewport-segment-left 1 0, 574px);
+    --fold-right: env(viewport-segment-right 0 0, 540px);
+    --fold-width: calc(var(--fold-left) - var(--fold-right));
+    --segment-0-width: env(viewport-segment-width 0 0, 540px);
+    --segment-1-width: env(viewport-segment-width 1 0, 540px);
+  }
+
+  /* 1. Title bar tabs stay within the first segment, avoiding the hinge seam */
+  .titleBar div[class*="tabsContainer"],
+  div[class*="tabsContainer"] {
+    max-width: calc(var(--segment-0-width) - 40px);
+    flex-grow: 0;
+  }
+
+  /* 2. Menu bar items (File, Edit, View, formatting) stay on segment 0 */
+  .menuBar div[class*="leftGroup"],
+  div[class*="leftGroup"] {
+    max-width: calc(var(--segment-0-width) - 20px);
+  }
+
+  .responsiveToolbar {
+    max-width: calc(var(--segment-0-width) - 200px);
+  }
+
+  /* 3. Editor text avoids spanning across the hinge seam */
+  .editorAreaContainer,
+  div[class*="editorWrapper"] {
+    box-sizing: border-box;
+    padding-right: calc(100vw - var(--segment-0-width) + 12px);
+    position: relative;
+  }
+
+  /* Visual subtle fold guide line indicator at the seam position */
+  .editorAreaContainer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--segment-0-width);
+    width: var(--fold-width, 34px);
+    background: repeating-linear-gradient(
+      to right,
+      transparent,
+      transparent 16px,
+      var(--border-subtle) 16px,
+      var(--border-subtle) 18px,
+      transparent 18px
+    );
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  /* 4. Modals and dialogs are bounded within a single segment, never centered over the hinge */
+  div[role="dialog"],
+  div[class*="modalOverlay"] > div,
+  div[class*="modalContent"],
+  div[class*="dialogContent"] {
+    max-width: calc(var(--segment-0-width) - 48px) !important;
+    margin-left: 24px !important;
+    margin-right: auto !important;
+  }
+
+  /* 5. Status bar items stay clear of fold seam */
+  .statusBar,
+  div[class*="statusBar"] {
+    padding-right: calc(100vw - var(--segment-0-width) + 12px);
+  }
+}
+
+/* Dual-screen vertical split (foldable in clamshell / laptop posture) */
+@media (vertical-viewport-segments: 2), (screen-spanning: single-fold-horizontal) {
+  :root {
+    --segment-top-height: env(viewport-segment-height 0 0, 360px);
+    --segment-bottom-height: env(viewport-segment-height 0 1, 360px);
+  }
+
+  /* Keep top chrome and primary editing area on upper segment */
+  .titleBar,
+  .menuBar {
+    position: relative;
+    z-index: 100;
+  }
+
+  .editorAreaContainer {
+    max-height: calc(var(--segment-top-height) - 76px);
+  }
+}

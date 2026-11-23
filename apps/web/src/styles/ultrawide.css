@@ -1,0 +1,83 @@
+/* Ultra-Wide and Large Display Adaptation */
+
+/* Large Displays (FHD / Wide - min-width: 1920px) */
+@media (min-width: 1920px) {
+  /* Keep toolbar and chrome at normal size without stretching */
+  .responsiveToolbar {
+    max-width: 800px;
+    flex-shrink: 0;
+  }
+
+  .menuBar,
+  div[class*="menuBar"] {
+    padding: 0 24px;
+  }
+
+  div[class*="tabsContainer"] {
+    max-width: 1200px;
+  }
+
+  /* Editor area maintains readable margins and proportions */
+  .editorAreaContainer {
+    width: 100%;
+    align-items: center;
+  }
+
+  .editorAreaContainer > * {
+    width: 100%;
+  }
+
+  div[class*="editorWrapper"] {
+    max-width: 1500px;
+    margin: 0 auto;
+    border-left: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.04);
+  }
+
+  /* CodeMirror and TipTap scrollers with comfortable reading margins */
+  div[class*="cmContainer"] .cm-scroller,
+  div[class*="proseContainer"] {
+    padding: 24px 48px;
+  }
+
+  /* Status bar maintains comfortable width alignment */
+  .statusBar,
+  div[class*="statusBar"] {
+    padding: 0 24px;
+  }
+}
+
+/* Ultra-Wide Displays (QHD / 1440p / 21:9 - min-width: 2560px) */
+@media (min-width: 2560px) {
+  /* Toolbar remains tightly grouped and ergonomic */
+  .responsiveToolbar {
+    max-width: 850px;
+  }
+
+  .menuBar,
+  div[class*="menuBar"] {
+    padding: 0 48px;
+  }
+
+  div[class*="tabsContainer"] {
+    max-width: 1400px;
+  }
+
+  /* Editor area maintains optimal readable line length and proportions */
+  div[class*="editorWrapper"] {
+    max-width: 1680px;
+    margin: 0 auto;
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.06);
+  }
+
+  div[class*="cmContainer"] .cm-scroller,
+  div[class*="proseContainer"] {
+    padding: 32px 64px;
+  }
+
+  .statusBar,
+  div[class*="statusBar"] {
+    padding: 0 48px;
+  }
+}

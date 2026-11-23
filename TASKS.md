@@ -658,7 +658,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 1114x720 (spanned), 1920x1080, 2560x1440
 - Depends on: T-039
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-042/summary.md)
 
 ---
 
