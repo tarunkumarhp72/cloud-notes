@@ -628,7 +628,7 @@
 - Tests to run: `pnpm --filter web test`
 - Viewports to screenshot: 360x640, 390x844, 540x720 (light and dark)
 - Depends on: T-013, T-039
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-040/summary.md)
 
 - ID: T-041
 - Title: Touch target sizing & virtual keyboard caret handling

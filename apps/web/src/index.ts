@@ -6,6 +6,7 @@ export * from "./components/header/AccountMenu";
 export * from "./components/tabs/TabStrip";
 export * from "./components/tabs/TabItem";
 export * from "./components/menu/MenuBar";
+export * from "./components/menu/CollapsedMenu";
 export * from "./components/menu/FileMenu";
 export * from "./components/menu/EditMenu";
 export * from "./components/menu/ViewMenu";
