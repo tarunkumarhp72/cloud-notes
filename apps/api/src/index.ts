@@ -3,8 +3,11 @@ import { handle } from "hono/vercel";
 import { checkDbConnection } from "./db";
 import { authRouter } from "./routes/auth";
 import { syncRouter } from "./routes/sync";
+import { cspMiddleware } from "./security/csp";
 
 export const app = new Hono();
+
+app.use("*", cspMiddleware());
 
 app.route("/auth", authRouter);
 app.route("/sync", syncRouter);

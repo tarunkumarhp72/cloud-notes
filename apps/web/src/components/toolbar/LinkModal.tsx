@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./LinkModal.module.css";
 import toolbarStyles from "./Toolbar.module.css";
+import { sanitizeUrl } from "../../security/sanitize";
 
 export interface LinkModalProps {
   isOpen: boolean;
@@ -54,7 +55,9 @@ export const LinkModal: React.FC<LinkModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!address.trim()) return;
-    onInsert(displayText.trim() || address.trim(), address.trim());
+    const cleanUrl = sanitizeUrl(address.trim());
+    if (!cleanUrl) return;
+    onInsert(displayText.trim() || cleanUrl, cleanUrl);
     onClose();
   };
 

@@ -5,6 +5,7 @@ import Link from "@tiptap/extension-link";
 import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
 import { Markdown } from "tiptap-markdown";
 import styles from "./editor.module.css";
+import { sanitizeUrl } from "../../security/sanitize";
 
 export interface TipTapEditorRef {
   toggleBold: () => void;
@@ -61,6 +62,11 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         Link.configure({
           openOnClick: false,
           autolink: true,
+          HTMLAttributes: {
+            rel: "noopener noreferrer",
+            target: "_blank",
+          },
+          validate: (href) => /^https?:\/\//i.test(href) || /^mailto:/i.test(href),
         }),
         Table.configure({
           resizable: true,
@@ -69,7 +75,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         TableHeader,
         TableCell,
         Markdown.configure({
-          html: true,
+          html: false,
           transformPastedText: true,
           transformCopiedText: true,
         }),
@@ -125,7 +131,12 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
           .focus()
           .insertTable({ rows, cols, withHeaderRow: true })
           .run(),
-      setLink: (url) => editor?.chain().focus().setLink({ href: url }).run(),
+      setLink: (url) => {
+        const cleanUrl = sanitizeUrl(url);
+        if (cleanUrl) {
+          editor?.chain().focus().setLink({ href: cleanUrl }).run();
+        }
+      },
       clearFormatting: () => editor?.chain().focus().unsetAllMarks().clearNodes().run(),
     }));
 

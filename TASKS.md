@@ -677,7 +677,7 @@
 - Tests to run: `pnpm --filter web test` (XSS payload sanitization tests)
 - Viewports to screenshot: none
 - Depends on: T-023
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-043/summary.md)
 
 - ID: T-044
 - Title: API rate limiting and input validation
