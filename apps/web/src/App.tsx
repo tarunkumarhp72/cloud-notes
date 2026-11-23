@@ -17,10 +17,12 @@ import { FindReplaceBar } from "./components/editor/FindReplaceBar";
 import { GoToDialog } from "./components/editor/GoToDialog";
 import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
+import { listNotes } from "@notepad/core";
 import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useLocalAutoSave } from "./sync/localAutoSave";
 import { SyncEngine, type SyncStatus } from "./sync/syncEngine";
 import { TabBroadcastSync } from "./sync/broadcast";
+import { networkMonitor } from "./sync/networkStatus";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
@@ -106,9 +108,58 @@ export const App: React.FC = () => {
       }
     });
 
+    const unsubNetwork = networkMonitor.subscribe((online) => {
+      if (!online) {
+        setSyncStatus("offline");
+      }
+    });
+
+    async function initLocalNotes() {
+      try {
+        const stored = await listNotes();
+        if (stored && stored.length > 0) {
+          const currentTabs = useTabsStore.getState().tabs;
+          const isInitialOnly =
+            currentTabs.length === 1 &&
+            currentTabs[0].title === "Untitled" &&
+            currentTabs[0].content === "" &&
+            !currentTabs[0].isDirty;
+
+          if (isInitialOnly) {
+            const sorted = [...stored].sort(
+              (a, b) => new Date(b.clientUpdatedAt).getTime() - new Date(a.clientUpdatedAt).getTime()
+            );
+            const first = sorted[0];
+            let title = "Untitled";
+            let content = "";
+            let isMarkdown = false;
+            try {
+              const parsed = JSON.parse(first.encryptedEnvelope);
+              title = parsed.title || "Untitled";
+              content = parsed.content || "";
+              isMarkdown = !!parsed.isMarkdown;
+            } catch {
+              content = first.encryptedEnvelope;
+            }
+            useTabsStore.getState().updateTabContent(currentTabs[0].id, content);
+            useTabsStore.getState().setTabTitle(currentTabs[0].id, title);
+            useTabsStore.getState().setTabDirty(currentTabs[0].id, false);
+            if (isMarkdown) {
+              setMarkdownMode(true);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load local notes on boot:", err);
+      }
+    }
+
+    initLocalNotes();
+
     return () => {
       unsubscribe();
       unsubBroadcast();
+      unsubNetwork();
       syncEngineRef.current?.destroy();
       broadcast.destroy();
     };
