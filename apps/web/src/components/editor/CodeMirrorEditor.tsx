@@ -14,6 +14,16 @@ export interface CodeMirrorEditorRef {
   getTotalLines: () => number;
   focus: () => void;
   selectAll: () => void;
+  toggleBold: () => void;
+  toggleItalic: () => void;
+  toggleStrike: () => void;
+  setHeading: (level: number) => void;
+  setParagraph: () => void;
+  toggleBulletList: () => void;
+  toggleOrderedList: () => void;
+  insertLink: (text: string, url: string) => void;
+  insertTable: (rows: number, cols: number) => void;
+  clearFormatting: () => void;
 }
 
 export interface CodeMirrorEditorProps {
@@ -214,6 +224,201 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
         if (!view) return;
         view.focus();
         selectAll(view);
+      },
+      toggleBold: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        const text = view.state.sliceDoc(from, to);
+        if (text.startsWith("**") && text.endsWith("**") && text.length >= 4) {
+          const unwrapped = text.slice(2, -2);
+          view.dispatch({
+            changes: { from, to, insert: unwrapped },
+            selection: { anchor: from, head: from + unwrapped.length },
+          });
+        } else {
+          const prefix = view.state.sliceDoc(Math.max(0, from - 2), from);
+          const suffix = view.state.sliceDoc(to, Math.min(view.state.doc.length, to + 2));
+          if (prefix === "**" && suffix === "**") {
+            view.dispatch({
+              changes: [
+                { from: from - 2, to: from, insert: "" },
+                { from: to, to: to + 2, insert: "" },
+              ],
+              selection: { anchor: from - 2, head: to - 2 },
+            });
+          } else {
+            const wrapped = `**${text}**`;
+            view.dispatch({
+              changes: { from, to, insert: wrapped },
+              selection: from === to
+                ? { anchor: from + 2, head: from + 2 }
+                : { anchor: from, head: from + wrapped.length },
+            });
+          }
+        }
+        view.focus();
+      },
+      toggleItalic: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        const text = view.state.sliceDoc(from, to);
+        if (text.startsWith("*") && text.endsWith("*") && text.length >= 2 && !text.startsWith("**")) {
+          const unwrapped = text.slice(1, -1);
+          view.dispatch({
+            changes: { from, to, insert: unwrapped },
+            selection: { anchor: from, head: from + unwrapped.length },
+          });
+        } else {
+          const prefix = view.state.sliceDoc(Math.max(0, from - 1), from);
+          const suffix = view.state.sliceDoc(to, Math.min(view.state.doc.length, to + 1));
+          if (prefix === "*" && suffix === "*" && view.state.sliceDoc(Math.max(0, from - 2), from) !== "**") {
+            view.dispatch({
+              changes: [
+                { from: from - 1, to: from, insert: "" },
+                { from: to, to: to + 1, insert: "" },
+              ],
+              selection: { anchor: from - 1, head: to - 1 },
+            });
+          } else {
+            const wrapped = `*${text}*`;
+            view.dispatch({
+              changes: { from, to, insert: wrapped },
+              selection: from === to
+                ? { anchor: from + 1, head: from + 1 }
+                : { anchor: from, head: from + wrapped.length },
+            });
+          }
+        }
+        view.focus();
+      },
+      toggleStrike: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        const text = view.state.sliceDoc(from, to);
+        if (text.startsWith("~~") && text.endsWith("~~") && text.length >= 4) {
+          const unwrapped = text.slice(2, -2);
+          view.dispatch({
+            changes: { from, to, insert: unwrapped },
+            selection: { anchor: from, head: from + unwrapped.length },
+          });
+        } else {
+          const wrapped = `~~${text}~~`;
+          view.dispatch({
+            changes: { from, to, insert: wrapped },
+            selection: from === to
+              ? { anchor: from + 2, head: from + 2 }
+              : { anchor: from, head: from + wrapped.length },
+          });
+        }
+        view.focus();
+      },
+      setHeading: (level: number) => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from } = view.state.selection.main;
+        const line = view.state.doc.lineAt(from);
+        const headerPrefix = "#".repeat(Math.max(1, Math.min(6, level))) + " ";
+        const cleaned = line.text.replace(/^#{1,6}\s+/, "");
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: headerPrefix + cleaned },
+        });
+        view.focus();
+      },
+      setParagraph: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from } = view.state.selection.main;
+        const line = view.state.doc.lineAt(from);
+        const cleaned = line.text.replace(/^#{1,6}\s+/, "");
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: cleaned },
+        });
+        view.focus();
+      },
+      toggleBulletList: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from } = view.state.selection.main;
+        const line = view.state.doc.lineAt(from);
+        let newText: string;
+        if (line.text.startsWith("- ")) {
+          newText = line.text.slice(2);
+        } else {
+          newText = "- " + line.text.replace(/^(\d+\.\s+)/, "");
+        }
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newText },
+        });
+        view.focus();
+      },
+      toggleOrderedList: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from } = view.state.selection.main;
+        const line = view.state.doc.lineAt(from);
+        let newText: string;
+        if (/^\d+\.\s+/.test(line.text)) {
+          newText = line.text.replace(/^\d+\.\s+/, "");
+        } else {
+          newText = "1. " + line.text.replace(/^-\s+/, "");
+        }
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newText },
+        });
+        view.focus();
+      },
+      insertLink: (text: string, url: string) => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        const selectedText = view.state.sliceDoc(from, to);
+        const linkTitle = text || selectedText || "link";
+        const markdownLink = `[${linkTitle}](${url})`;
+        view.dispatch({
+          changes: { from, to, insert: markdownLink },
+          selection: { anchor: from + markdownLink.length },
+        });
+        view.focus();
+      },
+      insertTable: (rows: number, cols: number) => {
+        const view = viewRef.current;
+        if (!view) return;
+        const r = Math.max(1, rows);
+        const c = Math.max(1, cols);
+        const headerRow = "| " + Array.from({ length: c }, (_, i) => `Header ${i + 1}`).join(" | ") + " |\n";
+        const sepRow = "| " + Array.from({ length: c }, () => "---").join(" | ") + " |\n";
+        const bodyRows = Array.from({ length: r }, () => "| " + Array.from({ length: c }, () => "Cell").join(" | ") + " |\n").join("");
+        const table = "\n" + headerRow + sepRow + bodyRows + "\n";
+        const { from, to } = view.state.selection.main;
+        view.dispatch({
+          changes: { from, to, insert: table },
+          selection: { anchor: from + table.length },
+        });
+        view.focus();
+      },
+      clearFormatting: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        const text = view.state.sliceDoc(from, to);
+        const cleaned = text
+          .replace(/\*\*(.*?)\*\*/g, "$1")
+          .replace(/\*(.*?)\*/g, "$1")
+          .replace(/~~(.*?)~~/g, "$1")
+          .replace(/__(.*?)__/g, "$1")
+          .replace(/_(.*?)_/g, "$1")
+          .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+          .replace(/^#{1,6}\s+/gm, "")
+          .replace(/^[-*+]\s+/gm, "")
+          .replace(/^\d+\.\s+/gm, "");
+        view.dispatch({
+          changes: { from, to, insert: cleaned },
+          selection: { anchor: from, head: from + cleaned.length },
+        });
+        view.focus();
       },
     }));
 

@@ -87,6 +87,7 @@ export const TableDropdown: React.FC<TableDropdownProps> = ({
           aria-expanded={isOpen}
           aria-label="Table"
           disabled={disabled}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => setIsOpen((prev) => !prev)}
         >
           <TableIcon />
@@ -127,6 +128,7 @@ export const TableDropdown: React.FC<TableDropdownProps> = ({
                       setHoveredRow(r);
                       setHoveredCol(c);
                     }}
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleCellClick(r, c)}
                   />
                 );

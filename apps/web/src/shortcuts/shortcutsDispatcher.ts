@@ -14,6 +14,8 @@ export interface ShortcutActions {
   onGoTo?: () => void;
   onTimeDate?: () => void;
   onSelectAll?: () => void;
+  onToggleBold?: () => void;
+  onToggleItalic?: () => void;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onResetZoom?: () => void;
@@ -150,6 +152,18 @@ export function handleShortcutEvent(
         }
         event.preventDefault?.();
         actions.onSelectAll();
+        return true;
+      }
+      // Ctrl+B -> Toggle Bold
+      if (key === "b" && actions.onToggleBold) {
+        event.preventDefault?.();
+        actions.onToggleBold();
+        return true;
+      }
+      // Ctrl+I -> Toggle Italic
+      if (key === "i" && actions.onToggleItalic) {
+        event.preventDefault?.();
+        actions.onToggleItalic();
         return true;
       }
       // Ctrl+Z -> Undo

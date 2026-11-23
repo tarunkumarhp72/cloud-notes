@@ -22,6 +22,7 @@ export const LinkButton: React.FC<{ onClick?: () => void; disabled?: boolean }> 
       className={toolbarStyles.toolbarBtn}
       aria-label="Link"
       disabled={disabled}
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       style={{ width: "28px", justifyContent: "center" }}
     >

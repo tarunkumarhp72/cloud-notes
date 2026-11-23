@@ -77,6 +77,7 @@ export const ListDropdown: React.FC<ListDropdownProps> = ({
           aria-expanded={isOpen}
           aria-label="Lists"
           disabled={disabled}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => setIsOpen((prev) => !prev)}
         >
           <BulletListIcon />
@@ -92,6 +93,7 @@ export const ListDropdown: React.FC<ListDropdownProps> = ({
             type="button"
             role="menuitem"
             className={styles.headingItem}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               onToggleBullet?.();
               setIsOpen(false);
@@ -104,6 +106,7 @@ export const ListDropdown: React.FC<ListDropdownProps> = ({
             type="button"
             role="menuitem"
             className={styles.headingItem}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               onToggleNumber?.();
               setIsOpen(false);
@@ -118,6 +121,7 @@ export const ListDropdown: React.FC<ListDropdownProps> = ({
             className={styles.headingItem}
             disabled={!canIndent}
             style={{ opacity: canIndent ? 1 : 0.4, cursor: canIndent ? "pointer" : "default" }}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               if (canIndent) {
                 onIndent?.();
@@ -134,6 +138,7 @@ export const ListDropdown: React.FC<ListDropdownProps> = ({
             className={styles.headingItem}
             disabled={!canOutdent}
             style={{ opacity: canOutdent ? 1 : 0.4, cursor: canOutdent ? "pointer" : "default" }}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               if (canOutdent) {
                 onOutdent?.();

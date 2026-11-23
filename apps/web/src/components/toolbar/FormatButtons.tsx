@@ -17,6 +17,7 @@ export const ClearFormattingButton: React.FC<ClearFormattingButtonProps> = ({
       className={styles.toolbarBtn}
       aria-label="Clear formatting"
       disabled={disabled}
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       style={{ width: "28px", justifyContent: "center" }}
     >
@@ -62,6 +63,7 @@ export const FormatButtons: React.FC<FormatButtonsProps> = ({
           aria-label="Bold"
           aria-pressed={isBold}
           disabled={disabled}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={onToggleBold}
           style={{ fontWeight: 700, fontSize: "14px", width: "28px", justifyContent: "center" }}
         >
@@ -77,6 +79,7 @@ export const FormatButtons: React.FC<FormatButtonsProps> = ({
           aria-label="Italic"
           aria-pressed={isItalic}
           disabled={disabled}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={onToggleItalic}
           style={{ fontStyle: "italic", fontFamily: "serif", fontSize: "14px", width: "28px", justifyContent: "center" }}
         >
@@ -92,6 +95,7 @@ export const FormatButtons: React.FC<FormatButtonsProps> = ({
           aria-label="Strikethrough"
           aria-pressed={isStrikethrough}
           disabled={disabled}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={onToggleStrikethrough}
           style={{ textDecoration: "line-through", fontSize: "14px", width: "28px", justifyContent: "center" }}
         >

@@ -259,6 +259,33 @@ export const App: React.FC = () => {
     }
   }, [activeTab?.isMarkdown, markdownMode]);
 
+  const handleToggleBold = useCallback(() => {
+    if (activeTab?.isMarkdown || markdownMode) {
+      tipTapRef.current?.toggleBold();
+    } else {
+      codeMirrorRef.current?.toggleBold();
+    }
+    setIsBold((b) => !b);
+  }, [activeTab?.isMarkdown, markdownMode]);
+
+  const handleToggleItalic = useCallback(() => {
+    if (activeTab?.isMarkdown || markdownMode) {
+      tipTapRef.current?.toggleItalic();
+    } else {
+      codeMirrorRef.current?.toggleItalic();
+    }
+    setIsItalic((i) => !i);
+  }, [activeTab?.isMarkdown, markdownMode]);
+
+  const handleToggleStrike = useCallback(() => {
+    if (activeTab?.isMarkdown || markdownMode) {
+      tipTapRef.current?.toggleStrike();
+    } else {
+      codeMirrorRef.current?.toggleStrike();
+    }
+    setIsStrikethrough((s) => !s);
+  }, [activeTab?.isMarkdown, markdownMode]);
+
   // Windows Notepad Global Shortcuts Dispatcher
   useNotepadShortcuts({
     onNewTab: () => handleNewTab(),
@@ -285,6 +312,8 @@ export const App: React.FC = () => {
     },
     onGoTo: () => setIsGoToOpen(true),
     onSelectAll: handleSelectAll,
+    onToggleBold: handleToggleBold,
+    onToggleItalic: handleToggleItalic,
     onTimeDate: () => {
       const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
       if (activeTabId) {
@@ -393,8 +422,13 @@ export const App: React.FC = () => {
               activeLevel={headingLevel}
               onSelectLevel={(level) => {
                 setHeadingLevel(level);
+                const isMd = activeTab?.isMarkdown || markdownMode;
                 if (level === "body") {
-                  tipTapRef.current?.setParagraph();
+                  if (isMd) {
+                    tipTapRef.current?.setParagraph();
+                  } else {
+                    codeMirrorRef.current?.setParagraph();
+                  }
                 } else {
                   const levelMap: Record<string, 1 | 2 | 3 | 4 | 5 | 6> = {
                     title: 1,
@@ -404,41 +438,57 @@ export const App: React.FC = () => {
                     section: 5,
                     subsection: 6,
                   };
-                  tipTapRef.current?.setHeading(levelMap[level] || 1);
+                  const num = levelMap[level] || 1;
+                  if (isMd) {
+                    tipTapRef.current?.setHeading(num);
+                  } else {
+                    codeMirrorRef.current?.setHeading(num);
+                  }
                 }
               }}
             />
             <ListDropdown
-              onToggleBullet={() => tipTapRef.current?.toggleBulletList()}
-              onToggleNumber={() => tipTapRef.current?.toggleOrderedList()}
+              onToggleBullet={() => {
+                if (activeTab?.isMarkdown || markdownMode) {
+                  tipTapRef.current?.toggleBulletList();
+                } else {
+                  codeMirrorRef.current?.toggleBulletList();
+                }
+              }}
+              onToggleNumber={() => {
+                if (activeTab?.isMarkdown || markdownMode) {
+                  tipTapRef.current?.toggleOrderedList();
+                } else {
+                  codeMirrorRef.current?.toggleOrderedList();
+                }
+              }}
             />
             <FormatButtons
               isBold={isBold}
               isItalic={isItalic}
               isStrikethrough={isStrikethrough}
               showClearFormatting={false}
-              onToggleBold={() => {
-                tipTapRef.current?.toggleBold();
-                setIsBold((b) => !b);
-              }}
-              onToggleItalic={() => {
-                tipTapRef.current?.toggleItalic();
-                setIsItalic((i) => !i);
-              }}
-              onToggleStrikethrough={() => {
-                tipTapRef.current?.toggleStrike();
-                setIsStrikethrough((s) => !s);
-              }}
+              onToggleBold={handleToggleBold}
+              onToggleItalic={handleToggleItalic}
+              onToggleStrikethrough={handleToggleStrike}
             />
             <LinkButton onClick={() => setShowLinkModal(true)} />
             <TableDropdown
               onInsertTable={(rows, cols) => {
-                tipTapRef.current?.insertTable(rows, cols);
+                if (activeTab?.isMarkdown || markdownMode) {
+                  tipTapRef.current?.insertTable(rows, cols);
+                } else {
+                  codeMirrorRef.current?.insertTable(rows, cols);
+                }
               }}
             />
             <ClearFormattingButton
               onClick={() => {
-                tipTapRef.current?.clearFormatting();
+                if (activeTab?.isMarkdown || markdownMode) {
+                  tipTapRef.current?.clearFormatting();
+                } else {
+                  codeMirrorRef.current?.clearFormatting();
+                }
                 setIsBold(false);
                 setIsItalic(false);
                 setIsStrikethrough(false);
@@ -632,8 +682,13 @@ export const App: React.FC = () => {
       <LinkModal
         isOpen={showLinkModal}
         onClose={() => setShowLinkModal(false)}
-        onInsert={(_text, url) => {
-          tipTapRef.current?.setLink(url);
+        onInsert={(text, url) => {
+          if (activeTab?.isMarkdown || markdownMode) {
+            tipTapRef.current?.setLink(url);
+          } else {
+            codeMirrorRef.current?.insertLink(text, url);
+          }
+          setShowLinkModal(false);
         }}
       />
 

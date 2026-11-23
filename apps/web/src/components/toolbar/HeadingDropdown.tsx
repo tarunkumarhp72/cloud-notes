@@ -92,6 +92,7 @@ export const HeadingDropdown: React.FC<HeadingDropdownProps> = ({
           aria-expanded={isOpen}
           aria-label="Style"
           disabled={disabled}
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => setIsOpen((prev) => !prev)}
         >
           <span>{activeOption.shortLabel}</span>
@@ -111,6 +112,7 @@ export const HeadingDropdown: React.FC<HeadingDropdownProps> = ({
                 type="button"
                 role="menuitem"
                 className={`${styles.headingItem} ${isSelected ? styles.selected : ""}`}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelect(opt.id)}
               >
                 {isSelected && <span className={styles.activeIndicator} aria-hidden="true" />}
