@@ -1,6 +1,6 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { EditorState, Compartment } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView, keymap, drawSelection } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, selectAll } from "@codemirror/commands";
 import styles from "./editor.module.css";
 
@@ -212,11 +212,8 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
       selectAll: () => {
         const view = viewRef.current;
         if (!view) return;
-        view.dispatch({
-          selection: { anchor: 0, head: view.state.doc.length },
-          scrollIntoView: false,
-        });
         view.focus();
+        selectAll(view);
       },
     }));
 
@@ -235,6 +232,7 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
         doc: value,
         extensions: [
           history(),
+          drawSelection(),
           keymap.of([
             { key: "Mod-a", run: selectAll },
             ...defaultKeymap,

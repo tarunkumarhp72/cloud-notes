@@ -28,6 +28,7 @@ export interface MinimalKeyboardEvent {
   metaKey?: boolean;
   shiftKey?: boolean;
   altKey?: boolean;
+  target?: EventTarget | null;
   preventDefault?: () => void;
 }
 
@@ -142,6 +143,11 @@ export function handleShortcutEvent(
       }
       // Ctrl+A -> Select All
       if (key === "a" && actions.onSelectAll) {
+        const target = event.target as HTMLElement | undefined;
+        const tagName = target?.tagName?.toLowerCase();
+        if (tagName === "input" || (tagName === "textarea" && !target?.classList?.contains("cm-content"))) {
+          return false;
+        }
         event.preventDefault?.();
         actions.onSelectAll();
         return true;

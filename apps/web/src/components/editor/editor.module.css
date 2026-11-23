@@ -42,13 +42,20 @@
   border-left-width: 1.5px !important;
 }
 
-.cmContainer :global(.cm-selectionBackground),
-.cmContainer :global(::selection) {
-  background-color: var(--accent-subtle) !important;
+.cmContainer :global(.cm-selectionBackground) {
+  background-color: var(--selection-bg) !important;
 }
 
 .cmContainer :global(.cm-focused .cm-selectionBackground) {
-  background-color: var(--accent-subtle) !important;
+  background-color: var(--selection-bg) !important;
+}
+
+.cmContainer :global(::selection),
+.cmContainer :global(*::selection),
+.proseContainer :global(::selection),
+.proseContainer :global(*::selection) {
+  background-color: var(--selection-bg) !important;
+  color: var(--selection-text) !important;
 }
 
 /* TipTap Prose Editor Surface */
