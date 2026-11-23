@@ -594,7 +594,7 @@
 - Tests to run: `pnpm --filter web test` (offline mock tests)
 - Viewports to screenshot: 1440x900
 - Depends on: T-034, T-037
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-038/summary.md)
 
 ---
 
