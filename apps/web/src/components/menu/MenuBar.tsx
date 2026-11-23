@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import styles from "./MenuBar.module.css";
+import { CollapsedMenu } from "./CollapsedMenu";
 
 export type ActiveMenu = "file" | "edit" | "view" | null;
 
@@ -137,14 +138,11 @@ export const MenuBar: React.FC<MenuBarProps> = ({
 
       {/* Collapsed menu for mobile viewports (<600px) */}
       <div className={styles.collapsedMenuWrapper}>
-        <button
-          type="button"
-          className={styles.menuBtn}
-          aria-label="Application menu"
-          onClick={() => handleMenuClick("file")}
-        >
-          Menu ▾
-        </button>
+        <CollapsedMenu
+          renderFileDropdown={renderFileDropdown}
+          renderEditDropdown={renderEditDropdown}
+          renderViewDropdown={renderViewDropdown}
+        />
       </div>
 
       {/* Formatting Toolbar in Center / Middle */}
