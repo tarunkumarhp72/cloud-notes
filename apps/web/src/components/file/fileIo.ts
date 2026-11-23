@@ -11,10 +11,21 @@ export function exportNoteToFile(
   content: string,
   isMarkdown: boolean = false
 ): void {
-  const extension = isMarkdown ? ".md" : ".txt";
   let safeName = filename.trim() || "Untitled";
-  if (!safeName.endsWith(".txt") && !safeName.endsWith(".md")) {
-    safeName += extension;
+  if (isMarkdown) {
+    if (safeName.toLowerCase().endsWith(".txt")) {
+      safeName = safeName.slice(0, -4);
+    }
+    if (!safeName.toLowerCase().endsWith(".md")) {
+      safeName += ".md";
+    }
+  } else {
+    if (safeName.toLowerCase().endsWith(".md")) {
+      safeName = safeName.slice(0, -3);
+    }
+    if (!safeName.toLowerCase().endsWith(".txt")) {
+      safeName += ".txt";
+    }
   }
 
   const mimeType = isMarkdown ? "text/markdown;charset=utf-8" : "text/plain;charset=utf-8";

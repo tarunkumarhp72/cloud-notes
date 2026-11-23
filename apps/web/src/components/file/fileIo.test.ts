@@ -35,6 +35,21 @@ describe("File I/O Utilities", () => {
     clickSpy.mockRestore();
   });
 
+  it("adjusts extension when title has conflicting extension for the active mode", () => {
+    let downloadedName = "";
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
+      downloadedName = this.download;
+    });
+
+    exportNoteToFile("Doc.txt", "# Header", true);
+    expect(downloadedName).toBe("Doc.md");
+
+    exportNoteToFile("Code.md", "console.log('hi')", false);
+    expect(downloadedName).toBe("Code.txt");
+
+    clickSpy.mockRestore();
+  });
+
   it("reads file as text and detects markdown extension", async () => {
     const txtFile = new File(["Plain text content"], "sample.txt", { type: "text/plain" });
     const txtResult = await readFileAsText(txtFile);
