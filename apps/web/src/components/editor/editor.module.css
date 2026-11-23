@@ -93,10 +93,48 @@
   min-height: 100%;
   outline: none;
   cursor: text;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .proseContainer :global(.tiptap p) {
   margin: 0.4em 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* When Word Wrap is disabled (horizontal scrolling, lines do not wrap) */
+.proseContainer.noWrap {
+  overflow-x: auto !important;
+}
+
+.proseContainer.noWrap > div {
+  min-width: max-content;
+  width: 100%;
+}
+
+.proseContainer.noWrap :global(.tiptap) {
+  white-space: pre !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  min-width: max-content;
+}
+
+.proseContainer.noWrap :global(.tiptap p),
+.proseContainer.noWrap :global(.tiptap h1),
+.proseContainer.noWrap :global(.tiptap h2),
+.proseContainer.noWrap :global(.tiptap h3),
+.proseContainer.noWrap :global(.tiptap h4),
+.proseContainer.noWrap :global(.tiptap h5),
+.proseContainer.noWrap :global(.tiptap h6),
+.proseContainer.noWrap :global(.tiptap li),
+.proseContainer.noWrap :global(.tiptap blockquote),
+.proseContainer.noWrap :global(.tiptap pre) {
+  white-space: pre !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
 }
 
 .proseContainer :global(.tiptap h1) {

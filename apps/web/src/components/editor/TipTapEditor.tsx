@@ -54,6 +54,7 @@ export interface TipTapEditorProps {
   }) => void;
   fontFamily?: string;
   fontSize?: number;
+  wordWrap?: boolean;
   readOnly?: boolean;
 }
 
@@ -76,6 +77,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       onActiveFormatsChange,
       fontFamily = "Segoe UI Variable",
       fontSize = 14,
+      wordWrap = false,
       readOnly = false,
     },
     ref
@@ -117,6 +119,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
             levels: [1, 2, 3, 4, 5, 6],
           },
           link: false,
+          horizontalRule: false,
         }),
         Link.configure({
           openOnClick: false,
@@ -402,7 +405,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
     return (
       <div className={styles.editorWrapper} onClick={handleContainerClick}>
         <div
-          className={styles.proseContainer}
+          className={`${styles.proseContainer} ${!wordWrap ? styles.noWrap : ""}`}
           style={{
             fontFamily: `${fontFamily}, Segoe UI Variable, sans-serif`,
             fontSize: `${fontSize}px`,

@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import { createRef } from "react";
 import { TipTapEditor, TipTapEditorRef } from "./TipTapEditor";
 import { extractPlainTextFromMarkdown, normalizeMarkdown } from "./markdownSerializer";
+import styles from "./editor.module.css";
 
 describe("TipTapEditor Component & Markdown Serializer", () => {
   it("normalizes and extracts plain text from markdown correctly", () => {
@@ -34,5 +35,15 @@ describe("TipTapEditor Component & Markdown Serializer", () => {
     expect(typeof editorRef.current?.setHeading).toBe("function");
     expect(typeof editorRef.current?.insertTable).toBe("function");
     expect(typeof editorRef.current?.clearFormatting).toBe("function");
+  });
+
+  it("applies noWrap class when wordWrap is false and removes it when true", () => {
+    const { container, rerender } = render(
+      <TipTapEditor value="Wrap test" wordWrap={false} />
+    );
+    expect(container.querySelector(`.${styles.noWrap}`)).not.toBeNull();
+
+    rerender(<TipTapEditor value="Wrap test" wordWrap={true} />);
+    expect(container.querySelector(`.${styles.noWrap}`)).toBeNull();
   });
 });

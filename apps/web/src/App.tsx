@@ -49,7 +49,6 @@ const TipTapEditor = lazy(() =>
 export const App: React.FC = () => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [statusBarVisible, setStatusBarVisible] = useState(true);
-  const [wordWrap, setWordWrap] = useState(false);
   const [markdownMode, setMarkdownMode] = useState(true);
   const [zoomLevel, setZoomLevel] = useState(100);
   const [headingLevel, setHeadingLevel] = useState<HeadingLevel>("title");
@@ -178,8 +177,7 @@ export const App: React.FC = () => {
     checkVaultStatus();
   }, [checkVaultStatus]);
 
-  const { fontFamily, fontSize, wordWrap: settingsWordWrap } = useSettingsStore();
-  const effectiveWordWrap = wordWrap || settingsWordWrap;
+  const { fontFamily, fontSize, wordWrap, setWordWrap } = useSettingsStore();
 
   const {
     tabs,
@@ -459,7 +457,7 @@ export const App: React.FC = () => {
             markdownMode={isMarkdownActive}
             zoomLevel={zoomLevel}
             onToggleStatusBar={() => setStatusBarVisible((v) => !v)}
-            onToggleWordWrap={() => setWordWrap((w) => !w)}
+            onToggleWordWrap={() => setWordWrap(!wordWrap)}
             onToggleMarkdown={() => {
               const next = !isMarkdownActive;
               setMarkdownMode(next);
@@ -685,6 +683,7 @@ export const App: React.FC = () => {
                   setCanIndent(canIndent);
                   setCanOutdent(canOutdent);
                 }}
+                wordWrap={wordWrap}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
               />
@@ -702,7 +701,7 @@ export const App: React.FC = () => {
                 onCursorChange={(line, col, charCount) => {
                   setCursorPos({ line, col, charCount });
                 }}
-                wordWrap={effectiveWordWrap}
+                wordWrap={wordWrap}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
               />
