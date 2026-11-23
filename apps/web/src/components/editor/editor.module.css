@@ -7,6 +7,8 @@
   overflow: hidden;
   position: relative;
   background-color: var(--bg-surface);
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .cmContainer {
@@ -15,6 +17,8 @@
   flex: 1;
   overflow: auto;
   cursor: text;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 /* CodeMirror custom theme variables to match Windows 11 Notepad */
@@ -25,6 +29,8 @@
   background-color: transparent !important;
   color: var(--text-primary) !important;
   cursor: text;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .cmContainer :global(.cm-scroller) {
@@ -35,11 +41,15 @@
   overflow: auto;
   min-height: 100%;
   cursor: text;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .cmContainer :global(.cm-content) {
   padding: 0;
   caret-color: var(--text-primary);
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .cmContainer :global(.cm-cursor) {
@@ -78,6 +88,8 @@
   cursor: text;
   display: flex;
   flex-direction: column;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .proseContainer > div {
@@ -86,6 +98,8 @@
   flex-direction: column;
   min-height: 100%;
   cursor: text;
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .proseContainer :global(.tiptap) {
@@ -96,6 +110,13 @@
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: break-word;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.proseContainer :global(.tiptap *) {
+  user-select: text !important;
+  -webkit-user-select: text !important;
 }
 
 .proseContainer :global(.tiptap p) {

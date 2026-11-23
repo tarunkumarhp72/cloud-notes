@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, forwardRef } from "react";
+import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -151,10 +151,9 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         if (!editor.isDestroyed && editor.state?.doc && editor.state?.selection) {
           try {
             const pos = editor.state.selection.from;
-            const textUpToCursor = editor.state.doc.textBetween(0, pos, "\n");
-            const lines = textUpToCursor.split("\n");
-            const line = lines.length;
-            const col = lines[lines.length - 1].length + 1;
+            const resolved = editor.state.doc.resolve(pos);
+            const line = resolved.index(0) + 1;
+            const col = resolved.parentOffset + 1;
             const charCount = editor.state.doc.textContent.length;
             onCursorChange?.(line, col, charCount);
           } catch {
@@ -167,10 +166,9 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         if (!editor.isDestroyed && editor.state?.doc && editor.state?.selection) {
           try {
             const pos = editor.state.selection.from;
-            const textUpToCursor = editor.state.doc.textBetween(0, pos, "\n");
-            const lines = textUpToCursor.split("\n");
-            const line = lines.length;
-            const col = lines[lines.length - 1].length + 1;
+            const resolved = editor.state.doc.resolve(pos);
+            const line = resolved.index(0) + 1;
+            const col = resolved.parentOffset + 1;
             const charCount = editor.state.doc.textContent.length;
             onCursorChange?.(line, col, charCount);
           } catch {
@@ -395,9 +393,78 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       }
     }, [value, editor]);
 
+    const proseContainerRef = useRef<HTMLDivElement>(null);
+
+    // Smooth autoscroll while mouse dragging selection near top/bottom boundaries
+    useEffect(() => {
+      const container = proseContainerRef.current;
+      if (!container) return;
+
+      let isDragging = false;
+      let animId: number | null = null;
+      let speed = 0;
+
+      const step = () => {
+        if (speed !== 0 && container) {
+          container.scrollTop += speed;
+          animId = requestAnimationFrame(step);
+        } else {
+          animId = null;
+        }
+      };
+
+      const onMouseDown = () => {
+        isDragging = true;
+      };
+
+      const onMouseMove = (e: MouseEvent) => {
+        if (!isDragging || !container) return;
+        const rect = container.getBoundingClientRect();
+        const edgeThreshold = 45;
+        const maxScroll = 18;
+
+        if (e.clientY < rect.top + edgeThreshold && e.clientY > rect.top - 80) {
+          const factor = Math.max(0, 1 - (e.clientY - rect.top) / edgeThreshold);
+          speed = -Math.round(factor * maxScroll) - 2;
+        } else if (e.clientY > rect.bottom - edgeThreshold && e.clientY < rect.bottom + 80) {
+          const factor = Math.max(0, 1 - (rect.bottom - e.clientY) / edgeThreshold);
+          speed = Math.round(factor * maxScroll) + 2;
+        } else {
+          speed = 0;
+        }
+
+        if (speed !== 0 && animId === null) {
+          animId = requestAnimationFrame(step);
+        }
+      };
+
+      const onMouseUp = () => {
+        isDragging = false;
+        speed = 0;
+        if (animId !== null) {
+          cancelAnimationFrame(animId);
+          animId = null;
+        }
+      };
+
+      container.addEventListener("mousedown", onMouseDown);
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+
+      return () => {
+        container.removeEventListener("mousedown", onMouseDown);
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        if (animId !== null) cancelAnimationFrame(animId);
+      };
+    }, []);
+
     const handleContainerClick = (e: React.MouseEvent) => {
       if (!editor || editor.isDestroyed) return;
-      if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === "DIV") {
+      const selection = window.getSelection();
+      if (selection && selection.toString().length > 0) return;
+
+      if (e.target === e.currentTarget) {
         editor.commands.focus("end");
       }
     };
@@ -405,6 +472,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
     return (
       <div className={styles.editorWrapper} onClick={handleContainerClick}>
         <div
+          ref={proseContainerRef}
           className={`${styles.proseContainer} ${!wordWrap ? styles.noWrap : ""}`}
           style={{
             fontFamily: `${fontFamily}, Segoe UI Variable, sans-serif`,

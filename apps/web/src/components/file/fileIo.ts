@@ -60,10 +60,13 @@ export function useFileDragAndDrop(
     if (!enabled) return;
 
     const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = "copy";
+      const types = e.dataTransfer?.types;
+      if (types && Array.from(types).includes("Files")) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer) {
+          e.dataTransfer.dropEffect = "copy";
+        }
       }
     };
 

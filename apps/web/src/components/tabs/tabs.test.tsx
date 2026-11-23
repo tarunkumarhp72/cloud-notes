@@ -90,6 +90,29 @@ describe("Tabs Management & Store", () => {
     expect(state.tabs[0].content).toBe("");
     expect(state.tabs[0].isDirty).toBe(false);
   });
+
+  it("dynamically generates title from first heading or line for untitled tab", () => {
+    const id = useTabsStore.getState().createTab();
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("Untitled");
+
+    const id2 = useTabsStore.getState().createTab();
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id2)?.title).toBe("Untitled 2");
+
+    useTabsStore.getState().updateTabContent(id, "# Meeting Architecture\nDiscussing system roadmap.");
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("Meeting Architecture");
+
+    // When content is cleared, reverts back to default untitled title
+    useTabsStore.getState().updateTabContent(id, "");
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("Untitled");
+  });
+
+  it("preserves custom file title when content is updated", () => {
+    const id = useTabsStore.getState().createTab("api-server.ts", "const x = 1;", false, true);
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("api-server.ts");
+
+    useTabsStore.getState().updateTabContent(id, "# New Heading\nsome text");
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("api-server.ts");
+  });
 });
 
 describe("TabItem Component Drag and Drop", () => {

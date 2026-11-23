@@ -6,6 +6,8 @@ export interface TabData {
   content: string;
   isDirty: boolean;
   isMarkdown: boolean;
+  isCustomTitle?: boolean;
+  defaultTitle?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -13,17 +15,63 @@ export interface TabData {
 export interface TabsState {
   tabs: TabData[];
   activeTabId: string;
-  createTab: (title?: string, content?: string, isMarkdown?: boolean) => string;
+  createTab: (title?: string, content?: string, isMarkdown?: boolean, isCustomTitle?: boolean) => string;
   closeTab: (id: string) => void;
   selectTab: (id: string) => void;
   updateTabContent: (id: string, content: string) => void;
   setTabDirty: (id: string, isDirty: boolean) => void;
-  setTabTitle: (id: string, title: string) => void;
+  setTabTitle: (id: string, title: string, isCustomTitle?: boolean) => void;
   setTabMarkdown: (id: string, isMarkdown: boolean) => void;
   reorderTabs: (sourceIndex: number, destinationIndex: number) => void;
   cycleNextTab: () => void;
   cyclePreviousTab: () => void;
   resetTabs: () => void;
+}
+
+export function extractTitleFromContent(content: string, fallback: string = "Untitled"): string {
+  if (!content || !content.trim()) return fallback;
+  const lines = content.split("\n");
+  for (const line of lines) {
+    const cleaned = line
+      .replace(/^[#\s*>-]+/, "")
+      .replace(/[*_~`]/g, "")
+      .trim();
+    if (cleaned.length > 0) {
+      return cleaned.length > 35 ? cleaned.slice(0, 32).trim() + "..." : cleaned;
+    }
+  }
+  return fallback;
+}
+
+export function getNextUntitledTitle(existingTabs: TabData[]): string {
+  const untitledRegex = /^Untitled(?:\s+(\d+))?$/i;
+  const usedNumbers = new Set<number>();
+  let hasBaseUntitled = false;
+
+  for (const tab of existingTabs) {
+    const candidates = [tab.defaultTitle, tab.title].filter(Boolean) as string[];
+    for (const cand of candidates) {
+      const match = cand.match(untitledRegex);
+      if (match) {
+        if (match[1]) {
+          usedNumbers.add(parseInt(match[1], 10));
+        } else {
+          hasBaseUntitled = true;
+          usedNumbers.add(1);
+        }
+      }
+    }
+  }
+
+  if (!hasBaseUntitled && !usedNumbers.has(1)) {
+    return "Untitled";
+  }
+
+  let candidate = 2;
+  while (usedNumbers.has(candidate)) {
+    candidate++;
+  }
+  return `Untitled ${candidate}`;
 }
 
 const initialTabId = "note-initial";
@@ -33,6 +81,8 @@ const initialTab: TabData = {
   content: "",
   isDirty: false,
   isMarkdown: true,
+  isCustomTitle: false,
+  defaultTitle: "Untitled",
   createdAt: Date.now(),
   updatedAt: Date.now(),
 };
@@ -41,14 +91,22 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   tabs: [initialTab],
   activeTabId: initialTabId,
 
-  createTab: (title = "Untitled", content = "", isMarkdown = true) => {
+  createTab: (title?: string, content = "", isMarkdown = true, isCustomTitle = false) => {
+    const { tabs } = get();
+    const isExplicitTitle = !!title && title !== "Untitled";
+    const defaultTitle = isExplicitTitle ? title : getNextUntitledTitle(tabs);
+    const finalIsCustom = isCustomTitle || isExplicitTitle;
+    const finalTitle = finalIsCustom ? defaultTitle : extractTitleFromContent(content, defaultTitle);
+
     const id = `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const newTab: TabData = {
       id,
-      title,
+      title: finalTitle,
       content,
       isDirty: false,
       isMarkdown,
+      isCustomTitle: finalIsCustom,
+      defaultTitle,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -64,7 +122,6 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   closeTab: (id: string) => {
     const { tabs, activeTabId } = get();
     if (tabs.length <= 1) {
-      // If closing the last tab, reset it to a fresh Untitled note
       const resetId = `note-${Date.now()}`;
       set({
         tabs: [
@@ -74,6 +131,8 @@ export const useTabsStore = create<TabsState>((set, get) => ({
             content: "",
             isDirty: false,
             isMarkdown: true,
+            isCustomTitle: false,
+            defaultTitle: "Untitled",
             createdAt: Date.now(),
             updatedAt: Date.now(),
           },
@@ -107,16 +166,22 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 
   updateTabContent: (id: string, content: string) => {
     set((state) => ({
-      tabs: state.tabs.map((tab) =>
-        tab.id === id
-          ? {
-              ...tab,
-              content,
-              isDirty: true,
-              updatedAt: Date.now(),
-            }
-          : tab
-      ),
+      tabs: state.tabs.map((tab) => {
+        if (tab.id !== id) return tab;
+        const fallback = tab.defaultTitle || "Untitled";
+        const isCustom = tab.isCustomTitle ?? (tab.title !== fallback && !/^Untitled(?:\s+\d+)?$/i.test(tab.title));
+        const newTitle = isCustom
+          ? tab.title
+          : extractTitleFromContent(content, fallback);
+
+        return {
+          ...tab,
+          title: newTitle,
+          content,
+          isDirty: true,
+          updatedAt: Date.now(),
+        };
+      }),
     }));
   },
 
@@ -126,9 +191,10 @@ export const useTabsStore = create<TabsState>((set, get) => ({
     }));
   },
 
-  setTabTitle: (id: string, title: string) => {
+  setTabTitle: (id: string, title: string, isCustomTitle?: boolean) => {
+    const isCustom = isCustomTitle !== undefined ? isCustomTitle : !/^Untitled(?:\s+\d+)?$/i.test(title);
     set((state) => ({
-      tabs: state.tabs.map((tab) => (tab.id === id ? { ...tab, title } : tab)),
+      tabs: state.tabs.map((tab) => (tab.id === id ? { ...tab, title, isCustomTitle: isCustom } : tab)),
     }));
   },
 

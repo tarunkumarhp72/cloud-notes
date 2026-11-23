@@ -584,6 +584,8 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
     }, [fontFamily, fontSize]);
 
     const handleContainerClick = (e: React.MouseEvent) => {
+      const selection = window.getSelection();
+      if (selection && selection.toString().length > 0) return;
       if (viewRef.current && (e.target === e.currentTarget || e.target === containerRef.current)) {
         viewRef.current.focus();
       }
