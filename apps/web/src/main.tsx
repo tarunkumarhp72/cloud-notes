@@ -4,6 +4,11 @@ import { App } from "./App";
 import "./styles/theme.css";
 import { useTabsStore } from "./stores/tabsStore";
 import { handleSyncConflict } from "./sync/conflictHandler";
+import { registerServiceWorker } from "./sw";
+
+if (process.env.NODE_ENV === "production") {
+  registerServiceWorker();
+}
 
 if (typeof window !== "undefined") {
   (window as unknown as { __tabsStore: typeof useTabsStore; __handleSyncConflict: typeof handleSyncConflict }).__tabsStore = useTabsStore;

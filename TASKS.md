@@ -579,7 +579,7 @@
 - Tests to run: `pnpm --filter web build`
 - Viewports to screenshot: none
 - Depends on: T-001
-- Status: todo
+- Status: done [Evidence](qa/evidence/T-037/summary.md)
 
 - ID: T-038
 - Title: Offline startup and local-first editor boot
