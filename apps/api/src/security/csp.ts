@@ -2,7 +2,7 @@ import type { MiddlewareHandler } from "hono";
 
 export const DEFAULT_CSP_DIRECTIVES = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: https:",

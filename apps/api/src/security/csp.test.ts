@@ -14,6 +14,7 @@ describe("T-043 CSP Middleware", () => {
     const csp = res.headers.get("Content-Security-Policy");
     expect(csp).toBeDefined();
     expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("script-src 'self' 'wasm-unsafe-eval'");
     expect(csp).toContain("frame-ancestors 'none'");
     expect(csp).toContain("object-src 'none'");
 
