@@ -20,6 +20,7 @@ import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
 import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useLocalAutoSave } from "./sync/localAutoSave";
 import { SyncEngine, type SyncStatus } from "./sync/syncEngine";
+import { TabBroadcastSync } from "./sync/broadcast";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
@@ -66,6 +67,7 @@ export const App: React.FC = () => {
   const tipTapRef = useRef<TipTapEditorRef>(null);
   const codeMirrorRef = useRef<CodeMirrorEditorRef>(null);
   const syncEngineRef = useRef<SyncEngine | null>(null);
+  const broadcastRef = useRef<TabBroadcastSync | null>(null);
 
   useEffect(() => {
     syncEngineRef.current = new SyncEngine({
@@ -76,9 +78,39 @@ export const App: React.FC = () => {
       setSyncStatus(status);
     });
 
+    const broadcast = new TabBroadcastSync();
+    broadcastRef.current = broadcast;
+
+    const unsubBroadcast = broadcast.subscribe((event) => {
+      if (event.type === "NOTE_UPDATED") {
+        const existing = useTabsStore.getState().tabs.find((t) => t.id === event.payload.noteId);
+        if (existing && existing.content !== event.payload.content) {
+          useTabsStore.getState().updateTabContent(event.payload.noteId, event.payload.content);
+          if (event.payload.title && existing.title !== event.payload.title) {
+            useTabsStore.getState().setTabTitle(event.payload.noteId, event.payload.title);
+          }
+        }
+      } else if (event.type === "TAB_CREATED") {
+        const existing = useTabsStore.getState().tabs.some((t) => t.id === event.payload.noteId);
+        if (!existing) {
+          useTabsStore.getState().createTab(event.payload.title, event.payload.content, event.payload.isMarkdown);
+        }
+      } else if (event.type === "TAB_CLOSED") {
+        const currentTabs = useTabsStore.getState().tabs;
+        const exists = currentTabs.some((t) => t.id === event.payload.noteId);
+        if (exists && currentTabs.length > 1) {
+          useTabsStore.getState().closeTab(event.payload.noteId);
+        }
+      } else if (event.type === "VAULT_STATUS_CHANGED") {
+        useVaultStore.getState().checkVaultStatus();
+      }
+    });
+
     return () => {
       unsubscribe();
+      unsubBroadcast();
       syncEngineRef.current?.destroy();
+      broadcast.destroy();
     };
   }, []);
 
@@ -106,6 +138,23 @@ export const App: React.FC = () => {
 
   const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
 
+  const handleNewTab = (title?: string, content?: string, isMarkdown?: boolean) => {
+    const newId = createTab(title, content, isMarkdown);
+    broadcastRef.current?.broadcast({
+      type: "TAB_CREATED",
+      payload: { noteId: newId, title: title || "Untitled", content: content || "", isMarkdown: !!isMarkdown },
+    });
+    return newId;
+  };
+
+  const handleCloseTab = (id: string) => {
+    closeTab(id);
+    broadcastRef.current?.broadcast({
+      type: "TAB_CLOSED",
+      payload: { noteId: id },
+    });
+  };
+
   // Local auto-save to IndexedDB (1s debounce, 10s forced flush)
   useLocalAutoSave(activeTab, (savedId) => {
     setTabDirty(savedId, false);
@@ -117,6 +166,16 @@ export const App: React.FC = () => {
         isMarkdown: activeTab?.isMarkdown,
       })
     );
+    if (activeTab) {
+      broadcastRef.current?.broadcast({
+        type: "NOTE_UPDATED",
+        payload: {
+          noteId: savedId,
+          content: activeTab.content,
+          title: activeTab.title,
+        },
+      });
+    }
   });
 
   const [user, setUser] = useState<UserProfile | null>({
@@ -128,12 +187,12 @@ export const App: React.FC = () => {
 
   // Native drag-and-drop file import (.txt, .md, etc.)
   useFileDragAndDrop((imported) => {
-    createTab(imported.filename, imported.content, imported.isMarkdown);
+    handleNewTab(imported.filename, imported.content, imported.isMarkdown);
   });
 
   // Windows Notepad Global Shortcuts Dispatcher
   useNotepadShortcuts({
-    onNewTab: () => createTab(),
+    onNewTab: () => handleNewTab(),
     onNewWindow: () => window.open(window.location.href, "_blank"),
     onOpen: () => setShowOpenDialog(true),
     onSave: () => {
@@ -146,7 +205,7 @@ export const App: React.FC = () => {
         exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
       }
     },
-    onCloseTab: () => closeTab(activeTabId),
+    onCloseTab: () => handleCloseTab(activeTabId),
     onFind: () => {
       setIsFindOpen(true);
       setIsReplaceOpen(false);
@@ -181,8 +240,8 @@ export const App: React.FC = () => {
         tabs={tabs}
         activeTabId={activeTabId}
         onSelectTab={selectTab}
-        onCloseTab={closeTab}
-        onNewTab={() => createTab()}
+        onCloseTab={handleCloseTab}
+        onNewTab={() => handleNewTab()}
         onReorderTabs={reorderTabs}
       />
 
@@ -190,9 +249,9 @@ export const App: React.FC = () => {
       <MenuBar
         renderFileDropdown={() => (
           <FileMenu
-            onNewTab={() => createTab()}
+            onNewTab={() => handleNewTab()}
             onNewWindow={() => window.open(window.location.href, "_blank")}
-            onNewMarkdownTab={() => createTab("Untitled.md", "", true)}
+            onNewMarkdownTab={() => handleNewTab("Untitled.md", "", true)}
             onOpen={() => setShowOpenDialog(true)}
             onSave={() => {
               if (activeTab) {
@@ -204,7 +263,7 @@ export const App: React.FC = () => {
                 exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
               }
             }}
-            onCloseTab={() => closeTab(activeTabId)}
+            onCloseTab={() => handleCloseTab(activeTabId)}
             onPrint={() => window.print()}
           />
         )}
