@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./TabStrip.module.css";
 import { TabItem } from "./TabItem";
 
@@ -15,6 +15,9 @@ export interface TabStripProps {
   onCloseTab: (id: string) => void;
   onNewTab: () => void;
   onReorderTabs?: (sourceIndex: number, destinationIndex: number) => void;
+  onMinimize?: () => void;
+  onMaximize?: () => void;
+  onCloseWindow?: () => void;
   childrenRight?: React.ReactNode;
 }
 
@@ -25,8 +28,47 @@ export const TabStrip: React.FC<TabStripProps> = ({
   onCloseTab,
   onNewTab,
   onReorderTabs,
+  onMinimize,
+  onMaximize,
+  onCloseWindow,
   childrenRight,
 }) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () => document.removeEventListener("fullscreenchange", handleFsChange);
+  }, []);
+
+  const handleMinimize = () => {
+    if (onMinimize) {
+      onMinimize();
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  const handleMaximize = () => {
+    if (onMaximize) {
+      onMaximize();
+    } else if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  };
+
+  const handleClose = () => {
+    if (onCloseWindow) {
+      onCloseWindow();
+    } else {
+      window.close();
+    }
+  };
+
   return (
     <header className={styles.titleBar} role="banner">
       <div className={styles.leftSection}>
@@ -76,22 +118,42 @@ export const TabStrip: React.FC<TabStripProps> = ({
         {childrenRight}
 
         {/* Windows Caption Controls */}
-        <div className={styles.captionControls} aria-hidden="true">
-          <button type="button" className={styles.captionBtn} aria-label="Minimize" tabIndex={-1}>
+        <div className={styles.captionControls}>
+          <button
+            type="button"
+            className={styles.captionBtn}
+            onClick={handleMinimize}
+            aria-label="Minimize"
+            title="Minimize"
+          >
             <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
               <rect width="10" height="1" />
             </svg>
           </button>
-          <button type="button" className={styles.captionBtn} aria-label="Maximize" tabIndex={-1}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
-              <rect x="0.5" y="0.5" width="9" height="9" />
-            </svg>
+          <button
+            type="button"
+            className={styles.captionBtn}
+            onClick={handleMaximize}
+            aria-label={isFullscreen ? "Restore down" : "Maximize"}
+            title={isFullscreen ? "Restore down" : "Maximize"}
+          >
+            {isFullscreen ? (
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
+                <rect x="0.5" y="2.5" width="7" height="7" strokeWidth="1" />
+                <path d="M2.5 2.5V0.5H9.5V7.5H7.5" strokeWidth="1" />
+              </svg>
+            ) : (
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
+                <rect x="0.5" y="0.5" width="9" height="9" strokeWidth="1" />
+              </svg>
+            )}
           </button>
           <button
             type="button"
             className={`${styles.captionBtn} ${styles.closeCaption}`}
-            aria-label="Close window"
-            tabIndex={-1}
+            onClick={handleClose}
+            aria-label="Close"
+            title="Close"
           >
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor">
               <path d="M1 1L9 9M9 1L1 9" />

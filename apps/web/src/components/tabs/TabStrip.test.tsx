@@ -97,4 +97,35 @@ describe("TabStrip Component", () => {
     fireEvent.click(newBtn);
     expect(handleNewTab).toHaveBeenCalledTimes(1);
   });
+
+  it("triggers window caption controls (minimize, maximize, close)", () => {
+    const onMinimize = vi.fn();
+    const onMaximize = vi.fn();
+    const onCloseWindow = vi.fn();
+
+    render(
+      <TabStrip
+        tabs={mockTabs}
+        activeTabId="tab-1"
+        onSelectTab={vi.fn()}
+        onCloseTab={vi.fn()}
+        onNewTab={vi.fn()}
+        onMinimize={onMinimize}
+        onMaximize={onMaximize}
+        onCloseWindow={onCloseWindow}
+      />
+    );
+
+    const minBtn = screen.getByRole("button", { name: "Minimize" });
+    fireEvent.click(minBtn);
+    expect(onMinimize).toHaveBeenCalledTimes(1);
+
+    const maxBtn = screen.getByRole("button", { name: "Maximize" });
+    fireEvent.click(maxBtn);
+    expect(onMaximize).toHaveBeenCalledTimes(1);
+
+    const closeBtn = screen.getByRole("button", { name: "Close" });
+    fireEvent.click(closeBtn);
+    expect(onCloseWindow).toHaveBeenCalledTimes(1);
+  });
 });
