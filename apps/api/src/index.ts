@@ -6,6 +6,7 @@ import { syncRouter } from "./routes/sync";
 import { accountRouter } from "./routes/account";
 import { cspMiddleware } from "./security/csp";
 import { rateLimitMiddleware } from "./middleware/rateLimit";
+import { config } from "./config";
 
 export const app = new Hono();
 
@@ -14,8 +15,8 @@ app.use("*", cspMiddleware());
 app.use(
   "/auth/*",
   rateLimitMiddleware({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
+    windowMs: config.rateLimit.auth.windowMs,
+    max: config.rateLimit.auth.max,
     message: "Too many authentication attempts. Please try again later.",
   })
 );
@@ -23,8 +24,8 @@ app.use(
 app.use(
   "/sync/*",
   rateLimitMiddleware({
-    windowMs: 60 * 1000,
-    max: 180,
+    windowMs: config.rateLimit.sync.windowMs,
+    max: config.rateLimit.sync.max,
     message: "Sync rate limit exceeded. Please try again later.",
   })
 );
@@ -32,8 +33,8 @@ app.use(
 app.use(
   "/api/sync/*",
   rateLimitMiddleware({
-    windowMs: 60 * 1000,
-    max: 180,
+    windowMs: config.rateLimit.sync.windowMs,
+    max: config.rateLimit.sync.max,
     message: "Sync rate limit exceeded. Please try again later.",
   })
 );

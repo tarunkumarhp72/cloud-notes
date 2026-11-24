@@ -79,9 +79,10 @@ describe("Shortcuts Dispatcher", () => {
     expect(handleShortcutEvent(eg, actions)).toBe(true);
     expect(actions.onGoTo).toHaveBeenCalledTimes(1);
 
-    // F5 -> Time/Date
+    // F5 -> Time/Date only active on desktop, ignored on web
     const eF5 = createMockEvent({ key: "F5" });
-    expect(handleShortcutEvent(eF5, actions)).toBe(true);
+    expect(handleShortcutEvent(eF5, { ...actions, isDesktop: false })).toBe(false);
+    expect(handleShortcutEvent(eF5, { ...actions, isDesktop: true })).toBe(true);
     expect(actions.onTimeDate).toHaveBeenCalledTimes(1);
 
     // Ctrl+Z -> Undo

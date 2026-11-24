@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { getJwtSecretKey } from "./jwt";
+import { config } from "../config";
 
 export interface RefreshTokenPayload {
   sub: string; // userId
@@ -24,18 +25,19 @@ function generateId(): string {
 
 export async function signRefreshToken(
   userId: string,
+  email?: string,
   familyId = generateId(),
   version = 1
 ): Promise<{ token: string; jti: string; familyId: string }> {
   const secret = getJwtSecretKey();
   const jti = generateId();
 
-  const token = await new SignJWT({ familyId, version })
-    .setProtectedHeader({ alg: "HS256" })
+  const token = await new SignJWT({ email, familyId, version })
+    .setProtectedHeader({ alg: config.jwt.algorithm })
     .setSubject(userId)
     .setJti(jti)
     .setIssuedAt()
-    .setExpirationTime("15d")
+    .setExpirationTime(config.jwt.refreshExpiresIn)
     .sign(secret);
 
   activeTokenIds.set(jti, { userId, familyId, version });
@@ -53,13 +55,14 @@ export async function rotateRefreshToken(oldToken: string): Promise<{
   let payload;
 
   try {
-    const verified = await jwtVerify(oldToken, secret, { algorithms: ["HS256"] });
+    const verified = await jwtVerify(oldToken, secret, { algorithms: [config.jwt.algorithm] });
     payload = verified.payload;
   } catch (err) {
     throw new Error(`Invalid refresh token: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   const userId = payload.sub as string;
+  let email = payload.email as string | undefined;
   const jti = payload.jti as string;
   const familyId = payload.familyId as string;
   const version = (payload.version as number) || 1;
@@ -78,17 +81,33 @@ export async function rotateRefreshToken(oldToken: string): Promise<{
   // Invalidate consumed token
   activeTokenIds.delete(jti);
 
-  // Issue rotated refresh token in the same family
-  const next = await signRefreshToken(userId, familyId, version + 1);
+  // If email was not stored in refresh token, look up the user's real email
+  if (!email) {
+    const { sql } = await import("../db");
+    if (sql) {
+      try {
+        const rows = await sql`SELECT email FROM users WHERE id = ${userId} LIMIT 1`;
+        if (rows.length > 0 && rows[0].email) {
+          email = rows[0].email;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+  }
 
-  // Issue fresh 15-minute access token
+  // Issue rotated refresh token in the same family
+  const next = await signRefreshToken(userId, email, familyId, version + 1);
+
+  // Issue fresh access token with user's verified email
   const { signAccessToken } = await import("./jwt");
-  const newAccessToken = await signAccessToken(userId, "user@cloudnotes.app");
+  const newAccessToken = await signAccessToken(userId, email || "");
 
   return {
     newAccessToken,
     newRefreshToken: next.token,
     userId,
+    email,
   };
 }
 
@@ -107,9 +126,9 @@ export function getRefreshCookieOptions(token: string): RefreshCookieOptions {
     name: "refresh_token",
     value: token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
-    maxAge: 15 * 24 * 60 * 60, // 15 days in seconds
-    path: "/auth",
+    secure: config.cookies.secure,
+    sameSite: config.cookies.sameSite as "Strict",
+    maxAge: config.cookies.refreshMaxAgeSec,
+    path: config.cookies.refreshPath,
   };
 }

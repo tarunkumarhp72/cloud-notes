@@ -4,7 +4,11 @@ build/
 .playwright-mcp/
 .env
 .env.*
+.env.local
+apps/*/.env
+apps/*/.env.*
 !.env.example
+!apps/*/.env.example
 *.log
 .DS_Store
 Thumbs.db

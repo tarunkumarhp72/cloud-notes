@@ -84,7 +84,9 @@ export const App: React.FC = () => {
   const broadcastRef = useRef<TabBroadcastSync | null>(null);
 
   useEffect(() => {
+    const apiBaseUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "";
     syncEngineRef.current = new SyncEngine({
+      pushUrl: apiBaseUrl ? `${apiBaseUrl}/api/sync/push` : "/api/sync/push",
       getAccessToken: () => localStorage.getItem("notepad_token") || null,
     });
 
@@ -279,6 +281,30 @@ export const App: React.FC = () => {
     return null;
   });
 
+  // Automatically refresh profile on mount to load freshest avatarUrl and displayName
+  useEffect(() => {
+    const token = localStorage.getItem("notepad_token");
+    if (!token) return;
+
+    const apiBaseUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "";
+    fetch(`${apiBaseUrl}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.user) {
+          setUser((prev) => {
+            const updated = { ...prev, ...data.user };
+            localStorage.setItem("notepad_user", JSON.stringify(updated));
+            return updated;
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to auto-refresh user profile:", err);
+      });
+  }, []);
+
   // Handle Google OAuth callback (?code=...&state=... or ?token=...&user=...)
   useEffect(() => {
     async function handleOAuthCallback() {
@@ -320,7 +346,8 @@ export const App: React.FC = () => {
 
           const { verifier } = validateGoogleCallback(searchParams, state);
 
-          const res = await fetch("/auth/google", {
+          const apiBaseUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "";
+          const res = await fetch(`${apiBaseUrl}/auth/google`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -405,6 +432,7 @@ export const App: React.FC = () => {
 
   // Windows Notepad Global Shortcuts Dispatcher
   useNotepadShortcuts({
+    isDesktop,
     onNewTab: () => handleNewTab(),
     onNewWindow: () => window.open(window.location.href, "_blank"),
     onOpen: () => setShowOpenDialog(true),

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { signAccessToken, verifyAccessToken } from "../auth/jwt";
 import { signRefreshToken, rotateRefreshToken, getRefreshCookieOptions } from "../auth/tokens";
 import { sql } from "../db";
+import { config } from "../config";
 
 export const authRouter = new Hono();
 
@@ -34,8 +35,8 @@ export async function exchangeGoogleCode(
   codeVerifier: string,
   redirectUri: string
 ): Promise<GoogleIdTokenClaims> {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const clientId = config.google.clientId;
+  const clientSecret = config.google.clientSecret;
 
   if (!clientId || !clientSecret) {
     throw new Error("Google OAuth credentials not configured on server");
@@ -67,6 +68,27 @@ export async function exchangeGoogleCode(
   }
 
   const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8")) as GoogleIdTokenClaims;
+
+  // If picture or display name is missing from ID token, fetch directly from Google UserInfo
+  if ((!payload.picture || !payload.name) && tokens.access_token) {
+    try {
+      const userinfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
+      });
+      if (userinfoRes.ok) {
+        const userinfo = (await userinfoRes.json()) as { picture?: string; name?: string };
+        if (userinfo.picture && !payload.picture) {
+          payload.picture = userinfo.picture;
+        }
+        if (userinfo.name && !payload.name) {
+          payload.name = userinfo.name;
+        }
+      }
+    } catch {
+      // Non-critical fallback
+    }
+  }
+
   return payload;
 }
 
@@ -114,7 +136,7 @@ authRouter.post("/google", async (c) => {
   }
 
   const accessToken = await signAccessToken(userId, email);
-  const { token: refreshToken } = await signRefreshToken(userId);
+  const { token: refreshToken } = await signRefreshToken(userId, email);
 
   const cookieOpts = getRefreshCookieOptions(refreshToken);
   setCookie(c, cookieOpts.name, cookieOpts.value, {
@@ -141,7 +163,7 @@ authRouter.get("/callback", async (c) => {
   const error = c.req.query("error");
   const errorDesc = c.req.query("error_description");
 
-  const frontendOrigin = process.env.FRONTEND_URL || "http://localhost:3000";
+  const frontendOrigin = config.frontendUrl;
 
   if (error) {
     return c.redirect(`${frontendOrigin}/?error=${encodeURIComponent(errorDesc || error)}`);
@@ -154,8 +176,8 @@ authRouter.get("/callback", async (c) => {
   try {
     const reqUrl = new URL(c.req.url);
     const redirectUri = `${reqUrl.origin}/auth/callback`;
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const clientId = config.google.clientId;
+    const clientSecret = config.google.clientSecret;
 
     if (!clientId || !clientSecret) {
       throw new Error("Google OAuth credentials not configured on server");
@@ -206,7 +228,7 @@ authRouter.get("/callback", async (c) => {
     }
 
     const accessToken = await signAccessToken(userId, email);
-    const { token: refreshToken } = await signRefreshToken(userId);
+    const { token: refreshToken } = await signRefreshToken(userId, email);
 
     const cookieOpts = getRefreshCookieOptions(refreshToken);
     setCookie(c, cookieOpts.name, cookieOpts.value, {
@@ -275,10 +297,29 @@ authRouter.get("/me", async (c) => {
   const token = authHeader.substring(7);
   try {
     const payload = await verifyAccessToken(token);
+    let displayName = payload.email.split("@")[0];
+    let avatarUrl: string | null = null;
+
+    if (sql) {
+      try {
+        const rows = await sql`
+          SELECT display_name, avatar_url FROM users WHERE id = ${payload.sub} LIMIT 1
+        `;
+        if (rows.length > 0) {
+          displayName = rows[0].display_name || displayName;
+          avatarUrl = rows[0].avatar_url || null;
+        }
+      } catch {
+        // Non-fatal database fallback
+      }
+    }
+
     return c.json({
       user: {
         id: payload.sub,
         email: payload.email,
+        displayName,
+        avatarUrl,
       },
     });
   } catch {

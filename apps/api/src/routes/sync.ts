@@ -2,6 +2,7 @@ import { Hono, type Context } from "hono";
 import { z } from "zod";
 import { verifyAccessToken } from "../auth/jwt";
 import { sql } from "../db";
+import { config } from "../config";
 
 export const syncRouter = new Hono();
 
@@ -9,7 +10,7 @@ export const SyncPushMutationSchema = z.object({
   id: z.string().min(1, "Mutation ID is required"),
   noteId: z.string().min(1, "Note ID is required"),
   action: z.enum(["upsert", "delete"]),
-  encryptedEnvelope: z.string().min(1, "Encrypted envelope is required").max(5_000_000, "Note size exceeds maximum 5MB limit"),
+  encryptedEnvelope: z.string().min(1, "Encrypted envelope is required").max(config.limits.maxNotePayloadBytes, `Note size exceeds maximum ${config.limits.maxNotePayloadBytes / 1_000_000}MB limit`),
   version: z.number().int().nonnegative().optional().default(1),
   clientUpdatedAt: z.string().min(1, "Client updated at is required"),
 });
@@ -75,8 +76,8 @@ export const syncHandlers = {
               SELECT count(*)::int AS count FROM encrypted_notes WHERE user_id = ${userId} AND deleted = FALSE
             `;
             const activeCount = countRows[0]?.count || 0;
-            if (activeCount >= 50) {
-              throw new Error("Active note limit reached (maximum 50 notes allowed for your account).");
+            if (activeCount >= config.limits.maxNotesPerUser) {
+              throw new Error(`Active note limit reached (maximum ${config.limits.maxNotesPerUser} notes allowed for your account).`);
             }
           }
 
@@ -162,8 +163,8 @@ export const syncHandlers = {
           for (const note of inMemoryNotesStore.values()) {
             if (note.userId === userId && !note.deleted) activeCount++;
           }
-          if (activeCount >= 50) {
-            throw new Error("Active note limit reached (maximum 50 notes allowed for your account).");
+          if (activeCount >= config.limits.maxNotesPerUser) {
+            throw new Error(`Active note limit reached (maximum ${config.limits.maxNotesPerUser} notes allowed for your account).`);
           }
         }
 

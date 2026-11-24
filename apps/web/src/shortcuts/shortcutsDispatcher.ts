@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 export interface ShortcutActions {
+  isDesktop?: boolean;
   onNewTab?: () => void;
   onNewWindow?: () => void;
   onOpen?: () => void;
@@ -42,11 +43,14 @@ export function handleShortcutEvent(
   const isShift = !!event.shiftKey;
   const key = event.key.toLowerCase();
 
-  // F5 -> Time/Date
+  // Function keys: F5 -> Time/Date (Only active in desktop mode; in web mode, allow native browser refresh)
   if (event.key === "F5") {
-    event.preventDefault?.();
-    actions.onTimeDate?.();
-    return true;
+    if (actions.isDesktop) {
+      event.preventDefault?.();
+      actions.onTimeDate?.();
+      return true;
+    }
+    return false;
   }
 
   // Ctrl+Tab / Ctrl+Shift+Tab -> Next / Prev tab

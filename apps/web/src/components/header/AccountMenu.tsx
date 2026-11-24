@@ -25,7 +25,13 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
   isVaultLocked = true,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Reset image error state whenever user or avatarUrl changes
+  useEffect(() => {
+    setImgError(false);
+  }, [user?.avatarUrl]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -58,6 +64,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
   };
 
   const initial = user?.displayName ? user.displayName.charAt(0).toUpperCase() : "";
+  const hasValidAvatar = Boolean(user?.avatarUrl && !imgError);
 
   return (
     <div className={styles.container} ref={containerRef}>
@@ -71,8 +78,14 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
           aria-haspopup="true"
         >
           <div className={styles.avatarCircle}>
-            {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt="" className={styles.avatarImg} />
+            {hasValidAvatar ? (
+              <img
+                src={user!.avatarUrl!}
+                alt={user?.displayName || "Profile"}
+                className={styles.avatarImg}
+                referrerPolicy="no-referrer"
+                onError={() => setImgError(true)}
+              />
             ) : user ? (
               <span>{initial}</span>
             ) : (
@@ -88,8 +101,14 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
         <div className={styles.flyout} role="dialog" aria-label="Account details">
           <div className={styles.profileRow}>
             <div className={styles.profileAvatar}>
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className={styles.avatarImg} />
+              {hasValidAvatar ? (
+                <img
+                  src={user.avatarUrl!}
+                  alt={user.displayName || "Profile"}
+                  className={styles.avatarImg}
+                  referrerPolicy="no-referrer"
+                  onError={() => setImgError(true)}
+                />
               ) : (
                 <span>{initial}</span>
               )}

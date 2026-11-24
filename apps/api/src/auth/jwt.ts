@@ -1,10 +1,8 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
-
-const DEFAULT_TEST_SECRET = "notepad-cloud-test-jwt-secret-32-bytes-min!!";
+import { config, tokenVerificationCache } from "../config";
 
 export function getJwtSecretKey(): Uint8Array {
-  const secret = process.env.JWT_SECRET || DEFAULT_TEST_SECRET;
-  return new TextEncoder().encode(secret);
+  return new TextEncoder().encode(config.jwt.secret);
 }
 
 export interface AccessTokenPayload extends JWTPayload {
@@ -15,26 +13,36 @@ export interface AccessTokenPayload extends JWTPayload {
 export async function signAccessToken(userId: string, email: string): Promise<string> {
   const secret = getJwtSecretKey();
   return new SignJWT({ email })
-    .setProtectedHeader({ alg: "HS256" })
+    .setProtectedHeader({ alg: config.jwt.algorithm })
     .setSubject(userId)
     .setIssuedAt()
-    .setExpirationTime("15m")
+    .setExpirationTime(config.jwt.accessExpiresIn)
     .sign(secret);
 }
 
 export async function verifyAccessToken(token: string): Promise<AccessTokenPayload> {
+  // Check LRU cache first to prevent repeated crypto operations on high-frequency requests
+  const cached = tokenVerificationCache.get(token);
+  if (cached) {
+    return cached as AccessTokenPayload;
+  }
+
   const secret = getJwtSecretKey();
   const { payload } = await jwtVerify(token, secret, {
-    algorithms: ["HS256"],
+    algorithms: [config.jwt.algorithm],
   });
 
   if (!payload.sub || typeof payload.email !== "string") {
     throw new Error("Invalid access token payload structure");
   }
 
-  return {
+  const verified: AccessTokenPayload = {
     ...payload,
     sub: payload.sub,
     email: payload.email,
   };
+
+  // Cache verified payload in LRU cache
+  tokenVerificationCache.set(token, verified);
+  return verified;
 }

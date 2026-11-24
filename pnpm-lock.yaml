@@ -38,6 +38,9 @@ importers:
       jose:
         specifier: ^6.2.18
         version: 6.2.18
+      lru-cache:
+        specifier: ^11.5.3
+        version: 11.5.3
       postgres:
         specifier: ^4.1.1
         version: 4.1.1

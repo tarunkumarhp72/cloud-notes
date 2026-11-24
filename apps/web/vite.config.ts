@@ -2,9 +2,13 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "node:path";
+import fs from "node:fs";
+
+const rootEnvPath = path.resolve(import.meta.dirname, "../../.env");
+const hasRootEnv = fs.existsSync(rootEnvPath);
 
 export default defineConfig({
-  envDir: path.resolve(import.meta.dirname, "../../"),
+  envDir: hasRootEnv ? path.resolve(import.meta.dirname, "../../") : path.resolve(import.meta.dirname, "./"),
   plugins: [
     react(),
     VitePWA({

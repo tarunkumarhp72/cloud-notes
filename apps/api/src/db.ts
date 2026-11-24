@@ -1,32 +1,21 @@
 import postgres from "postgres";
-import process from "node:process";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { config } from "./config";
 
-if (!process.env.DATABASE_URL) {
-  try {
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    process.loadEnvFile(path.resolve(__dirname, "../../../.env"));
-  } catch {
-    // Fallback if .env is not found or already loaded
-  }
-}
+const connectionString = config.database.url;
 
-const connectionString = process.env.DATABASE_URL;
-
-// Lazy connection to avoid crashing when DATABASE_URL is not set or during unit tests
-export const sql = connectionString && process.env.NODE_ENV !== "test"
+// Connection pool configured via config.ts / .env parameters
+export const sql = connectionString && !config.isTest
   ? postgres(connectionString, {
-      max: 10,
-      idle_timeout: 20,
-      connect_timeout: 10,
-      ssl: "require",
+      max: config.database.maxConnections,
+      idle_timeout: config.database.idleTimeoutSec,
+      connect_timeout: config.database.connectTimeoutSec,
+      ssl: config.database.ssl,
     })
   : null;
 
 export async function checkDbConnection(): Promise<{ connected: boolean; latencyMs?: number; error?: string }> {
   if (!sql) {
-    return { connected: false, error: "DATABASE_URL not configured" };
+    return { connected: false, error: "DATABASE_URL not configured or running in test mode" };
   }
 
   const start = Date.now();
