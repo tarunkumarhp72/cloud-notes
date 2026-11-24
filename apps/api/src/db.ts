@@ -1,4 +1,16 @@
 import postgres from "postgres";
+import process from "node:process";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+if (!process.env.DATABASE_URL) {
+  try {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    process.loadEnvFile(path.resolve(__dirname, "../../../.env"));
+  } catch {
+    // Fallback if .env is not found or already loaded
+  }
+}
 
 const connectionString = process.env.DATABASE_URL;
 
