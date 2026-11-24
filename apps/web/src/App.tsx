@@ -20,7 +20,7 @@ import { FindReplaceBar } from "./components/editor/FindReplaceBar";
 import { GoToDialog } from "./components/editor/GoToDialog";
 import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
-import { listNotes } from "@notepad/core";
+import { listNotes, createNoteEnvelope, openNoteEnvelope } from "@notepad/core";
 import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useLocalAutoSave } from "./sync/localAutoSave";
 import { SyncEngine, type SyncStatus } from "./sync/syncEngine";
@@ -80,7 +80,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     syncEngineRef.current = new SyncEngine({
-      getAccessToken: () => "demo-token",
+      getAccessToken: () => localStorage.getItem("notepad_token") || null,
     });
 
     const unsubscribe = syncEngineRef.current.subscribe((status) => {
@@ -221,17 +221,34 @@ export const App: React.FC = () => {
   };
 
   // Local auto-save to IndexedDB (1s debounce, 10s forced flush)
-  useLocalAutoSave(activeTab, (savedId) => {
+  useLocalAutoSave(activeTab, async (savedId) => {
     setTabDirty(savedId, false);
     setSyncStatus("saved");
-    syncEngineRef.current?.onLocalNoteSaved(
-      savedId,
-      JSON.stringify({
-        title: activeTab?.title,
-        content: activeTab?.content,
-        isMarkdown: activeTab?.isMarkdown,
-      })
-    );
+
+    let envelopePayload = JSON.stringify({
+      title: activeTab?.title,
+      content: activeTab?.content,
+      isMarkdown: activeTab?.isMarkdown,
+    });
+
+    const vKey = useVaultStore.getState().vaultKey;
+    if (vKey && activeTab) {
+      try {
+        const envelope = await createNoteEnvelope(vKey, {
+          id: savedId,
+          title: activeTab.title,
+          content: activeTab.content,
+          isMarkdown: activeTab.isMarkdown,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        envelopePayload = JSON.stringify(envelope);
+      } catch (err) {
+        console.error("Failed to encrypt note envelope with vault key:", err);
+      }
+    }
+
+    syncEngineRef.current?.onLocalNoteSaved(savedId, envelopePayload);
     if (activeTab) {
       broadcastRef.current?.broadcast({
         type: "NOTE_UPDATED",
