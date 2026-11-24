@@ -35,9 +35,7 @@ import { NoteLimitModal } from "./components/tabs/NoteLimitModal";
 import { useVaultStore } from "./stores/vaultStore";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
-
-const GUEST_NOTE_LIMIT = 10;
-const USER_NOTE_LIMIT = 50;
+import { webConfig } from "./config";
 
 const CodeMirrorEditor = lazy(() =>
   import("./components/editor/CodeMirrorEditor").then((m) => ({
@@ -84,7 +82,7 @@ export const App: React.FC = () => {
   const broadcastRef = useRef<TabBroadcastSync | null>(null);
 
   useEffect(() => {
-    const apiBaseUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "";
+    const apiBaseUrl = webConfig.apiBaseUrl;
     syncEngineRef.current = new SyncEngine({
       pushUrl: apiBaseUrl ? `${apiBaseUrl}/api/sync/push` : "/api/sync/push",
       getAccessToken: () => localStorage.getItem("notepad_token") || null,
@@ -211,7 +209,7 @@ export const App: React.FC = () => {
   }, [isMarkdownActive]);
 
   const handleNewTab = (title?: string, content?: string, isMarkdown = true) => {
-    const maxLimit = user ? USER_NOTE_LIMIT : GUEST_NOTE_LIMIT;
+    const maxLimit = user ? webConfig.userNoteLimit : webConfig.guestNoteLimit;
     if (tabs.length >= maxLimit) {
       setShowLimitModal(true);
       return null;
@@ -286,7 +284,7 @@ export const App: React.FC = () => {
     const token = localStorage.getItem("notepad_token");
     if (!token) return;
 
-    const apiBaseUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "";
+    const apiBaseUrl = webConfig.apiBaseUrl;
     fetch(`${apiBaseUrl}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -294,7 +292,11 @@ export const App: React.FC = () => {
       .then((data) => {
         if (data?.user) {
           setUser((prev) => {
-            const updated = { ...prev, ...data.user };
+            const updated = {
+              ...prev,
+              ...data.user,
+              avatarUrl: data.user.avatarUrl || prev?.avatarUrl || null,
+            };
             localStorage.setItem("notepad_user", JSON.stringify(updated));
             return updated;
           });
@@ -340,13 +342,10 @@ export const App: React.FC = () => {
       // Flow 2: Frontend PKCE redirect (from http://localhost:3000/auth/callback)
       if (code && state) {
         try {
-          const redirectUri =
-            (typeof import.meta !== "undefined" && import.meta.env?.VITE_GOOGLE_REDIRECT_URI) ||
-            `${window.location.origin}/auth/callback`;
-
+          const redirectUri = webConfig.googleRedirectUri;
           const { verifier } = validateGoogleCallback(searchParams, state);
 
-          const apiBaseUrl = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "";
+          const apiBaseUrl = webConfig.apiBaseUrl;
           const res = await fetch(`${apiBaseUrl}/auth/google`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -940,7 +939,8 @@ export const App: React.FC = () => {
       <NoteLimitModal
         isOpen={showLimitModal}
         isGuest={!user}
-        limit={user ? USER_NOTE_LIMIT : GUEST_NOTE_LIMIT}
+        limit={user ? webConfig.userNoteLimit : webConfig.guestNoteLimit}
+        userLimit={webConfig.userNoteLimit}
         currentCount={tabs.length}
         onClose={() => setShowLimitModal(false)}
         onSignIn={() => {

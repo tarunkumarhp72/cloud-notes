@@ -1,10 +1,12 @@
 import React from "react";
 import styles from "./NoteLimitModal.module.css";
+import { webConfig } from "../../config";
 
 export interface NoteLimitModalProps {
   isOpen: boolean;
   isGuest: boolean;
   limit: number;
+  userLimit?: number;
   currentCount: number;
   onClose: () => void;
   onSignIn?: () => void;
@@ -14,6 +16,7 @@ export const NoteLimitModal: React.FC<NoteLimitModalProps> = ({
   isOpen,
   isGuest,
   limit,
+  userLimit = webConfig.userNoteLimit,
   currentCount,
   onClose,
   onSignIn,
@@ -47,7 +50,7 @@ export const NoteLimitModal: React.FC<NoteLimitModalProps> = ({
 
         <p className={styles.bodyText}>
           {isGuest
-            ? `Guest mode allows up to ${limit} notes stored locally in this browser. Sign in with your Google account to unlock up to 50 notes with zero-knowledge encrypted cloud sync.`
+            ? `Guest mode allows up to ${limit} notes stored locally in this browser. Sign in with your Google account to unlock up to ${userLimit} notes with zero-knowledge encrypted cloud sync.`
             : `You have reached the maximum limit of ${limit} active notes for your account. To create a new note, please close, delete, or export an existing note.`}
         </p>
 
@@ -55,11 +58,11 @@ export const NoteLimitModal: React.FC<NoteLimitModalProps> = ({
           <div className={styles.limitsComparison}>
             <div className={styles.limitRow}>
               <span className={styles.limitLabel}>Guest Mode:</span>
-              <span className={styles.limitValue}>10 notes (local only)</span>
+              <span className={styles.limitValue}>{limit} notes (local only)</span>
             </div>
             <div className={styles.limitRow}>
               <span className={styles.limitLabel}>Signed In Account:</span>
-              <span className={styles.limitValue}>50 notes (E2EE cloud sync)</span>
+              <span className={styles.limitValue}>{userLimit} notes (E2EE cloud sync)</span>
             </div>
           </div>
         )}

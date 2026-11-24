@@ -1,79 +1,126 @@
 import process from "node:process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { z } from "zod";
 import { LRUCache } from "lru-cache";
 
-// Ensure .env is loaded if running directly without preloader
-if (!process.env.JWT_SECRET || !process.env.DATABASE_URL) {
+// Explicitly load .env file from apps/api/.env or root repository .env
+try {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  process.loadEnvFile(path.resolve(__dirname, "../.env"));
+} catch {
   try {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     process.loadEnvFile(path.resolve(__dirname, "../../../.env"));
   } catch {
-    // Already loaded or in CI environment
+    // Environment already supplied by host/container/CI runner
   }
 }
 
-const nodeEnv = process.env.NODE_ENV || "development";
-const isProduction = nodeEnv === "production";
-const isTest = nodeEnv === "test";
+// Strict Cyber Security Zod Validation Schema: Zero Fallbacks (no "||" operators permitted)
+const EnvSchema = z.object({
+  NODE_ENV: z.enum(["development", "production", "test"]),
+  PORT: z.string().transform((val) => Number(val)),
+  FRONTEND_URL: z.string().url("FRONTEND_URL must be a valid URL"),
 
-if (isProduction && !process.env.JWT_SECRET) {
-  throw new Error("Security Alert: JWT_SECRET environment variable is strictly required in production!");
+  DATABASE_URL: z.string().min(1, "DATABASE_URL is strictly required"),
+  DB_MAX_CONNECTIONS: z.string().transform((val) => Number(val)),
+  DB_IDLE_TIMEOUT_SEC: z.string().transform((val) => Number(val)),
+  DB_CONNECT_TIMEOUT_SEC: z.string().transform((val) => Number(val)),
+  DB_SSL: z
+    .enum(["require", "false"])
+    .transform((val) => (val === "false" ? false : ("require" as const))),
+
+  GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is strictly required"),
+  GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is strictly required"),
+
+  JWT_SECRET: z
+    .string()
+    .min(32, "JWT_SECRET must be at least 32 characters for HMAC-SHA256 zero-trust security"),
+  JWT_ALGORITHM: z.enum(["HS256", "HS384", "HS512"]),
+  JWT_ACCESS_EXPIRES_IN: z.string().min(1, "JWT_ACCESS_EXPIRES_IN is strictly required"),
+  JWT_REFRESH_EXPIRES_IN: z.string().min(1, "JWT_REFRESH_EXPIRES_IN is strictly required"),
+
+  REFRESH_COOKIE_MAX_AGE_SEC: z.string().transform((val) => Number(val)),
+  REFRESH_COOKIE_PATH: z.string().min(1, "REFRESH_COOKIE_PATH is strictly required"),
+  COOKIE_SAMESITE: z.enum(["Strict", "Lax", "None"]),
+
+  RATE_LIMIT_AUTH_WINDOW_MS: z.string().transform((val) => Number(val)),
+  RATE_LIMIT_AUTH_MAX: z.string().transform((val) => Number(val)),
+  RATE_LIMIT_SYNC_WINDOW_MS: z.string().transform((val) => Number(val)),
+  RATE_LIMIT_SYNC_MAX: z.string().transform((val) => Number(val)),
+
+  MAX_NOTES_PER_USER: z.string().transform((val) => Number(val)),
+  MAX_NOTE_PAYLOAD_BYTES: z.string().transform((val) => Number(val)),
+
+  CACHE_TOKEN_MAX_ITEMS: z.string().transform((val) => Number(val)),
+  CACHE_TOKEN_TTL_MS: z.string().transform((val) => Number(val)),
+});
+
+const parsedEnv = EnvSchema.safeParse(process.env);
+
+if (!parsedEnv.success) {
+  const issues = parsedEnv.error.issues
+    .map((issue) => `  - [${issue.path.join(".")}]: ${issue.message}`)
+    .join("\n");
+  throw new Error(`[CRITICAL SECURITY CONFIGURATION ERROR] Missing or invalid environment variables:\n${issues}`);
 }
 
+const env = parsedEnv.data;
+
 export const config = {
-  env: nodeEnv,
-  isProduction,
-  isTest,
-  port: Number(process.env.PORT) || 3001,
-  frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+  env: env.NODE_ENV,
+  isProduction: env.NODE_ENV === "production",
+  isTest: env.NODE_ENV === "test",
+  port: env.PORT,
+  frontendUrl: env.FRONTEND_URL,
 
   database: {
-    url: process.env.DATABASE_URL || "",
-    maxConnections: Number(process.env.DB_MAX_CONNECTIONS) || 10,
-    idleTimeoutSec: Number(process.env.DB_IDLE_TIMEOUT_SEC) || 20,
-    connectTimeoutSec: Number(process.env.DB_CONNECT_TIMEOUT_SEC) || 10,
-    ssl: (process.env.DB_SSL === "false" ? false : "require") as "require" | false,
+    url: env.DATABASE_URL,
+    maxConnections: env.DB_MAX_CONNECTIONS,
+    idleTimeoutSec: env.DB_IDLE_TIMEOUT_SEC,
+    connectTimeoutSec: env.DB_CONNECT_TIMEOUT_SEC,
+    ssl: env.DB_SSL,
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || (isTest ? "notepad-cloud-test-jwt-secret-32-bytes-min!!" : ""),
-    algorithm: (process.env.JWT_ALGORITHM || "HS256") as "HS256" | "HS384" | "HS512",
-    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
-    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "15d",
+    secret: env.JWT_SECRET,
+    algorithm: env.JWT_ALGORITHM,
+    accessExpiresIn: env.JWT_ACCESS_EXPIRES_IN,
+    refreshExpiresIn: env.JWT_REFRESH_EXPIRES_IN,
   },
 
   cookies: {
-    refreshMaxAgeSec: Number(process.env.REFRESH_COOKIE_MAX_AGE_SEC) || 15 * 24 * 60 * 60,
-    refreshPath: process.env.REFRESH_COOKIE_PATH || "/auth",
-    sameSite: (process.env.COOKIE_SAMESITE || "Strict") as "Strict" | "Lax" | "None",
-    secure: isProduction,
+    refreshMaxAgeSec: env.REFRESH_COOKIE_MAX_AGE_SEC,
+    refreshPath: env.REFRESH_COOKIE_PATH,
+    sameSite: env.COOKIE_SAMESITE,
+    secure: env.NODE_ENV === "production",
   },
 
   google: {
-    clientId: process.env.GOOGLE_CLIENT_ID || "",
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    clientId: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
   },
 
   rateLimit: {
     auth: {
-      windowMs: Number(process.env.RATE_LIMIT_AUTH_WINDOW_MS) || 15 * 60 * 1000,
-      max: Number(process.env.RATE_LIMIT_AUTH_MAX) || 100,
+      windowMs: env.RATE_LIMIT_AUTH_WINDOW_MS,
+      max: env.RATE_LIMIT_AUTH_MAX,
     },
     sync: {
-      windowMs: Number(process.env.RATE_LIMIT_SYNC_WINDOW_MS) || 60 * 1000,
-      max: Number(process.env.RATE_LIMIT_SYNC_MAX) || 180,
+      windowMs: env.RATE_LIMIT_SYNC_WINDOW_MS,
+      max: env.RATE_LIMIT_SYNC_MAX,
     },
   },
 
   limits: {
-    maxNotesPerUser: Number(process.env.MAX_NOTES_PER_USER) || 50,
-    maxNotePayloadBytes: Number(process.env.MAX_NOTE_PAYLOAD_BYTES) || 5_000_000,
+    maxNotesPerUser: env.MAX_NOTES_PER_USER,
+    maxNotePayloadBytes: env.MAX_NOTE_PAYLOAD_BYTES,
   },
 
   cache: {
-    tokenCacheMax: Number(process.env.CACHE_TOKEN_MAX_ITEMS) || 1000,
-    tokenCacheTtlMs: Number(process.env.CACHE_TOKEN_TTL_MS) || 5 * 60 * 1000, // 5 minutes
+    tokenCacheMax: env.CACHE_TOKEN_MAX_ITEMS,
+    tokenCacheTtlMs: env.CACHE_TOKEN_TTL_MS,
   },
 } as const;
 

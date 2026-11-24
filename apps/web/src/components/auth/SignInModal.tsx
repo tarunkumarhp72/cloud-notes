@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import styles from "./SignInModal.module.css";
 import { buildGoogleAuthUrl } from "../../auth/googleAuth";
+import { webConfig } from "../../config";
 
 export interface SignInModalProps {
   isOpen: boolean;
@@ -35,15 +36,8 @@ export const SignInModal: React.FC<SignInModalProps> = ({
         return;
       }
 
-      const activeClientId =
-        clientId ||
-        (typeof import.meta !== "undefined" && import.meta.env?.VITE_GOOGLE_CLIENT_ID) ||
-        "";
-
-      const activeRedirectUri =
-        redirectUri ||
-        (typeof import.meta !== "undefined" && import.meta.env?.VITE_GOOGLE_REDIRECT_URI) ||
-        `${window.location.origin}/auth/callback`;
+      const activeClientId = clientId || webConfig.googleClientId;
+      const activeRedirectUri = redirectUri || webConfig.googleRedirectUri;
 
       if (!activeClientId) {
         throw new Error("Google Client ID not configured. Set VITE_GOOGLE_CLIENT_ID in .env.");

@@ -114,22 +114,28 @@ authRouter.post("/google", async (c) => {
     return c.json({ error: err instanceof Error ? err.message : "Google authentication failed" }, 401);
   }
 
-  const userId = crypto.randomUUID();
+  let userId = crypto.randomUUID();
   const email = claims.email;
-  const displayName = claims.name || email.split("@")[0];
-  const avatarUrl = claims.picture || null;
+  let displayName = claims.name || email.split("@")[0];
+  let avatarUrl = claims.picture || null;
 
   if (sql) {
     try {
-      await sql`
+      const rows = await sql`
         INSERT INTO users (id, google_sub, email, display_name, avatar_url, updated_at)
         VALUES (${userId}, ${claims.sub}, ${email}, ${displayName}, ${avatarUrl}, NOW())
         ON CONFLICT (google_sub) DO UPDATE SET
-          display_name = EXCLUDED.display_name,
-          avatar_url = EXCLUDED.avatar_url,
+          email = EXCLUDED.email,
+          display_name = COALESCE(EXCLUDED.display_name, users.display_name),
+          avatar_url = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
           updated_at = NOW()
-        RETURNING id
+        RETURNING id, display_name, avatar_url
       `;
+      if (rows && rows.length > 0) {
+        userId = rows[0].id;
+        displayName = rows[0].display_name || displayName;
+        avatarUrl = rows[0].avatar_url || avatarUrl;
+      }
     } catch {
       // In tests or offline mode, continue with generated userId
     }
@@ -208,22 +214,48 @@ authRouter.get("/callback", async (c) => {
 
     const claims = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8")) as GoogleIdTokenClaims;
 
-    const userId = crypto.randomUUID();
+    // Fetch userinfo if picture or name is missing from ID token
+    if ((!claims.picture || !claims.name) && tokens.access_token) {
+      try {
+        const userinfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+        if (userinfoRes.ok) {
+          const userinfo = (await userinfoRes.json()) as { picture?: string; name?: string };
+          if (userinfo.picture && !claims.picture) {
+            claims.picture = userinfo.picture;
+          }
+          if (userinfo.name && !claims.name) {
+            claims.name = userinfo.name;
+          }
+        }
+      } catch {
+        // Non-critical fallback
+      }
+    }
+
+    let userId = crypto.randomUUID();
     const email = claims.email;
-    const displayName = claims.name || email.split("@")[0];
-    const avatarUrl = claims.picture || null;
+    let displayName = claims.name || email.split("@")[0];
+    let avatarUrl = claims.picture || null;
 
     if (sql) {
       try {
-        await sql`
+        const rows = await sql`
           INSERT INTO users (id, google_sub, email, display_name, avatar_url, updated_at)
           VALUES (${userId}, ${claims.sub}, ${email}, ${displayName}, ${avatarUrl}, NOW())
           ON CONFLICT (google_sub) DO UPDATE SET
-            display_name = EXCLUDED.display_name,
-            avatar_url = EXCLUDED.avatar_url,
+            email = EXCLUDED.email,
+            display_name = COALESCE(EXCLUDED.display_name, users.display_name),
+            avatar_url = COALESCE(EXCLUDED.avatar_url, users.avatar_url),
             updated_at = NOW()
-          RETURNING id
+          RETURNING id, display_name, avatar_url
         `;
+        if (rows && rows.length > 0) {
+          userId = rows[0].id;
+          displayName = rows[0].display_name || displayName;
+          avatarUrl = rows[0].avatar_url || avatarUrl;
+        }
       } catch {}
     }
 
@@ -303,7 +335,10 @@ authRouter.get("/me", async (c) => {
     if (sql) {
       try {
         const rows = await sql`
-          SELECT display_name, avatar_url FROM users WHERE id = ${payload.sub} LIMIT 1
+          SELECT display_name, avatar_url FROM users
+          WHERE id = ${payload.sub} OR email = ${payload.email}
+          ORDER BY avatar_url NULLS LAST, updated_at DESC
+          LIMIT 1
         `;
         if (rows.length > 0) {
           displayName = rows[0].display_name || displayName;
