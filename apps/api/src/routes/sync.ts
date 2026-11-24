@@ -9,7 +9,7 @@ export const SyncPushMutationSchema = z.object({
   id: z.string().min(1, "Mutation ID is required"),
   noteId: z.string().min(1, "Note ID is required"),
   action: z.enum(["upsert", "delete"]),
-  encryptedEnvelope: z.string().min(1, "Encrypted envelope is required"),
+  encryptedEnvelope: z.string().min(1, "Encrypted envelope is required").max(5_000_000, "Note size exceeds maximum 5MB limit"),
   version: z.number().int().nonnegative().optional().default(1),
   clientUpdatedAt: z.string().min(1, "Client updated at is required"),
 });
@@ -65,6 +65,21 @@ export const syncHandlers = {
 
       if (sql) {
         if (m.action === "upsert") {
+          // Enforce 50 active notes limit per account
+          const existingRows = await sql`
+            SELECT id, deleted FROM encrypted_notes WHERE id = ${m.noteId} AND user_id = ${userId}
+          `;
+          const isExistingActive = existingRows.length > 0 && !existingRows[0].deleted;
+          if (!isExistingActive) {
+            const countRows = await sql`
+              SELECT count(*)::int AS count FROM encrypted_notes WHERE user_id = ${userId} AND deleted = FALSE
+            `;
+            const activeCount = countRows[0]?.count || 0;
+            if (activeCount >= 50) {
+              throw new Error("Active note limit reached (maximum 50 notes allowed for your account).");
+            }
+          }
+
           const rows = await sql`
             INSERT INTO encrypted_notes (
               id,
@@ -141,6 +156,17 @@ export const syncHandlers = {
         // Fallback in-memory behavior
         const existingKey = `${userId}:${m.noteId}`;
         const existing = inMemoryNotesStore.get(existingKey);
+
+        if (m.action === "upsert" && (!existing || existing.deleted)) {
+          let activeCount = 0;
+          for (const note of inMemoryNotesStore.values()) {
+            if (note.userId === userId && !note.deleted) activeCount++;
+          }
+          if (activeCount >= 50) {
+            throw new Error("Active note limit reached (maximum 50 notes allowed for your account).");
+          }
+        }
+
         const newVersion = existing ? existing.version + 1 : m.version;
 
         const updatedRecord: StoredEncryptedNote = {
@@ -262,7 +288,8 @@ syncRouter.post("/push", async (c) => {
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Sync push failed";
-    return c.json({ error: msg }, 500);
+    const isLimit = msg.includes("Active note limit reached");
+    return c.json({ error: msg }, isLimit ? 403 : 500);
   }
 });
 

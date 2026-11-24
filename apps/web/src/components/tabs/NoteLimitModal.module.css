@@ -1,0 +1,157 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  width: 90%;
+  max-width: 440px;
+  background-color: var(--bg-menu, #202020);
+  color: var(--text-main, #ffffff);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: "Segoe UI Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  animation: scaleIn 0.15s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconContainer {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(0, 120, 212, 0.12);
+  color: #60cdff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary, #cccccc);
+  margin-top: 4px;
+}
+
+.bodyText {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-secondary, #d0d0d0);
+  margin: 0;
+}
+
+.limitsComparison {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.limitRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.limitLabel {
+  color: var(--text-secondary, #aaaaaa);
+}
+
+.limitValue {
+  font-weight: 600;
+  color: #60cdff;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.primaryButton {
+  background-color: #0078d4;
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 18px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primaryButton:hover {
+  background-color: #106ebe;
+}
+
+.secondaryButton {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: var(--text-main, #ffffff);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.secondaryButton:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}

@@ -135,6 +135,69 @@ describe("Sync Endpoints (/sync)", () => {
       const data2 = await res2.json();
       expect(data2.synced[0].version).toBe(2);
     });
+
+    it("enforces maximum limit of 50 active notes per account and rejects 51st note", async () => {
+      // Pre-fill 50 notes for user1 in memory store
+      for (let i = 1; i <= 50; i++) {
+        inMemoryNotesStore.set(`${user1}:note-${i}`, {
+          id: `note-${i}`,
+          userId: user1,
+          encryptedEnvelope: JSON.stringify({ ciphertext: `note-${i}` }),
+          version: 1,
+          clientUpdatedAt: new Date().toISOString(),
+          deleted: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      // Updating an existing note among the 50 should succeed
+      const updateRes = await app.request("/sync/push", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token1}`,
+        },
+        body: JSON.stringify({
+          mutations: [
+            {
+              id: "mut-update",
+              noteId: "note-1",
+              action: "upsert",
+              encryptedEnvelope: JSON.stringify({ ciphertext: "updated note 1" }),
+              version: 1,
+              clientUpdatedAt: new Date().toISOString(),
+            },
+          ],
+        }),
+      });
+      expect(updateRes.status).toBe(200);
+
+      // Attempting to create the 51st note should be rejected with 403
+      const overflowRes = await app.request("/sync/push", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token1}`,
+        },
+        body: JSON.stringify({
+          mutations: [
+            {
+              id: "mut-51",
+              noteId: "note-51",
+              action: "upsert",
+              encryptedEnvelope: JSON.stringify({ ciphertext: "note 51 content" }),
+              version: 1,
+              clientUpdatedAt: new Date().toISOString(),
+            },
+          ],
+        }),
+      });
+
+      expect(overflowRes.status).toBe(403);
+      const overflowData = await overflowRes.json();
+      expect(overflowData.error).toContain("Active note limit reached");
+    });
   });
 
   describe("GET /sync/pull", () => {

@@ -14,8 +14,8 @@ if (!process.env.DATABASE_URL) {
 
 const connectionString = process.env.DATABASE_URL;
 
-// Lazy connection to avoid crashing when DATABASE_URL is not set during local mock tests
-export const sql = connectionString
+// Lazy connection to avoid crashing when DATABASE_URL is not set or during unit tests
+export const sql = connectionString && process.env.NODE_ENV !== "test"
   ? postgres(connectionString, {
       max: 10,
       idle_timeout: 20,

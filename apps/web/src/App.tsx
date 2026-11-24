@@ -31,9 +31,13 @@ import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./componen
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
 import { RecoveryKeyModal } from "./components/vault/RecoveryKeyModal";
+import { NoteLimitModal } from "./components/tabs/NoteLimitModal";
 import { useVaultStore } from "./stores/vaultStore";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
+
+const GUEST_NOTE_LIMIT = 10;
+const USER_NOTE_LIMIT = 50;
 
 const CodeMirrorEditor = lazy(() =>
   import("./components/editor/CodeMirrorEditor").then((m) => ({
@@ -62,6 +66,7 @@ export const App: React.FC = () => {
   const [showOpenDialog, setShowOpenDialog] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const [recoveryModalMode, setRecoveryModalMode] = useState<"display" | "recover">("display");
   const [activeRecoveryKey, setActiveRecoveryKey] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -204,6 +209,11 @@ export const App: React.FC = () => {
   }, [isMarkdownActive]);
 
   const handleNewTab = (title?: string, content?: string, isMarkdown = true) => {
+    const maxLimit = user ? USER_NOTE_LIMIT : GUEST_NOTE_LIMIT;
+    if (tabs.length >= maxLimit) {
+      setShowLimitModal(true);
+      return null;
+    }
     const newId = createTab(title, content, isMarkdown);
     broadcastRef.current?.broadcast({
       type: "TAB_CREATED",
@@ -840,9 +850,19 @@ export const App: React.FC = () => {
         isOpen={showOpenDialog}
         onClose={() => setShowOpenDialog(false)}
         onSelectNote={(saved) => {
+          const maxLimit = user ? USER_NOTE_LIMIT : GUEST_NOTE_LIMIT;
+          if (tabs.length >= maxLimit) {
+            setShowLimitModal(true);
+            return;
+          }
           createTab(saved.title, saved.content, saved.isMarkdown);
         }}
         onOpenFileFromDisk={async (file) => {
+          const maxLimit = user ? USER_NOTE_LIMIT : GUEST_NOTE_LIMIT;
+          if (tabs.length >= maxLimit) {
+            setShowLimitModal(true);
+            return;
+          }
           const imported = await readFileAsText(file);
           createTab(imported.filename, imported.content, imported.isMarkdown);
         }}
@@ -886,6 +906,18 @@ export const App: React.FC = () => {
         onClose={() => setShowRecoveryModal(false)}
         onSuccess={() => {
           setShowRecoveryModal(false);
+        }}
+      />
+
+      <NoteLimitModal
+        isOpen={showLimitModal}
+        isGuest={!user}
+        limit={user ? USER_NOTE_LIMIT : GUEST_NOTE_LIMIT}
+        currentCount={tabs.length}
+        onClose={() => setShowLimitModal(false)}
+        onSignIn={() => {
+          setShowLimitModal(false);
+          setShowSignIn(true);
         }}
       />
     </div>
