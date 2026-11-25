@@ -114,3 +114,64 @@
   display: inline-flex;
   align-items: center;
 }
+
+.menuDivider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: 3px 6px;
+}
+
+.desktopOnlyTool {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tabletUpTool {
+  display: inline-flex;
+  align-items: center;
+}
+
+.overflowToolTrigger {
+  display: none;
+}
+
+.foldOnlyItem {
+  display: none;
+}
+
+.overflowDropdown {
+  right: 0;
+  left: auto;
+  min-width: 185px;
+  max-width: calc(100vw - 16px);
+}
+
+@media (max-width: 680px) {
+  .desktopOnlyTool {
+    display: none;
+  }
+
+  .overflowToolTrigger {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .overflowDropdown {
+    position: fixed;
+    top: 76px;
+    right: 8px;
+    left: auto;
+  }
+}
+
+@media (max-width: 360px) {
+  .tabletUpTool {
+    display: none;
+  }
+
+  .foldOnlyItem {
+    display: flex;
+  }
+}

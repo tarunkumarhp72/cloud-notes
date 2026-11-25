@@ -12,6 +12,8 @@ import { ListDropdown } from "./components/toolbar/ListDropdown";
 import { FormatButtons, ClearFormattingButton } from "./components/toolbar/FormatButtons";
 import { LinkModal, LinkButton } from "./components/toolbar/LinkModal";
 import { TableDropdown } from "./components/toolbar/TableDropdown";
+import { ToolbarOverflowMenu } from "./components/toolbar/ToolbarOverflowMenu";
+import toolbarStyles from "./components/toolbar/Toolbar.module.css";
 import { SettingsPage } from "./components/settings/SettingsPage";
 import { Tooltip } from "./components/ui/Tooltip";
 import { SettingsIcon } from "./components/icons/SettingsIcon";
@@ -907,9 +909,67 @@ export const App: React.FC = () => {
                 }
               }}
             />
-            <ListDropdown
+            <span className={toolbarStyles.desktopOnlyTool}>
+              <ListDropdown
+                canIndent={canIndent}
+                canOutdent={canOutdent}
+                onToggleBullet={() => {
+                  ensureRichText();
+                  tipTapRef.current?.toggleBulletList();
+                }}
+                onToggleNumber={() => {
+                  ensureRichText();
+                  tipTapRef.current?.toggleOrderedList();
+                }}
+                onIndent={() => {
+                  tipTapRef.current?.indent?.();
+                }}
+                onOutdent={() => {
+                  tipTapRef.current?.outdent?.();
+                }}
+              />
+            </span>
+            <FormatButtons
+              isBold={isBold}
+              isItalic={isItalic}
+              isStrikethrough={isStrikethrough}
+              showClearFormatting={false}
+              onToggleBold={handleToggleBold}
+              onToggleItalic={handleToggleItalic}
+              onToggleStrikethrough={handleToggleStrike}
+            />
+            <span className={toolbarStyles.desktopOnlyTool}>
+              <LinkButton onClick={() => setShowLinkModal(true)} />
+            </span>
+            <span className={toolbarStyles.desktopOnlyTool}>
+              <TableDropdown
+                onInsertTable={(rows, cols) => {
+                  ensureRichText();
+                  tipTapRef.current?.insertTable(rows, cols);
+                }}
+              />
+            </span>
+            <span className={toolbarStyles.desktopOnlyTool}>
+              <ClearFormattingButton
+                onClick={() => {
+                  ensureRichText();
+                  tipTapRef.current?.clearFormatting();
+                  setIsBold(false);
+                  setIsItalic(false);
+                  setIsStrikethrough(false);
+                  setHeadingLevel("body");
+                }}
+              />
+            </span>
+            <ToolbarOverflowMenu
+              isBold={isBold}
+              isItalic={isItalic}
+              isStrikethrough={isStrikethrough}
               canIndent={canIndent}
               canOutdent={canOutdent}
+              onToggleBold={handleToggleBold}
+              onToggleItalic={handleToggleItalic}
+              onToggleStrikethrough={handleToggleStrike}
               onToggleBullet={() => {
                 ensureRichText();
                 tipTapRef.current?.toggleBulletList();
@@ -924,25 +984,12 @@ export const App: React.FC = () => {
               onOutdent={() => {
                 tipTapRef.current?.outdent?.();
               }}
-            />
-            <FormatButtons
-              isBold={isBold}
-              isItalic={isItalic}
-              isStrikethrough={isStrikethrough}
-              showClearFormatting={false}
-              onToggleBold={handleToggleBold}
-              onToggleItalic={handleToggleItalic}
-              onToggleStrikethrough={handleToggleStrike}
-            />
-            <LinkButton onClick={() => setShowLinkModal(true)} />
-            <TableDropdown
+              onInsertLink={() => setShowLinkModal(true)}
               onInsertTable={(rows, cols) => {
                 ensureRichText();
                 tipTapRef.current?.insertTable(rows, cols);
               }}
-            />
-            <ClearFormattingButton
-              onClick={() => {
+              onClearFormatting={() => {
                 ensureRichText();
                 tipTapRef.current?.clearFormatting();
                 setIsBold(false);

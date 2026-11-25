@@ -56,52 +56,58 @@ export const FormatButtons: React.FC<FormatButtonsProps> = ({
   return (
     <>
       {/* Bold */}
-      <Tooltip content="Bold (Ctrl+B)" position="top">
-        <button
-          type="button"
-          className={`${styles.toolbarBtn} ${isBold ? styles.active : ""}`}
-          aria-label="Bold"
-          aria-pressed={isBold}
-          disabled={disabled}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={onToggleBold}
-          style={{ fontWeight: 700, fontSize: "14px", width: "28px", justifyContent: "center" }}
-        >
-          B
-        </button>
-      </Tooltip>
+      <span className={styles.tabletUpTool}>
+        <Tooltip content="Bold (Ctrl+B)" position="top">
+          <button
+            type="button"
+            className={`${styles.toolbarBtn} ${isBold ? styles.active : ""}`}
+            aria-label="Bold"
+            aria-pressed={isBold}
+            disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={onToggleBold}
+            style={{ fontWeight: 700, fontSize: "14px", width: "28px", justifyContent: "center" }}
+          >
+            B
+          </button>
+        </Tooltip>
+      </span>
 
       {/* Italic */}
-      <Tooltip content="Italic (Ctrl+I)" position="top">
-        <button
-          type="button"
-          className={`${styles.toolbarBtn} ${isItalic ? styles.active : ""}`}
-          aria-label="Italic"
-          aria-pressed={isItalic}
-          disabled={disabled}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={onToggleItalic}
-          style={{ fontStyle: "italic", fontFamily: "serif", fontSize: "14px", width: "28px", justifyContent: "center" }}
-        >
-          I
-        </button>
-      </Tooltip>
+      <span className={styles.tabletUpTool}>
+        <Tooltip content="Italic (Ctrl+I)" position="top">
+          <button
+            type="button"
+            className={`${styles.toolbarBtn} ${isItalic ? styles.active : ""}`}
+            aria-label="Italic"
+            aria-pressed={isItalic}
+            disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={onToggleItalic}
+            style={{ fontStyle: "italic", fontFamily: "serif", fontSize: "14px", width: "28px", justifyContent: "center" }}
+          >
+            I
+          </button>
+        </Tooltip>
+      </span>
 
       {/* Strikethrough */}
-      <Tooltip content="Strikethrough" position="top">
-        <button
-          type="button"
-          className={`${styles.toolbarBtn} ${isStrikethrough ? styles.active : ""}`}
-          aria-label="Strikethrough"
-          aria-pressed={isStrikethrough}
-          disabled={disabled}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={onToggleStrikethrough}
-          style={{ textDecoration: "line-through", fontSize: "14px", width: "28px", justifyContent: "center" }}
-        >
-          S
-        </button>
-      </Tooltip>
+      <span className={styles.desktopOnlyTool}>
+        <Tooltip content="Strikethrough" position="top">
+          <button
+            type="button"
+            className={`${styles.toolbarBtn} ${isStrikethrough ? styles.active : ""}`}
+            aria-label="Strikethrough"
+            aria-pressed={isStrikethrough}
+            disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={onToggleStrikethrough}
+            style={{ textDecoration: "line-through", fontSize: "14px", width: "28px", justifyContent: "center" }}
+          >
+            S
+          </button>
+        </Tooltip>
+      </span>
 
       {/* Optional inline Clear formatting */}
       {showClearFormatting && (
