@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import styles from "./RecentHistoryPage.module.css";
+import { Tooltip } from "../ui/Tooltip";
 import { useRecentHistoryStore, RecentHistoryItem } from "../../stores/recentHistoryStore";
 import { defaultNotesLoader, SavedNoteSummary } from "./OpenNotesDialog";
 
@@ -292,36 +293,44 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
                 </button>
 
                 <div className={styles.rowActions}>
-                  <button
-                    type="button"
-                    className={styles.reopenBtn}
-                    onClick={() =>
-                      onReopenNote({
-                        id: item.id,
-                        title: item.title,
-                        content: item.content,
-                        isMarkdown: item.isMarkdown,
-                        isCustomTitle: item.status === "saved",
-                      })
-                    }
-                  >
-                    {mode === "open" ? "Open" : "Reopen"}
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.removeBtn}
-                    onClick={() => handleDeleteItem(item.id)}
-                    title="Delete note"
-                    aria-label={`Delete ${item.title || "note"}`}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
-                      <path
-                        fillRule="evenodd"
-                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
-                      />
-                    </svg>
-                  </button>
+                  <Tooltip content={mode === "open" ? "Open" : "Reopen"} position="top">
+                    <button
+                      type="button"
+                      className={styles.reopenBtn}
+                      aria-label={mode === "open" ? "Open" : "Reopen"}
+                      onClick={() =>
+                        onReopenNote({
+                          id: item.id,
+                          title: item.title,
+                          content: item.content,
+                          isMarkdown: item.isMarkdown,
+                          isCustomTitle: item.status === "saved",
+                        })
+                      }
+                    >
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9.5 2.5H13.5V6.5" />
+                        <path d="M7.5 8.5L13.5 2.5" />
+                        <path d="M13.5 9.5V12.5C13.5 13.0523 13.0523 13.5 12.5 13.5H3.5C2.94772 13.5 2.5 13.0523 2.5 12.5V3.5C2.5 2.94772 2.94772 2.5 3.5 2.5H6.5" />
+                      </svg>
+                    </button>
+                  </Tooltip>
+                  <Tooltip content="Delete" position="top" align="end">
+                    <button
+                      type="button"
+                      className={styles.removeBtn}
+                      onClick={() => handleDeleteItem(item.id)}
+                      aria-label={`Delete ${item.title || "note"}`}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                        <path
+                          fillRule="evenodd"
+                          d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
+                        />
+                      </svg>
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
             ))
