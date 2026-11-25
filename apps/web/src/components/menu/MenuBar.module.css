@@ -15,6 +15,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .menuBtn {
@@ -61,12 +62,31 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  overflow: visible;
-  max-width: 100%;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.toolbarGroup::-webkit-scrollbar {
+  display: none;
 }
 
 .rightGroup {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .menuBar {
+    padding: 0 6px;
+    gap: 4px;
+  }
+
+  .toolbarGroup {
+    gap: 2px;
+  }
 }

@@ -439,3 +439,12 @@
   color: var(--accent-hover, #005fb8);
 }
 
+
+@media (max-width: 560px) {
+  .cardHeader,
+  .row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

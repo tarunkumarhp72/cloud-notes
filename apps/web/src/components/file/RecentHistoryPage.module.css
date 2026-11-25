@@ -400,3 +400,22 @@
   color: var(--text-secondary);
   font-size: 13px;
 }
+
+@media (max-width: 520px) {
+  .docRow {
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .docMainBtn {
+    flex: 1 1 100%;
+    padding: 4px 2px;
+  }
+
+  .rowActions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+  }
+}
