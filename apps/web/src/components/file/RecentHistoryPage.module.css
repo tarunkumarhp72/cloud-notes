@@ -142,6 +142,11 @@
   border-color: var(--accent-primary, #0078d4);
 }
 
+.quickCardPrimary {
+  border-color: rgba(0, 120, 212, 0.35);
+  background-color: rgba(0, 120, 212, 0.04);
+}
+
 .quickIcon {
   width: 36px;
   height: 36px;

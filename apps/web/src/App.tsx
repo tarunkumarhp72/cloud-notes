@@ -84,15 +84,24 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(
     () => typeof window !== "undefined" && window.location.pathname === "/settings"
   );
-  const [isHistoryOpen, setIsHistoryOpen] = useState(
-    () => typeof window !== "undefined" && window.location.pathname === "/history"
-  );
+  const [openPageMode, setOpenPageMode] = useState<"open" | "history" | null>(() => {
+    if (typeof window === "undefined") return null;
+    if (window.location.pathname === "/open") return "open";
+    if (window.location.pathname === "/history") return "history";
+    return null;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handlePopState = () => {
       setIsSettingsOpen(window.location.pathname === "/settings");
-      setIsHistoryOpen(window.location.pathname === "/history");
+      if (window.location.pathname === "/open") {
+        setOpenPageMode("open");
+      } else if (window.location.pathname === "/history") {
+        setOpenPageMode("history");
+      } else {
+        setOpenPageMode(null);
+      }
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -104,12 +113,18 @@ export const App: React.FC = () => {
     if (path.includes("/auth/")) return;
     if (isSettingsOpen && path !== "/settings") {
       window.history.pushState({}, document.title, "/settings");
-    } else if (isHistoryOpen && !isSettingsOpen && path !== "/history") {
+    } else if (!isSettingsOpen && openPageMode === "open" && path !== "/open") {
+      window.history.pushState({}, document.title, "/open");
+    } else if (!isSettingsOpen && openPageMode === "history" && path !== "/history") {
       window.history.pushState({}, document.title, "/history");
-    } else if (!isSettingsOpen && !isHistoryOpen && (path === "/settings" || path === "/history")) {
+    } else if (
+      !isSettingsOpen &&
+      !openPageMode &&
+      (path === "/settings" || path === "/history" || path === "/open")
+    ) {
       window.history.pushState({}, document.title, "/");
     }
-  }, [isSettingsOpen, isHistoryOpen]);
+  }, [isSettingsOpen, openPageMode]);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [isReplaceOpen, setIsReplaceOpen] = useState(false);
@@ -657,7 +672,10 @@ export const App: React.FC = () => {
     isDesktop,
     onNewTab: () => handleNewTab(),
     onNewWindow: () => window.open(window.location.href, "_blank"),
-    onOpen: () => setShowOpenDialog(true),
+    onOpen: () => {
+      setIsSettingsOpen(false);
+      setOpenPageMode("open");
+    },
     onSave: () => {
       if (activeTab) {
         handleSaveTrigger(activeTab.id, false);
@@ -722,10 +740,13 @@ export const App: React.FC = () => {
             onNewTab={() => handleNewTab()}
             onNewWindow={() => window.open(window.location.href, "_blank")}
             onNewMarkdownTab={() => handleNewTab("Untitled.md", "", true)}
-            onOpen={() => setShowOpenDialog(true)}
+            onOpen={() => {
+              setIsSettingsOpen(false);
+              setOpenPageMode("open");
+            }}
             onRecent={() => {
               setIsSettingsOpen(false);
-              setIsHistoryOpen(true);
+              setOpenPageMode("history");
             }}
             onSave={() => {
               if (activeTab) {
@@ -974,11 +995,12 @@ export const App: React.FC = () => {
             setIsSettingsOpen(false);
           }}
         />
-      ) : isHistoryOpen ? (
+      ) : openPageMode ? (
         <RecentHistoryPage
-          onBack={() => setIsHistoryOpen(false)}
+          mode={openPageMode}
+          onBack={() => setOpenPageMode(null)}
           onNewDocument={() => {
-            setIsHistoryOpen(false);
+            setOpenPageMode(null);
             handleNewTab();
           }}
           onOpenFileFromDisk={async (file) => {
@@ -989,13 +1011,13 @@ export const App: React.FC = () => {
             }
             const imported = await readFileAsText(file);
             createTab(imported.filename, imported.content, imported.isMarkdown, true);
-            setIsHistoryOpen(false);
+            setOpenPageMode(null);
           }}
           onReopenNote={(note) => {
             const existing = tabs.find((t) => t.id === note.id);
             if (existing) {
               selectTab(existing.id);
-              setIsHistoryOpen(false);
+              setOpenPageMode(null);
               return;
             }
             const maxLimit = user ? webConfig.userNoteLimit : webConfig.guestNoteLimit;
@@ -1004,7 +1026,17 @@ export const App: React.FC = () => {
               return;
             }
             createTab(note.title, note.content, note.isMarkdown, note.isCustomTitle);
-            setIsHistoryOpen(false);
+            setOpenPageMode(null);
+          }}
+          onDeleteNote={async (id) => {
+            try {
+              await deleteNote(id, false);
+            } catch (err) {
+              console.warn("Failed to delete note from IndexedDB:", err);
+            }
+            if (syncEngineRef.current && user) {
+              await syncEngineRef.current.enqueueMutation(id, "delete", "", 1);
+            }
           }}
         />
       ) : (

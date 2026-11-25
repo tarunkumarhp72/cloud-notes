@@ -78,4 +78,42 @@ describe("RecentHistoryPage Component", () => {
     fireEvent.click(screen.getByText("New Document"));
     expect(onNewDocument).toHaveBeenCalledTimes(1);
   });
+
+  it("renders Open Document mode with Saved Notes filter and deletes notes on Delete click", async () => {
+    const onDeleteNote = vi.fn();
+    const mockNotesLoader = vi.fn().mockResolvedValue([
+      {
+        id: "saved-1",
+        title: "Meeting Minutes",
+        content: "Action items",
+        isMarkdown: false,
+        updatedAt: "2026-11-23T09:00:00Z",
+      },
+    ]);
+
+    render(
+      <RecentHistoryPage
+        mode="open"
+        onBack={vi.fn()}
+        onNewDocument={vi.fn()}
+        onOpenFileFromDisk={vi.fn()}
+        onReopenNote={vi.fn()}
+        onDeleteNote={onDeleteNote}
+        notesLoader={mockNotesLoader}
+      />
+    );
+
+    expect(screen.getByText("Open Document")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Meeting Minutes")).toBeDefined();
+    });
+
+    expect(screen.getByRole("button", { name: "Open" })).toBeDefined();
+    fireEvent.click(screen.getByLabelText("Delete Meeting Minutes"));
+
+    expect(onDeleteNote).toHaveBeenCalledWith("saved-1");
+    await waitFor(() => {
+      expect(screen.queryByText("Meeting Minutes")).toBeNull();
+    });
+  });
 });

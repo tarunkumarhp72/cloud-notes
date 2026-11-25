@@ -4,6 +4,7 @@ import { useRecentHistoryStore, RecentHistoryItem } from "../../stores/recentHis
 import { defaultNotesLoader, SavedNoteSummary } from "./OpenNotesDialog";
 
 export interface RecentHistoryPageProps {
+  mode?: "history" | "open";
   onBack: () => void;
   onNewDocument: () => void;
   onOpenFileFromDisk: (file: File) => void;
@@ -14,23 +15,30 @@ export interface RecentHistoryPageProps {
     isMarkdown: boolean;
     isCustomTitle: boolean;
   }) => void;
+  onDeleteNote?: (id: string) => Promise<void> | void;
   notesLoader?: () => Promise<SavedNoteSummary[]>;
 }
 
 type FilterMode = "all" | "closed" | "saved";
 
 export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
+  mode = "history",
   onBack,
   onNewDocument,
   onOpenFileFromDisk,
   onReopenNote,
+  onDeleteNote,
   notesLoader = defaultNotesLoader,
 }) => {
   const { items: historyItems, removeHistoryItem, clearHistory } = useRecentHistoryStore();
   const [savedNotes, setSavedNotes] = useState<SavedNoteSummary[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterMode, setFilterMode] = useState<FilterMode>("all");
+  const [filterMode, setFilterMode] = useState<FilterMode>(mode === "open" ? "saved" : "all");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setFilterMode(mode === "open" ? "saved" : "all");
+  }, [mode]);
 
   useEffect(() => {
     notesLoader()
@@ -88,6 +96,14 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
     return date.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
   };
 
+  const handleDeleteItem = async (id: string) => {
+    removeHistoryItem(id);
+    setSavedNotes((prev) => prev.filter((n) => n.id !== id));
+    if (onDeleteNote) {
+      await onDeleteNote(id);
+    }
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.container}>
@@ -105,9 +121,13 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
               </svg>
             </button>
             <div>
-              <h1 className={styles.title}>Recent & History</h1>
+              <h1 className={styles.title}>
+                {mode === "open" ? "Open Document" : "Recent & History"}
+              </h1>
               <p className={styles.subtitle}>
-                Reopen closed tabs, manage saved notes, or import files from your computer.
+                {mode === "open"
+                  ? "Browse your saved notes or import a file from your computer."
+                  : "Reopen closed tabs, manage saved notes, or import files from your computer."}
               </p>
             </div>
           </div>
@@ -170,7 +190,7 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
           />
           <button
             type="button"
-            className={styles.quickCard}
+            className={`${styles.quickCard} ${mode === "open" ? styles.quickCardPrimary : ""}`}
             onClick={() => fileInputRef.current?.click()}
           >
             <div className={styles.quickIcon}>
@@ -179,15 +199,17 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
               </svg>
             </div>
             <div className={styles.quickText}>
-              <strong>Open File</strong>
-              <span>Import from computer</span>
+              <strong>Open File from Computer</strong>
+              <span>Import .txt or .md from disk</span>
             </div>
           </button>
         </div>
 
         {/* Section Header + Filter Pills */}
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Recent Documents</h2>
+          <h2 className={styles.sectionTitle}>
+            {mode === "open" ? "Your Documents" : "Recent Documents"}
+          </h2>
           <div className={styles.filterGroup}>
             <button
               type="button"
@@ -279,19 +301,23 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
                       })
                     }
                   >
-                    Reopen
+                    {mode === "open" ? "Open" : "Reopen"}
                   </button>
-                  {historyItems.some((h) => h.id === item.id) && (
-                    <button
-                      type="button"
-                      className={styles.removeBtn}
-                      onClick={() => removeHistoryItem(item.id)}
-                      title="Remove from history"
-                      aria-label={`Remove ${item.title} from history`}
-                    >
-                      ✕
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    className={styles.removeBtn}
+                    onClick={() => handleDeleteItem(item.id)}
+                    title="Delete note"
+                    aria-label={`Delete ${item.title || "note"}`}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                      <path
+                        fillRule="evenodd"
+                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
             ))
