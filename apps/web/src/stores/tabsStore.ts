@@ -5,6 +5,7 @@ export interface TabData {
   title: string;
   content: string;
   isDirty: boolean;
+  hasUnsavedChanges?: boolean;
   isMarkdown: boolean;
   isCustomTitle?: boolean;
   defaultTitle?: string;
@@ -21,6 +22,7 @@ export interface TabsState {
   updateTabContent: (id: string, content: string) => void;
   setTabDirty: (id: string, isDirty: boolean) => void;
   setTabTitle: (id: string, title: string, isCustomTitle?: boolean) => void;
+  markTabSaved: (id: string, title: string, isCustomTitle?: boolean) => void;
   setTabMarkdown: (id: string, isMarkdown: boolean) => void;
   reorderTabs: (sourceIndex: number, destinationIndex: number) => void;
   cycleNextTab: () => void;
@@ -80,6 +82,7 @@ const initialTab: TabData = {
   title: "Untitled",
   content: "",
   isDirty: false,
+  hasUnsavedChanges: false,
   isMarkdown: true,
   isCustomTitle: false,
   defaultTitle: "Untitled",
@@ -91,12 +94,14 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   tabs: [initialTab],
   activeTabId: initialTabId,
 
-  createTab: (title?: string, content = "", isMarkdown = true, isCustomTitle = false) => {
+  createTab: (title?: string, content = "", isMarkdown = true, isCustomTitle?: boolean) => {
     const { tabs } = get();
-    const isExplicitTitle = !!title && title !== "Untitled";
-    const defaultTitle = isExplicitTitle ? title : getNextUntitledTitle(tabs);
-    const finalIsCustom = isCustomTitle || isExplicitTitle;
-    const finalTitle = finalIsCustom ? defaultTitle : extractTitleFromContent(content, defaultTitle);
+    const hasProvidedTitle = !!title && title !== "Untitled";
+    const finalIsCustom = isCustomTitle !== undefined ? isCustomTitle : hasProvidedTitle;
+    const defaultTitle = finalIsCustom && hasProvidedTitle ? title : getNextUntitledTitle(tabs);
+    const finalTitle = hasProvidedTitle
+      ? title
+      : extractTitleFromContent(content, defaultTitle);
 
     const id = `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const newTab: TabData = {
@@ -104,6 +109,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
       title: finalTitle,
       content,
       isDirty: false,
+      hasUnsavedChanges: false,
       isMarkdown,
       isCustomTitle: finalIsCustom,
       defaultTitle,
@@ -169,7 +175,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
       tabs: state.tabs.map((tab) => {
         if (tab.id !== id) return tab;
         const fallback = tab.defaultTitle || "Untitled";
-        const isCustom = tab.isCustomTitle ?? (tab.title !== fallback && !/^Untitled(?:\s+\d+)?$/i.test(tab.title));
+        const isCustom = Boolean(tab.isCustomTitle);
         const newTitle = isCustom
           ? tab.title
           : extractTitleFromContent(content, fallback);
@@ -179,6 +185,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
           title: newTitle,
           content,
           isDirty: true,
+          hasUnsavedChanges: true,
           updatedAt: Date.now(),
         };
       }),
@@ -192,9 +199,26 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   },
 
   setTabTitle: (id: string, title: string, isCustomTitle?: boolean) => {
-    const isCustom = isCustomTitle !== undefined ? isCustomTitle : !/^Untitled(?:\s+\d+)?$/i.test(title);
+    const isCustom = isCustomTitle !== undefined ? isCustomTitle : false;
     set((state) => ({
       tabs: state.tabs.map((tab) => (tab.id === id ? { ...tab, title, isCustomTitle: isCustom } : tab)),
+    }));
+  },
+
+  markTabSaved: (id: string, title: string, isCustomTitle = true) => {
+    set((state) => ({
+      tabs: state.tabs.map((tab) =>
+        tab.id === id
+          ? {
+              ...tab,
+              title,
+              isCustomTitle,
+              isDirty: false,
+              hasUnsavedChanges: false,
+              updatedAt: Date.now(),
+            }
+          : tab
+      ),
     }));
   },
 

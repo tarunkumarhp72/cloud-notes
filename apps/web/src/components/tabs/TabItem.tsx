@@ -75,7 +75,7 @@ export const TabItem: React.FC<TabItemProps> = ({
         {tab.title}
       </span>
 
-      {tab.isDirty && (
+      {(tab.hasUnsavedChanges !== undefined ? tab.hasUnsavedChanges : tab.isDirty) && (
         <span className={styles.dirtyDot} title="Unsaved changes" aria-label="Unsaved changes" />
       )}
 

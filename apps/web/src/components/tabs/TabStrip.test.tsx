@@ -44,6 +44,20 @@ describe("TabStrip Component", () => {
     expect(screen.getByTitle("Unsaved changes")).toBeDefined();
   });
 
+  it("keeps dirty dot visible when hasUnsavedChanges is true even after background auto-save clears isDirty", () => {
+    render(
+      <TabStrip
+        tabs={[{ id: "tab-auto", title: "Draft", isDirty: false, hasUnsavedChanges: true }]}
+        activeTabId="tab-auto"
+        onSelectTab={vi.fn()}
+        onCloseTab={vi.fn()}
+        onNewTab={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTitle("Unsaved changes")).toBeDefined();
+  });
+
   it("triggers onSelectTab when clicking an inactive tab", () => {
     const handleSelect = vi.fn();
     render(

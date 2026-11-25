@@ -113,6 +113,28 @@ describe("Tabs Management & Store", () => {
     useTabsStore.getState().updateTabContent(id, "# New Heading\nsome text");
     expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("api-server.ts");
   });
+
+  it("dynamically updates restored non-custom note title when cleared and re-entered", () => {
+    const id = useTabsStore.getState().createTab("afdfdsfdsf...", "afdfdsfdsfdfdfddsdfa", true, false);
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("afdfdsfdsf...");
+
+    // Clearing content reverts title to Untitled
+    useTabsStore.getState().updateTabContent(id, "");
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("Untitled");
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.hasUnsavedChanges).toBe(true);
+
+    // Entering new content updates title dynamically
+    useTabsStore.getState().updateTabContent(id, "ttkejdijfg");
+    expect(useTabsStore.getState().tabs.find((t) => t.id === id)?.title).toBe("ttkejdijfg");
+
+    // Explicit save locks custom title and clears hasUnsavedChanges
+    useTabsStore.getState().markTabSaved(id, "My Saved Note", true);
+    const saved = useTabsStore.getState().tabs.find((t) => t.id === id);
+    expect(saved?.title).toBe("My Saved Note");
+    expect(saved?.isCustomTitle).toBe(true);
+    expect(saved?.hasUnsavedChanges).toBe(false);
+    expect(saved?.isDirty).toBe(false);
+  });
 });
 
 describe("TabItem Component Drag and Drop", () => {

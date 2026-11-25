@@ -29,6 +29,8 @@ import { networkMonitor } from "./sync/networkStatus";
 import { useVisualViewport } from "./hooks/useVisualViewport";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
+import { SaveNoteModal } from "./components/file/SaveNoteModal";
+import { CloseTabConfirmModal } from "./components/tabs/CloseTabConfirmModal";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
 import { RecoveryKeyModal } from "./components/vault/RecoveryKeyModal";
 import { NoteLimitModal } from "./components/tabs/NoteLimitModal";
@@ -65,6 +67,13 @@ export const App: React.FC = () => {
   const [canOutdent, setCanOutdent] = useState(false);
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showOpenDialog, setShowOpenDialog] = useState(false);
+  const [saveModalState, setSaveModalState] = useState<{
+    isOpen: boolean;
+    tabId: string;
+    isSaveAs: boolean;
+    closeAfterSave: boolean;
+  } | null>(null);
+  const [closeConfirmTabId, setCloseConfirmTabId] = useState<string | null>(null);
   const [showVaultModal, setShowVaultModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
@@ -180,8 +189,7 @@ export const App: React.FC = () => {
               isMarkdown = true;
             }
             useTabsStore.getState().updateTabContent(currentTabs[0].id, content);
-            useTabsStore.getState().setTabTitle(currentTabs[0].id, title);
-            useTabsStore.getState().setTabDirty(currentTabs[0].id, false);
+            useTabsStore.getState().markTabSaved(currentTabs[0].id, title, false);
             useTabsStore.getState().setTabMarkdown(currentTabs[0].id, isMarkdown);
             setMarkdownMode(isMarkdown);
           }
@@ -254,12 +262,88 @@ export const App: React.FC = () => {
     return newId;
   };
 
-  const handleCloseTab = (id: string) => {
+  const forceCloseTab = (id: string) => {
     closeTab(id);
     broadcastRef.current?.broadcast({
       type: "TAB_CLOSED",
       payload: { noteId: id },
     });
+  };
+
+  const handleCloseTab = (id: string) => {
+    const targetTab = useTabsStore.getState().tabs.find((t) => t.id === id);
+    if (
+      targetTab &&
+      (targetTab.hasUnsavedChanges ||
+        (targetTab.content.trim().length > 0 && !targetTab.isCustomTitle))
+    ) {
+      setCloseConfirmTabId(id);
+      return;
+    }
+    forceCloseTab(id);
+  };
+
+  const performExplicitSave = async (
+    tabId: string,
+    chosenTitle: string,
+    alsoDownload: boolean
+  ) => {
+    const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId);
+    if (!tab) return;
+
+    useTabsStore.getState().markTabSaved(tabId, chosenTitle, true);
+    setSyncStatus("saved");
+
+    if (alsoDownload) {
+      exportNoteToFile(chosenTitle, tab.content, tab.isMarkdown);
+    }
+
+    let envelopePayload = JSON.stringify({
+      title: chosenTitle,
+      content: tab.content,
+      isMarkdown: tab.isMarkdown,
+    });
+
+    const vKey = useVaultStore.getState().vaultKey;
+    if (vKey) {
+      try {
+        const envelope = await createNoteEnvelope(vKey, {
+          id: tabId,
+          title: chosenTitle,
+          content: tab.content,
+          isMarkdown: tab.isMarkdown,
+          createdAt: new Date(tab.createdAt).toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+        envelopePayload = JSON.stringify(envelope);
+      } catch (err) {
+        console.warn("Could not encrypt explicit save envelope:", err);
+      }
+    }
+
+    if (syncEngineRef.current && user) {
+      await syncEngineRef.current.enqueueMutation(tabId, "upsert", envelopePayload, 1);
+    }
+  };
+
+  const handleSaveTrigger = (tabId: string, isSaveAs = false, closeAfterSave = false) => {
+    const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId);
+    if (!tab) return;
+
+    if (isSaveAs || !tab.isCustomTitle) {
+      setSaveModalState({
+        isOpen: true,
+        tabId,
+        isSaveAs,
+        closeAfterSave,
+      });
+      return;
+    }
+
+    performExplicitSave(tabId, tab.title, false);
+    if (closeAfterSave) {
+      forceCloseTab(tabId);
+    }
   };
 
   // Local auto-save to IndexedDB (1s debounce, 10s forced flush)
@@ -538,12 +622,12 @@ export const App: React.FC = () => {
     onOpen: () => setShowOpenDialog(true),
     onSave: () => {
       if (activeTab) {
-        exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
+        handleSaveTrigger(activeTab.id, false);
       }
     },
     onSaveAs: () => {
       if (activeTab) {
-        exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
+        handleSaveTrigger(activeTab.id, true);
       }
     },
     onCloseTab: () => handleCloseTab(activeTabId),
@@ -603,12 +687,12 @@ export const App: React.FC = () => {
             onOpen={() => setShowOpenDialog(true)}
             onSave={() => {
               if (activeTab) {
-                exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
+                handleSaveTrigger(activeTab.id, false);
               }
             }}
             onSaveAs={() => {
               if (activeTab) {
-                exportNoteToFile(activeTab.title, activeTab.content, activeTab.isMarkdown);
+                handleSaveTrigger(activeTab.id, true);
               }
             }}
             onSaveAll={() => {
@@ -1014,8 +1098,49 @@ export const App: React.FC = () => {
             return;
           }
           const imported = await readFileAsText(file);
-          createTab(imported.filename, imported.content, imported.isMarkdown);
+          createTab(imported.filename, imported.content, imported.isMarkdown, true);
         }}
+      />
+
+      <SaveNoteModal
+        isOpen={Boolean(saveModalState?.isOpen)}
+        initialTitle={
+          tabs.find((t) => t.id === saveModalState?.tabId)?.title || "Untitled"
+        }
+        isSaveAs={Boolean(saveModalState?.isSaveAs)}
+        isMarkdown={
+          tabs.find((t) => t.id === saveModalState?.tabId)?.isMarkdown ?? true
+        }
+        onSave={async (chosenTitle, alsoDownload) => {
+          if (!saveModalState) return;
+          const { tabId, closeAfterSave } = saveModalState;
+          setSaveModalState(null);
+          await performExplicitSave(tabId, chosenTitle, alsoDownload);
+          if (closeAfterSave) {
+            forceCloseTab(tabId);
+          }
+        }}
+        onCancel={() => setSaveModalState(null)}
+      />
+
+      <CloseTabConfirmModal
+        isOpen={Boolean(closeConfirmTabId)}
+        tabTitle={
+          tabs.find((t) => t.id === closeConfirmTabId)?.title || "Untitled"
+        }
+        onSave={() => {
+          if (!closeConfirmTabId) return;
+          const targetId = closeConfirmTabId;
+          setCloseConfirmTabId(null);
+          handleSaveTrigger(targetId, false, true);
+        }}
+        onDontSave={() => {
+          if (!closeConfirmTabId) return;
+          const targetId = closeConfirmTabId;
+          setCloseConfirmTabId(null);
+          forceCloseTab(targetId);
+        }}
+        onCancel={() => setCloseConfirmTabId(null)}
       />
 
       <LinkModal

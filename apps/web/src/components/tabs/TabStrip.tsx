@@ -7,6 +7,7 @@ export interface Tab {
   id: string;
   title: string;
   isDirty?: boolean;
+  hasUnsavedChanges?: boolean;
 }
 
 export interface TabStripProps {
