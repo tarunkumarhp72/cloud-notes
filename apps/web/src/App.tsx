@@ -16,7 +16,7 @@ import { ToolbarOverflowMenu } from "./components/toolbar/ToolbarOverflowMenu";
 import toolbarStyles from "./components/toolbar/Toolbar.module.css";
 import { SettingsPage } from "./components/settings/SettingsPage";
 import { Tooltip } from "./components/ui/Tooltip";
-import { NotFoundPage, ProtectedRoutePage } from "./components/ui/NotFoundPage";
+import { NotFoundPage } from "./components/ui/NotFoundPage";
 import { SettingsIcon } from "./components/icons/SettingsIcon";
 import { TipTapEditorRef } from "./components/editor/TipTapEditor";
 import { FindReplaceBar } from "./components/editor/FindReplaceBar";
@@ -752,9 +752,19 @@ export const App: React.FC = () => {
       <TabStrip
         tabs={tabs}
         activeTabId={activeTabId}
-        onSelectTab={selectTab}
+        onSelectTab={(id) => {
+          selectTab(id);
+          setIsSettingsOpen(false);
+          setOpenPageMode(null);
+          setIsNotFound(false);
+        }}
         onCloseTab={handleCloseTab}
-        onNewTab={() => handleNewTab()}
+        onNewTab={() => {
+          setIsSettingsOpen(false);
+          setOpenPageMode(null);
+          setIsNotFound(false);
+          handleNewTab();
+        }}
         onReorderTabs={reorderTabs}
         showCaptionControls={isDesktop}
       />
@@ -769,15 +779,18 @@ export const App: React.FC = () => {
             onNewWindow={() => window.open(window.location.href, "_blank")}
             onNewMarkdownTab={() => handleNewTab("Untitled.md", "", true)}
             onOpen={() => {
+              setIsNotFound(false);
               setIsSettingsOpen(false);
               setOpenPageMode("open");
             }}
             onRecent={() => {
+              setIsNotFound(false);
               setIsSettingsOpen(false);
               setOpenPageMode("history");
             }}
             onRecycleBin={() => {
               if (!user) return;
+              setIsNotFound(false);
               setIsSettingsOpen(false);
               setOpenPageMode("recycle");
             }}
@@ -1057,18 +1070,12 @@ export const App: React.FC = () => {
       />
 
       {/* Body: 404, Settings, Protected Route, or Editor Surface */}
-      {isNotFound ? (
+      {isNotFound || (openPageMode === "recycle" && !user) ? (
         <NotFoundPage
-          path={typeof window !== "undefined" ? window.location.pathname : "/"}
           onGoHome={() => {
             setIsNotFound(false);
             setIsSettingsOpen(false);
             setOpenPageMode(null);
-          }}
-          onGoHistory={() => {
-            setIsNotFound(false);
-            setIsSettingsOpen(false);
-            setOpenPageMode("history");
           }}
         />
       ) : isSettingsOpen ? (
@@ -1089,12 +1096,6 @@ export const App: React.FC = () => {
             } catch {}
             setIsSettingsOpen(false);
           }}
-        />
-      ) : openPageMode === "recycle" && !user ? (
-        <ProtectedRoutePage
-          routeName="Recycle Bin"
-          onSignIn={() => setShowSignIn(true)}
-          onBack={() => setOpenPageMode(null)}
         />
       ) : openPageMode === "recycle" && user ? (
         <RecycleBinPage
