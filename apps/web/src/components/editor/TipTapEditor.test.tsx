@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, act } from "@testing-library/react";
 import { createRef } from "react";
 import { TipTapEditor, TipTapEditorRef } from "./TipTapEditor";
 import { extractPlainTextFromMarkdown, normalizeMarkdown } from "./markdownSerializer";
@@ -60,5 +60,24 @@ describe("TipTapEditor Component & Markdown Serializer", () => {
     );
     expect(tiptap?.getAttribute("spellcheck")).toBe("false");
     expect(tiptap?.getAttribute("autocorrect")).toBe("off");
+  });
+
+  it("inserts a clickable link node with display text instead of escaped HTML", () => {
+    const editorRef = createRef<TipTapEditorRef>();
+    const onChange = vi.fn();
+    const { container } = render(
+      <TipTapEditor ref={editorRef} value="" onChange={onChange} />
+    );
+
+    act(() => {
+      editorRef.current?.setLink("http://localhost:3000/", "localhost");
+    });
+
+    const anchor = container.querySelector(".tiptap a");
+    expect(anchor).not.toBeNull();
+    expect(anchor?.getAttribute("href")).toBe("http://localhost:3000/");
+    expect(anchor?.textContent).toBe("localhost");
+    expect(container.textContent).not.toContain("<a ");
+    expect(onChange).toHaveBeenCalledWith("[localhost](http://localhost:3000/)");
   });
 });

@@ -238,7 +238,15 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         if (cleanUrl && editor) {
           if (editor.state.selection.empty) {
             const displayText = text || cleanUrl;
-            editor.chain().focus().insertContent(`<a href="${cleanUrl}">${displayText}</a>`).run();
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "text",
+                text: displayText,
+                marks: [{ type: "link", attrs: { href: cleanUrl } }],
+              })
+              .run();
           } else {
             editor.chain().focus().setLink({ href: cleanUrl }).run();
           }
