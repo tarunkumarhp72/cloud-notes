@@ -13,19 +13,9 @@ body,
   .responsiveToolbar,
   div[class*="toolbarGroup"],
   div[class*="childrenToolbar"] {
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
+    overflow: visible;
     flex-shrink: 1;
     max-width: 100%;
-  }
-
-  .responsiveToolbar::-webkit-scrollbar,
-  div[class*="toolbarGroup"]::-webkit-scrollbar,
-  div[class*="childrenToolbar"]::-webkit-scrollbar {
-    display: none;
   }
 
   /* Caption controls size adaptation on touch / tablet */
