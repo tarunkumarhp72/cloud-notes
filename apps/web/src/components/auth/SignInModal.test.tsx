@@ -51,4 +51,27 @@ describe("SignInModal Component", () => {
     });
     expect(handleClose).toHaveBeenCalledTimes(1);
   });
+
+  it("shows small loading spinner inside Google button while sign in is in progress", async () => {
+    let resolveSignIn!: () => void;
+    const pendingSignIn = new Promise<void>((resolve) => {
+      resolveSignIn = resolve;
+    });
+    const handleSignIn = vi.fn().mockReturnValue(pendingSignIn);
+
+    render(<SignInModal isOpen={true} onGoogleSignIn={handleSignIn} />);
+    const btn = screen.getByLabelText("Sign in with Google");
+
+    await act(async () => {
+      fireEvent.click(btn);
+    });
+
+    expect(screen.getByRole("progressbar", { name: "Signing in" })).toBeDefined();
+    expect(screen.getByText("Signing in...")).toBeDefined();
+    expect(btn.hasAttribute("disabled")).toBe(true);
+
+    await act(async () => {
+      resolveSignIn();
+    });
+  });
 });

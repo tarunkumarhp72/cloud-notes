@@ -33,6 +33,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
     try {
       if (onGoogleSignIn) {
         await onGoogleSignIn();
+        setLoading(false);
         return;
       }
 
@@ -48,11 +49,10 @@ export const SignInModal: React.FC<SignInModalProps> = ({
         redirectUri: activeRedirectUri,
       });
 
-      // Redirect to Google OAuth consent
+      // Keep loading spinner active while browser navigates to Google OAuth
       window.location.href = url;
     } catch (err) {
       setInternalError(err instanceof Error ? err.message : "Failed to initiate Google sign in");
-    } finally {
       setLoading(false);
     }
   };
@@ -99,32 +99,14 @@ export const SignInModal: React.FC<SignInModalProps> = ({
           Sign in to Notepad
         </h1>
         <p className={styles.description}>
-          Sync your end-to-end encrypted notes seamlessly across all your devices.
+          Sync your end-to-end encrypted notes across web and desktop.
         </p>
 
-        {/* Security & Feature Badges */}
-        <div className={styles.featureList} role="list">
-          <div className={styles.featureItem} role="listitem">
-            <span className={styles.featureIcon}>🔒</span>
-            <div className={styles.featureText}>
-              <strong>End-to-End Encrypted</strong>
-              <span>Encrypted on your device before syncing</span>
-            </div>
-          </div>
-          <div className={styles.featureItem} role="listitem">
-            <span className={styles.featureIcon}>⚡</span>
-            <div className={styles.featureText}>
-              <strong>Multi-Device Sync</strong>
-              <span>Instant real-time sync across web and desktop</span>
-            </div>
-          </div>
-          <div className={styles.featureItem} role="listitem">
-            <span className={styles.featureIcon}>🛡️</span>
-            <div className={styles.featureText}>
-              <strong>Zero-Knowledge Privacy</strong>
-              <span>Only you hold your keys — nobody else can read your notes</span>
-            </div>
-          </div>
+        <div className={styles.privacyNote}>
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 1a3.5 3.5 0 0 0-3.5 3.5V7A1.5 1.5 0 0 0 3 8.5v5A1.5 1.5 0 0 0 4.5 15h7a1.5 1.5 0 0 0 1.5-1.5v-5A1.5 1.5 0 0 0 11.5 7V4.5A3.5 3.5 0 0 0 8 1zm2 6H6V4.5a2 2 0 1 1 4 0V7z" />
+          </svg>
+          <span>Notes are encrypted on your device before syncing.</span>
         </div>
 
         {displayError && (
@@ -145,7 +127,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
           aria-label="Sign in with Google"
         >
           {loading ? (
-            <div className={styles.spinner} aria-hidden="true" />
+            <span className={styles.spinner} role="progressbar" aria-label="Signing in" />
           ) : (
             <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path
@@ -166,7 +148,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
               />
             </svg>
           )}
-          <span>{loading ? "Connecting to Google..." : "Sign in with Google"}</span>
+          <span>{loading ? "Signing in..." : "Sign in with Google"}</span>
         </button>
 
         {/* Continue Offline Option */}
