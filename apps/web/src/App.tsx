@@ -29,6 +29,7 @@ import { networkMonitor } from "./sync/networkStatus";
 import { useVisualViewport } from "./hooks/useVisualViewport";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
+import { RecentHistoryPage } from "./components/file/RecentHistoryPage";
 import { SaveNoteModal } from "./components/file/SaveNoteModal";
 import { CloseTabConfirmModal } from "./components/tabs/CloseTabConfirmModal";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
@@ -36,6 +37,7 @@ import { RecoveryKeyModal } from "./components/vault/RecoveryKeyModal";
 import { NoteLimitModal } from "./components/tabs/NoteLimitModal";
 import { useVaultStore } from "./stores/vaultStore";
 import { useTabsStore } from "./stores/tabsStore";
+import { useRecentHistoryStore } from "./stores/recentHistoryStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { webConfig } from "./config";
 import { getValidAccessToken, fetchWithAuth } from "./auth/tokenManager";
@@ -82,11 +84,15 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(
     () => typeof window !== "undefined" && window.location.pathname === "/settings"
   );
+  const [isHistoryOpen, setIsHistoryOpen] = useState(
+    () => typeof window !== "undefined" && window.location.pathname === "/history"
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handlePopState = () => {
       setIsSettingsOpen(window.location.pathname === "/settings");
+      setIsHistoryOpen(window.location.pathname === "/history");
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -98,10 +104,12 @@ export const App: React.FC = () => {
     if (path.includes("/auth/")) return;
     if (isSettingsOpen && path !== "/settings") {
       window.history.pushState({}, document.title, "/settings");
-    } else if (!isSettingsOpen && path === "/settings") {
+    } else if (isHistoryOpen && !isSettingsOpen && path !== "/history") {
+      window.history.pushState({}, document.title, "/history");
+    } else if (!isSettingsOpen && !isHistoryOpen && (path === "/settings" || path === "/history")) {
       window.history.pushState({}, document.title, "/");
     }
-  }, [isSettingsOpen]);
+  }, [isSettingsOpen, isHistoryOpen]);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [isReplaceOpen, setIsReplaceOpen] = useState(false);
@@ -263,6 +271,16 @@ export const App: React.FC = () => {
   };
 
   const forceCloseTab = (id: string) => {
+    const closingTab = useTabsStore.getState().tabs.find((t) => t.id === id);
+    if (closingTab && closingTab.content.trim().length > 0) {
+      useRecentHistoryStore.getState().recordHistoryItem({
+        id: closingTab.id,
+        title: closingTab.title || "Untitled",
+        content: closingTab.content,
+        isMarkdown: closingTab.isMarkdown,
+        status: "closed",
+      });
+    }
     closeTab(id);
     broadcastRef.current?.broadcast({
       type: "TAB_CLOSED",
@@ -292,6 +310,13 @@ export const App: React.FC = () => {
     if (!tab) return;
 
     useTabsStore.getState().markTabSaved(tabId, chosenTitle, true);
+    useRecentHistoryStore.getState().recordHistoryItem({
+      id: tabId,
+      title: chosenTitle,
+      content: tab.content,
+      isMarkdown: tab.isMarkdown,
+      status: "saved",
+    });
     setSyncStatus("saved");
 
     if (alsoDownload) {
@@ -685,6 +710,10 @@ export const App: React.FC = () => {
             onNewWindow={() => window.open(window.location.href, "_blank")}
             onNewMarkdownTab={() => handleNewTab("Untitled.md", "", true)}
             onOpen={() => setShowOpenDialog(true)}
+            onRecent={() => {
+              setIsSettingsOpen(false);
+              setIsHistoryOpen(true);
+            }}
             onSave={() => {
               if (activeTab) {
                 handleSaveTrigger(activeTab.id, false);
@@ -932,6 +961,39 @@ export const App: React.FC = () => {
             setIsSettingsOpen(false);
           }}
         />
+      ) : isHistoryOpen ? (
+        <RecentHistoryPage
+          onBack={() => setIsHistoryOpen(false)}
+          onNewDocument={() => {
+            setIsHistoryOpen(false);
+            handleNewTab();
+          }}
+          onOpenFileFromDisk={async (file) => {
+            const maxLimit = user ? webConfig.userNoteLimit : webConfig.guestNoteLimit;
+            if (tabs.length >= maxLimit) {
+              setShowLimitModal(true);
+              return;
+            }
+            const imported = await readFileAsText(file);
+            createTab(imported.filename, imported.content, imported.isMarkdown, true);
+            setIsHistoryOpen(false);
+          }}
+          onReopenNote={(note) => {
+            const existing = tabs.find((t) => t.id === note.id);
+            if (existing) {
+              selectTab(existing.id);
+              setIsHistoryOpen(false);
+              return;
+            }
+            const maxLimit = user ? webConfig.userNoteLimit : webConfig.guestNoteLimit;
+            if (tabs.length >= maxLimit) {
+              setShowLimitModal(true);
+              return;
+            }
+            createTab(note.title, note.content, note.isMarkdown, note.isCustomTitle);
+            setIsHistoryOpen(false);
+          }}
+        />
       ) : (
         <div
           className="editorAreaContainer"
@@ -1084,15 +1146,15 @@ export const App: React.FC = () => {
         isOpen={showOpenDialog}
         onClose={() => setShowOpenDialog(false)}
         onSelectNote={(saved) => {
-          const maxLimit = user ? USER_NOTE_LIMIT : GUEST_NOTE_LIMIT;
+          const maxLimit = user ? webConfig.userNoteLimit : webConfig.guestNoteLimit;
           if (tabs.length >= maxLimit) {
             setShowLimitModal(true);
             return;
           }
-          createTab(saved.title, saved.content, saved.isMarkdown);
+          createTab(saved.title, saved.content, saved.isMarkdown, false);
         }}
         onOpenFileFromDisk={async (file) => {
-          const maxLimit = user ? USER_NOTE_LIMIT : GUEST_NOTE_LIMIT;
+          const maxLimit = user ? webConfig.userNoteLimit : webConfig.guestNoteLimit;
           if (tabs.length >= maxLimit) {
             setShowLimitModal(true);
             return;

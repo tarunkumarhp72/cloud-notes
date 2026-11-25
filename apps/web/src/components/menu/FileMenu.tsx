@@ -7,6 +7,7 @@ export interface FileMenuProps {
   onNewWindow?: () => void;
   onNewMarkdownTab?: () => void;
   onOpen?: () => void;
+  onRecent?: () => void;
   onSave?: () => void;
   onSaveAs?: () => void;
   onSaveAll?: () => void;
@@ -23,6 +24,7 @@ export const FileMenu: React.FC<FileMenuProps> = ({
   onNewWindow,
   onNewMarkdownTab,
   onOpen,
+  onRecent,
   onSave,
   onSaveAs,
   onSaveAll,
@@ -79,9 +81,9 @@ export const FileMenu: React.FC<FileMenuProps> = ({
         type="button"
         role="menuitem"
         className={styles.item}
-        disabled
+        onClick={onRecent}
       >
-        <span className={styles.label}>Recent</span>
+        <span className={styles.label}>Recent / History</span>
         <span className={styles.chevron}>›</span>
       </button>
 

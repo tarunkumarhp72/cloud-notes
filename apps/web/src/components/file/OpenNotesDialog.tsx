@@ -86,6 +86,7 @@ export const OpenNotesDialog: React.FC<OpenNotesDialogProps> = ({
     const files = e.target.files;
     if (files && files.length > 0) {
       onOpenFileFromDisk(files[0]);
+      e.target.value = "";
       onClose();
     }
   };
@@ -168,7 +169,7 @@ export const OpenNotesDialog: React.FC<OpenNotesDialogProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".txt,.md,.markdown"
+            accept=".txt,.md,.markdown,text/plain,text/markdown"
             style={{ display: "none" }}
             onChange={handleFileInputChange}
           />
