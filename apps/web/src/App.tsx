@@ -20,7 +20,7 @@ import { FindReplaceBar } from "./components/editor/FindReplaceBar";
 import { GoToDialog } from "./components/editor/GoToDialog";
 import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
-import { listNotes, createNoteEnvelope, openNoteEnvelope } from "@notepad/core";
+import { listNotes, deleteNote, createNoteEnvelope, openNoteEnvelope } from "@notepad/core";
 import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useLocalAutoSave } from "./sync/localAutoSave";
 import { SyncEngine, type SyncStatus } from "./sync/syncEngine";
@@ -196,9 +196,22 @@ export const App: React.FC = () => {
               content = first.encryptedEnvelope;
               isMarkdown = true;
             }
-            useTabsStore.getState().updateTabContent(currentTabs[0].id, content);
-            useTabsStore.getState().markTabSaved(currentTabs[0].id, title, false);
-            useTabsStore.getState().setTabMarkdown(currentTabs[0].id, isMarkdown);
+            useTabsStore.setState({
+              tabs: [
+                {
+                  ...currentTabs[0],
+                  id: first.id,
+                  title,
+                  content,
+                  isMarkdown,
+                  isCustomTitle: false,
+                  isDirty: false,
+                  hasUnsavedChanges: false,
+                  updatedAt: Date.now(),
+                },
+              ],
+              activeTabId: first.id,
+            });
             setMarkdownMode(isMarkdown);
           }
         }
@@ -1196,11 +1209,19 @@ export const App: React.FC = () => {
           setCloseConfirmTabId(null);
           handleSaveTrigger(targetId, false, true);
         }}
-        onDontSave={() => {
+        onDontSave={async () => {
           if (!closeConfirmTabId) return;
           const targetId = closeConfirmTabId;
           setCloseConfirmTabId(null);
           forceCloseTab(targetId);
+          try {
+            await deleteNote(targetId, false);
+          } catch (err) {
+            console.warn("Failed to remove discarded note from IndexedDB:", err);
+          }
+          if (syncEngineRef.current && user) {
+            await syncEngineRef.current.enqueueMutation(targetId, "delete", "", 1);
+          }
         }}
         onCancel={() => setCloseConfirmTabId(null)}
       />
