@@ -231,18 +231,22 @@
 
 .clearBtn {
   height: 28px;
-  padding: 0 10px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  padding: 0 12px;
+  margin-left: auto;
+  background-color: rgba(232, 17, 35, 0.08);
+  border: 1px solid rgba(232, 17, 35, 0.25);
+  border-radius: 999px;
+  color: #d13438;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .clearBtn:hover {
-  color: #d13438;
-  background-color: rgba(232, 17, 35, 0.08);
+  background-color: #c50f1f;
+  border-color: #c50f1f;
+  color: #ffffff;
 }
 
 .listCard {
@@ -451,6 +455,10 @@
 
   .quickText span {
     display: none;
+  }
+
+  .filterGroup {
+    width: 100%;
   }
 
   .docRow {
