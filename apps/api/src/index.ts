@@ -4,6 +4,8 @@ import { checkDbConnection } from "./db";
 import { authRouter } from "./routes/auth";
 import { syncRouter } from "./routes/sync";
 import { accountRouter } from "./routes/account";
+import { backupRouter } from "./routes/backup";
+import { startBackupScheduler } from "./backup/scheduler";
 import { cspMiddleware } from "./security/csp";
 import { rateLimitMiddleware } from "./middleware/rateLimit";
 import { config } from "./config";
@@ -44,6 +46,12 @@ app.route("/sync", syncRouter);
 app.route("/api/sync", syncRouter);
 app.route("/account", accountRouter);
 app.route("/api/account", accountRouter);
+app.route("/backup", backupRouter);
+app.route("/api/backup", backupRouter);
+
+if (!config.isTest) {
+  startBackupScheduler();
+}
 
 app.get("/health", async (c) => {
   const dbStatus = await checkDbConnection();

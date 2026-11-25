@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styles from "./SettingsPage.module.css";
 import { useSettingsStore, AppTheme } from "../../stores/settingsStore";
 import { DeleteAccountModal } from "./DeleteAccountModal";
+import { GoogleDriveBackup } from "./GoogleDriveBackup";
 
 export interface SettingsPageProps {
   onBack: () => void;
@@ -194,6 +195,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             </p>
           </div>
         </section>
+
+        {/* Google Drive Backup & Restore */}
+        <GoogleDriveBackup accessToken={accessToken} onRestored={onBack} />
 
         {/* Account & Data */}
         <section className={styles.card}>

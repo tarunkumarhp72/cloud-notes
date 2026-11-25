@@ -339,6 +339,40 @@ export const App: React.FC = () => {
         return;
       }
 
+      // Flow 2.5: Google Drive OAuth Callback (from /auth/drive-callback)
+      if (window.location.pathname.includes("/drive-callback") && code) {
+        try {
+          const redirectUri = `${window.location.origin}/auth/drive-callback`;
+          const token = localStorage.getItem("notepad_token");
+          if (token) {
+            const apiBaseUrl = webConfig.apiBaseUrl;
+            const res = await fetch(`${apiBaseUrl}/api/backup/auth/callback`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                code,
+                redirectUri,
+              }),
+            });
+            if (res.ok) {
+              setIsSettingsOpen(true);
+            }
+          }
+        } catch (err) {
+          console.error("Google Drive connection callback error:", err);
+        } finally {
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname.replace(/\/auth\/drive-callback\/?$/, "/") || "/"
+          );
+        }
+        return;
+      }
+
       // Flow 2: Frontend PKCE redirect (from http://localhost:3000/auth/callback)
       if (code && state) {
         try {
