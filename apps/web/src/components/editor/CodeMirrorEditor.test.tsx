@@ -68,4 +68,19 @@ describe("CodeMirrorEditor Component", () => {
     const jumped = ref.current!.goToLine(1);
     expect(jumped).toBe(true);
   });
+
+  it("applies spellcheck and autocorrect attributes on editable content", () => {
+    const { container, rerender } = render(
+      <CodeMirrorEditor value="Spellcheck test" spellCheck={true} autoCorrect={true} />
+    );
+    const content = container.querySelector(".cm-content");
+    expect(content?.getAttribute("spellcheck")).toBe("true");
+    expect(content?.getAttribute("autocorrect")).toBe("on");
+
+    rerender(
+      <CodeMirrorEditor value="Spellcheck test" spellCheck={false} autoCorrect={false} />
+    );
+    expect(content?.getAttribute("spellcheck")).toBe("false");
+    expect(content?.getAttribute("autocorrect")).toBe("off");
+  });
 });

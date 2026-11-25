@@ -41,6 +41,8 @@ export interface CodeMirrorEditorProps {
   fontFamily?: string;
   fontSize?: number;
   readOnly?: boolean;
+  spellCheck?: boolean;
+  autoCorrect?: boolean;
 }
 
 export const findAllMatches = (text: string, query: string, matchCase: boolean) => {
@@ -66,6 +68,8 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
       fontFamily = "Consolas",
       fontSize = 14,
       readOnly = false,
+      spellCheck = false,
+      autoCorrect = false,
     },
     ref
   ) => {
@@ -75,6 +79,7 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
     const wrapCompartment = useRef(new Compartment());
     const themeCompartment = useRef(new Compartment());
     const readOnlyCompartment = useRef(new Compartment());
+    const attributesCompartment = useRef(new Compartment());
 
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
@@ -508,6 +513,13 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
           wrapCompartment.current.of(wordWrap ? EditorView.lineWrapping : []),
           themeCompartment.current.of(baseTheme),
           readOnlyCompartment.current.of(EditorState.readOnly.of(readOnly)),
+          attributesCompartment.current.of(
+            EditorView.contentAttributes.of({
+              spellcheck: spellCheck ? "true" : "false",
+              autocorrect: autoCorrect ? "on" : "off",
+              autocapitalize: autoCorrect ? "sentences" : "off",
+            })
+          ),
           EditorView.updateListener.of((update) => {
             if (update.docChanged && onChangeRef.current) {
               onChangeRef.current(update.state.doc.toString());
@@ -582,6 +594,28 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
         effects: themeCompartment.current.reconfigure(updatedTheme),
       });
     }, [fontFamily, fontSize]);
+
+    // Dynamic Spellcheck / Autocorrect update
+    useEffect(() => {
+      const view = viewRef.current;
+      if (!view) return;
+
+      view.dispatch({
+        effects: attributesCompartment.current.reconfigure(
+          EditorView.contentAttributes.of({
+            spellcheck: spellCheck ? "true" : "false",
+            autocorrect: autoCorrect ? "on" : "off",
+            autocapitalize: autoCorrect ? "sentences" : "off",
+          })
+        ),
+      });
+
+      if (view.contentDOM) {
+        view.contentDOM.setAttribute("spellcheck", spellCheck ? "true" : "false");
+        view.contentDOM.setAttribute("autocorrect", autoCorrect ? "on" : "off");
+        view.contentDOM.setAttribute("autocapitalize", autoCorrect ? "sentences" : "off");
+      }
+    }, [spellCheck, autoCorrect]);
 
     const handleContainerClick = (e: React.MouseEvent) => {
       const selection = window.getSelection();

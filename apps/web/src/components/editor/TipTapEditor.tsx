@@ -56,6 +56,8 @@ export interface TipTapEditorProps {
   fontSize?: number;
   wordWrap?: boolean;
   readOnly?: boolean;
+  spellCheck?: boolean;
+  autoCorrect?: boolean;
 }
 
 const getDocMarkdown = (ed: ReturnType<typeof useEditor>) => {
@@ -79,6 +81,8 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       fontSize = 14,
       wordWrap = false,
       readOnly = false,
+      spellCheck = false,
+      autoCorrect = false,
     },
     ref
   ) => {
@@ -144,6 +148,13 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       ],
       content: value,
       editable: !readOnly,
+      editorProps: {
+        attributes: {
+          spellcheck: spellCheck ? "true" : "false",
+          autocorrect: autoCorrect ? "on" : "off",
+          autocapitalize: autoCorrect ? "sentences" : "off",
+        },
+      },
       onUpdate: ({ editor }) => {
         const markdown = getDocMarkdown(editor);
         onChange?.(markdown);
@@ -392,6 +403,25 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         editor.commands.setContent(value, { emitUpdate: false });
       }
     }, [value, editor]);
+
+    // Dynamic Spellcheck / Autocorrect update
+    useEffect(() => {
+      if (!editor || editor.isDestroyed) return;
+      editor.setOptions({
+        editorProps: {
+          attributes: {
+            spellcheck: spellCheck ? "true" : "false",
+            autocorrect: autoCorrect ? "on" : "off",
+            autocapitalize: autoCorrect ? "sentences" : "off",
+          },
+        },
+      });
+      if (editor.view?.dom) {
+        editor.view.dom.setAttribute("spellcheck", spellCheck ? "true" : "false");
+        editor.view.dom.setAttribute("autocorrect", autoCorrect ? "on" : "off");
+        editor.view.dom.setAttribute("autocapitalize", autoCorrect ? "sentences" : "off");
+      }
+    }, [editor, spellCheck, autoCorrect]);
 
     const proseContainerRef = useRef<HTMLDivElement>(null);
 

@@ -183,7 +183,14 @@ export const App: React.FC = () => {
     checkVaultStatus();
   }, [checkVaultStatus]);
 
-  const { fontFamily, fontSize, wordWrap, setWordWrap } = useSettingsStore();
+  const {
+    fontFamily,
+    fontSize,
+    wordWrap,
+    setWordWrap,
+    spellCheck,
+    autoCorrect,
+  } = useSettingsStore();
 
   const {
     tabs,
@@ -862,6 +869,8 @@ export const App: React.FC = () => {
                 wordWrap={wordWrap}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
+                spellCheck={spellCheck}
+                autoCorrect={autoCorrect}
               />
             </Suspense>
           ) : (
@@ -880,6 +889,8 @@ export const App: React.FC = () => {
                 wordWrap={wordWrap}
                 fontFamily={fontFamily}
                 fontSize={fontSize}
+                spellCheck={spellCheck}
+                autoCorrect={autoCorrect}
               />
             </Suspense>
           )}

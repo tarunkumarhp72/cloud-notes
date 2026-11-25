@@ -21,6 +21,7 @@
   --accent-hover: #005fb8;
   --accent-subtle: rgba(0, 103, 192, 0.12);
   --accent-text: #ffffff;
+  --text-on-accent: #ffffff;
   --selection-bg: #b4d8fd;
   --selection-text: #000000;
 
@@ -55,6 +56,7 @@
   --accent-hover: #38bdf8;
   --accent-subtle: rgba(76, 194, 255, 0.15);
   --accent-text: #000000;
+  --text-on-accent: #000000;
   --selection-bg: rgba(76, 194, 255, 0.35);
   --selection-text: #ffffff;
 

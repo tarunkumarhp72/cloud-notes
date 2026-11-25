@@ -46,4 +46,19 @@ describe("TipTapEditor Component & Markdown Serializer", () => {
     rerender(<TipTapEditor value="Wrap test" wordWrap={true} />);
     expect(container.querySelector(`.${styles.noWrap}`)).toBeNull();
   });
+
+  it("applies spellcheck and autocorrect attributes correctly", () => {
+    const { container, rerender } = render(
+      <TipTapEditor value="Spellcheck test" spellCheck={true} autoCorrect={true} />
+    );
+    const tiptap = container.querySelector(".tiptap");
+    expect(tiptap?.getAttribute("spellcheck")).toBe("true");
+    expect(tiptap?.getAttribute("autocorrect")).toBe("on");
+
+    rerender(
+      <TipTapEditor value="Spellcheck test" spellCheck={false} autoCorrect={false} />
+    );
+    expect(tiptap?.getAttribute("spellcheck")).toBe("false");
+    expect(tiptap?.getAttribute("autocorrect")).toBe("off");
+  });
 });
