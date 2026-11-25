@@ -73,8 +73,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             {zoomLevel}%
           </button>
         </Tooltip>
-        <span className={styles.staticItem}>{lineEnding}</span>
-        <span className={styles.staticItem}>{encoding}</span>
+        <span className={`${styles.staticItem} ${styles.secondaryMeta}`}>{lineEnding}</span>
+        <span className={`${styles.staticItem} ${styles.secondaryMeta}`}>{encoding}</span>
       </div>
     </footer>
   );

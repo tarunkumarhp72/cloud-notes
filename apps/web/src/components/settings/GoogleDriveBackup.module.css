@@ -441,10 +441,34 @@
 
 
 @media (max-width: 560px) {
+  .card {
+    padding: 12px 14px;
+  }
+
   .cardHeader,
-  .row {
+  .row,
+  .connectRow {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .connectRow button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cardTitle {
+    font-size: 14px;
+  }
+
+  .cardDescription,
+  .label {
+    font-size: 12px;
+  }
+
+  .historyTable {
+    display: block;
+    overflow-x: auto;
   }
 }

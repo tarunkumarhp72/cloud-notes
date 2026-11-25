@@ -60,7 +60,7 @@
   white-space: nowrap;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .statusBar {
     padding: 0 8px;
     gap: 8px;
@@ -70,5 +70,21 @@
   .leftGroup,
   .rightGroup {
     gap: 8px;
+  }
+
+  .secondaryMeta {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .statusBar {
+    font-size: 10.5px;
+    gap: 6px;
+  }
+
+  .leftGroup,
+  .rightGroup {
+    gap: 6px;
   }
 }
