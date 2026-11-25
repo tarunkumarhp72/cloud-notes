@@ -4,8 +4,16 @@ import { getAuthUserId } from "./sync";
 import { sql } from "../db";
 import { config } from "../config";
 import { encryptToken } from "../backup/tokenCrypto";
-import { performBackup, calculateNextBackupDate } from "../backup/backupService";
+import { performBackup } from "../backup/backupService";
 import { performRestore } from "../backup/restoreService";
+import {
+  activeBackupTasks,
+  registerActiveTask,
+  broadcastTaskProgress,
+  cancelActiveTask,
+  type BackupProgressEvent,
+} from "../backup/activeTasks";
+import { scheduleUserBackup, cancelUserScheduledBackup } from "../backup/scheduler";
 
 export const backupRouter = new Hono();
 
@@ -200,12 +208,18 @@ backupRouter.post("/auth/callback", async (c) => {
 
 /**
  * POST /api/backup/disconnect
- * Disconnects Google Drive connection and disables automatic scheduling.
+ * Disconnects Google Drive connection, stops any active backup, and cancels scheduled backups.
  */
 backupRouter.post("/disconnect", async (c) => {
   const auth = await requireUser(c);
   if (typeof auth !== "string") return auth;
   const userId = auth;
+
+  // 1. Immediately abort active backup if running
+  cancelActiveTask(userId);
+
+  // 2. Immediately cancel and deregister any scheduled task
+  cancelUserScheduledBackup(userId);
 
   if (sql) {
     try {
@@ -224,7 +238,7 @@ backupRouter.post("/disconnect", async (c) => {
 
 /**
  * POST /api/backup/settings
- * Updates backup frequency and auto-backup toggle.
+ * Updates backup frequency and auto-backup toggle with dynamic task replacement.
  */
 const SettingsSchema = z.object({
   autoBackupEnabled: z.boolean(),
@@ -243,7 +257,15 @@ backupRouter.post("/settings", async (c) => {
     return c.json({ error: "Invalid settings format" }, 400);
   }
 
-  const nextBackup = body.autoBackupEnabled ? calculateNextBackupDate(body.frequency) : null;
+  let nextBackup: Date | null = null;
+
+  if (body.autoBackupEnabled && body.frequency !== "disabled") {
+    // Dynamically register or replace existing scheduled task (strictly 1 task per user)
+    nextBackup = scheduleUserBackup(userId, body.frequency as "daily" | "weekly" | "monthly");
+  } else {
+    // User disabled auto backup -> cancel any active scheduled task
+    cancelUserScheduledBackup(userId);
+  }
 
   if (sql) {
     try {
@@ -273,22 +295,175 @@ backupRouter.post("/settings", async (c) => {
 
 /**
  * POST /api/backup/now
- * Triggers an immediate manual backup to Google Drive.
+ * Triggers an immediate manual backup to Google Drive with real-time progress broadcasting.
  */
 backupRouter.post("/now", async (c) => {
   const auth = await requireUser(c);
   if (typeof auth !== "string") return auth;
   const userId = auth;
 
-  try {
-    const result = await performBackup(userId, "manual");
-    return c.json({ success: true, backup: result });
-  } catch (err) {
-    return c.json(
-      { error: err instanceof Error ? err.message : "Backup execution failed" },
-      500
-    );
+  if (activeBackupTasks.has(userId)) {
+    return c.json({ error: "A backup is already in progress for this account" }, 409);
   }
+
+  const wait = c.req.query("wait") === "true";
+  const activeTask = registerActiveTask(userId, "manual");
+
+  const backupPromise = performBackup(
+    userId,
+    "manual",
+    (event) => broadcastTaskProgress(userId, event),
+    activeTask.abortController.signal
+  )
+    .then((result) => {
+      broadcastTaskProgress(userId, {
+        status: "success",
+        phase: "Backup completed successfully",
+        totalNotes: result.notesCount,
+        processedNotes: result.notesCount,
+        percent: 100,
+        backupId: result.fileId,
+        fileName: result.fileName,
+        fileSizeBytes: result.sizeBytes,
+      });
+      return result;
+    })
+    .catch((err) => {
+      if (!activeTask.abortController.signal.aborted) {
+        broadcastTaskProgress(userId, {
+          status: "failed",
+          phase: "Backup failed",
+          totalNotes: activeTask.currentProgress.totalNotes,
+          processedNotes: activeTask.currentProgress.processedNotes,
+          percent: activeTask.currentProgress.percent,
+          errorMessage: err instanceof Error ? err.message : "Backup execution failed",
+        });
+      }
+      throw err;
+    });
+
+  if (wait) {
+    try {
+      const result = await backupPromise;
+      return c.json({ success: true, backup: result });
+    } catch (err) {
+      return c.json(
+        { error: err instanceof Error ? err.message : "Backup execution failed" },
+        500
+      );
+    }
+  }
+
+  return c.json({
+    success: true,
+    message: "Backup initiated",
+    progress: activeTask.currentProgress,
+  });
+});
+
+/**
+ * GET /api/backup/progress
+ * Streams real-time backup progress via Server-Sent Events (SSE) or returns JSON status snapshot.
+ */
+backupRouter.get("/progress", async (c) => {
+  const auth = await requireUser(c);
+  if (typeof auth !== "string") return auth;
+  const userId = auth;
+
+  const accept = c.req.header("accept") || "";
+  const isSSE = accept.includes("text/event-stream");
+  const task = activeBackupTasks.get(userId);
+
+  if (!isSSE) {
+    return c.json({
+      active: !!task,
+      progress: task
+        ? task.currentProgress
+        : {
+            status: "idle",
+            phase: "No backup in progress",
+            totalNotes: 0,
+            processedNotes: 0,
+            percent: 0,
+          },
+    });
+  }
+
+  let listener: ((event: BackupProgressEvent) => void) | null = null;
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder();
+
+      // Emit current progress immediately
+      const initial = task
+        ? task.currentProgress
+        : {
+            status: "idle",
+            phase: "No backup in progress",
+            totalNotes: 0,
+            processedNotes: 0,
+            percent: 0,
+          };
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify(initial)}\n\n`));
+
+      if (task) {
+        listener = (event: BackupProgressEvent) => {
+          try {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+            if (
+              event.status === "success" ||
+              event.status === "failed" ||
+              event.status === "cancelled"
+            ) {
+              setTimeout(() => {
+                try {
+                  controller.close();
+                } catch {
+                  // Already closed
+                }
+              }, 500);
+            }
+          } catch {
+            // Stream closed
+          }
+        };
+        task.listeners.add(listener);
+      } else {
+        // If no active task, close stream after initial snapshot
+        controller.close();
+      }
+    },
+    cancel() {
+      if (listener && task) {
+        task.listeners.delete(listener);
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  });
+});
+
+/**
+ * POST /api/backup/cancel
+ * Safely cancels currently running backup for the authenticated user.
+ */
+backupRouter.post("/cancel", async (c) => {
+  const auth = await requireUser(c);
+  if (typeof auth !== "string") return auth;
+  const userId = auth;
+
+  const cancelled = cancelActiveTask(userId);
+  if (!cancelled) {
+    return c.json({ success: false, message: "No active backup in progress" }, 404);
+  }
+
+  return c.json({ success: true, message: "Active backup cancelled safely" });
 });
 
 /**
@@ -308,7 +483,7 @@ backupRouter.get("/history", async (c) => {
         FROM backup_history
         WHERE user_id = ${userId}
         ORDER BY created_at DESC
-        LIMIT 25
+        LIMIT 1
       `;
     } catch {
       return c.json({ error: "Failed to retrieve backup history" }, 500);

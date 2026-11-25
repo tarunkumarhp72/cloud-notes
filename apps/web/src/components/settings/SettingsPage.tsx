@@ -7,6 +7,8 @@ import { GoogleDriveBackup } from "./GoogleDriveBackup";
 export interface SettingsPageProps {
   onBack: () => void;
   accessToken?: string;
+  isGuest?: boolean;
+  onSignInClick?: () => void;
   onAccountDeleted?: () => void;
 }
 
@@ -19,14 +21,17 @@ const BackArrowIcon: React.FC = () => (
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   onBack,
   accessToken: propToken,
+  isGuest,
+  onSignInClick,
   onAccountDeleted,
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const token =
-    propToken ||
-    (typeof window !== "undefined"
-      ? localStorage.getItem("notepad_token") || undefined
-      : undefined);
+  const token = isGuest
+    ? undefined
+    : (propToken ||
+        (typeof window !== "undefined"
+          ? localStorage.getItem("notepad_token") || undefined
+          : undefined));
   const {
     theme,
     fontFamily,
@@ -202,7 +207,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </section>
 
         {/* Google Drive Backup & Restore */}
-        <GoogleDriveBackup accessToken={token} onRestored={onBack} />
+        <GoogleDriveBackup
+          accessToken={token}
+          isGuest={isGuest}
+          onSignInClick={onSignInClick}
+          onRestored={onBack}
+        />
 
         {/* Account & Data */}
         <section className={styles.card}>

@@ -1,0 +1,136 @@
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background-color: var(--overlay-backdrop, rgba(0, 0, 0, 0.45));
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background-color: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border-default, rgba(0, 0, 0, 0.12));
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: var(--card-shadow, 0 16px 36px rgba(0, 0, 0, 0.28));
+  padding: 24px;
+  width: 440px;
+  max-width: 92vw;
+  color: var(--text-primary, #1e293b);
+  font-family: var(--font-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: scaleUp 0.15s ease-out;
+  box-sizing: border-box;
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dangerIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: rgba(232, 17, 35, 0.1);
+  color: #e81123;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 2px 0 0 0;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.textSecondary {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cancelBtn {
+  padding: 6px 16px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid var(--border-default);
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background-color: var(--bg-active);
+}
+
+.disconnectBtn {
+  padding: 6px 16px;
+  border-radius: var(--radius-sm, 4px);
+  border: 1px solid rgba(232, 17, 35, 0.3);
+  background-color: rgba(232, 17, 35, 0.12);
+  color: #e81123;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.disconnectBtn:hover:not(:disabled) {
+  background-color: #e81123;
+  color: #ffffff;
+}
+
+.cancelBtn:disabled,
+.disconnectBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -84,6 +84,8 @@ describe("GoogleDriveBackup Component", () => {
       JSON.stringify({ sub: "user-1", exp: Math.floor(Date.now() / 1000) + 3600 })
     )}.mockSig`;
     localStorage.setItem("notepad_token", validJwt);
+    localStorage.setItem("notepad_user", JSON.stringify({ email: "user@example.com" }));
+
     let calledWithAuth = false;
     global.fetch = vi.fn().mockImplementation((url: string, options: any) => {
       const authHeader = options?.headers?.Authorization || options?.headers?.get?.("Authorization");
@@ -111,5 +113,21 @@ describe("GoogleDriveBackup Component", () => {
       expect(btn.hasAttribute("disabled")).toBe(false);
     });
     localStorage.removeItem("notepad_token");
+    localStorage.removeItem("notepad_user");
+  });
+
+  it("disables Connect Google Drive button for guest user and renders sign in prompt", () => {
+    const onSignInClick = vi.fn();
+    render(<GoogleDriveBackup isGuest={true} onSignInClick={onSignInClick} />);
+
+    const btn = screen.getByRole("button", { name: /Connect Google Drive/i });
+    expect(btn.hasAttribute("disabled")).toBe(true);
+    expect(
+      screen.getByText(/Sign in to your Notepad Cloud account to connect Google Drive/i)
+    ).toBeDefined();
+
+    const signInBtn = screen.getByRole("button", { name: /^sign in$/i });
+    fireEvent.click(signInBtn);
+    expect(onSignInClick).toHaveBeenCalledTimes(1);
   });
 });

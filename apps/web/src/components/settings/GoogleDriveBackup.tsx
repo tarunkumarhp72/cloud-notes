@@ -2,9 +2,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import styles from "./GoogleDriveBackup.module.css";
 import { webConfig } from "../../config";
 import { fetchWithAuth, getValidAccessToken } from "../../auth/tokenManager";
+import { useBackupProgressStore } from "../../stores/backupProgressStore";
+import { DisconnectDriveModal } from "./DisconnectDriveModal";
 
 export interface GoogleDriveBackupProps {
   accessToken?: string;
+  isGuest?: boolean;
+  onSignInClick?: () => void;
   onRestored?: () => void;
 }
 
@@ -29,8 +33,11 @@ export interface BackupHistoryEntry {
   created_at: string;
 }
 
-const GoogleDriveLogo: React.FC<{ className?: string }> = ({ className }) => (
-  <svg className={className} viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
+const GoogleDriveLogo: React.FC<{ className?: string; style?: React.CSSProperties }> = ({
+  className,
+  style,
+}) => (
+  <svg className={className} style={style} viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg">
     <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da" />
     <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47" />
     <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335" />
@@ -42,9 +49,23 @@ const GoogleDriveLogo: React.FC<{ className?: string }> = ({ className }) => (
 
 export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   accessToken: propToken,
+  isGuest,
+  onSignInClick,
   onRestored,
 }) => {
+  const [hasUserSession, setHasUserSession] = useState<boolean>(() => {
+    if (isGuest) return false;
+    if (typeof window !== "undefined") {
+      return Boolean(localStorage.getItem("notepad_user"));
+    }
+    return false;
+  });
+
   const [effectiveToken, setEffectiveToken] = useState<string | undefined>(() => {
+    if (isGuest) return undefined;
+    if (typeof window !== "undefined" && !localStorage.getItem("notepad_user") && !propToken) {
+      return undefined;
+    }
     return (
       propToken ||
       (typeof window !== "undefined"
@@ -54,6 +75,17 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   });
 
   useEffect(() => {
+    if (isGuest) {
+      setEffectiveToken(undefined);
+      setHasUserSession(false);
+      return;
+    }
+    const hasUser = typeof window !== "undefined" && Boolean(localStorage.getItem("notepad_user"));
+    setHasUserSession(hasUser);
+    if (!hasUser && !propToken) {
+      setEffectiveToken(undefined);
+      return;
+    }
     getValidAccessToken().then((tok) => {
       if (tok) {
         setEffectiveToken(tok);
@@ -61,29 +93,78 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
         setEffectiveToken(propToken);
       }
     });
-  }, [propToken]);
+  }, [propToken, isGuest]);
 
-  const accessToken = effectiveToken;
-  const [status, setStatus] = useState<BackupStatus | null>(null);
+  const isUserSignedIn = !isGuest && (hasUserSession || Boolean(propToken)) && Boolean(effectiveToken);
+  const accessToken = isUserSignedIn ? effectiveToken : undefined;
+  const { startBackup, status: backupProgressStatus } = useBackupProgressStore();
+  const [status, setStatus] = useState<BackupStatus | null>(() => {
+    if (isGuest) return null;
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("notepad_drive_status");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed === "object") return parsed;
+        }
+      } catch {}
+    }
+    return null;
+  });
   const [history, setHistory] = useState<BackupHistoryEntry[]>([]);
+  const [statusLoading, setStatusLoading] = useState<boolean>(() => {
+    if (isGuest) return false;
+    if (typeof window !== "undefined") {
+      try {
+        const cached = localStorage.getItem("notepad_drive_status");
+        if (cached) return false;
+      } catch {}
+    }
+    return true;
+  });
   const [loading, setLoading] = useState(false);
   const [backingUp, setBackingUp] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [isDisconnectModalOpen, setIsDisconnectModalOpen] = useState(false);
   const [restoreModalFile, setRestoreModalFile] = useState<BackupHistoryEntry | null>(null);
   const [restoring, setRestoring] = useState(false);
 
   const fetchStatus = useCallback(async () => {
-    if (!accessToken) return;
+    if (isGuest) {
+      setStatusLoading(false);
+      return;
+    }
+    let token = accessToken;
+    if (!token && typeof window !== "undefined") {
+      token = (await getValidAccessToken()) || undefined;
+    }
+    if (!token) {
+      setStatusLoading(false);
+      return;
+    }
+    if (!status) {
+      setStatusLoading(true);
+    }
     try {
       const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/status`);
       if (res.ok) {
         const data = await res.json();
         setStatus(data);
+        if (typeof window !== "undefined") {
+          try {
+            if (data.connected) {
+              localStorage.setItem("notepad_drive_status", JSON.stringify(data));
+            } else {
+              localStorage.removeItem("notepad_drive_status");
+            }
+          } catch {}
+        }
       }
     } catch {
       // Ignore network errors
+    } finally {
+      setStatusLoading(false);
     }
-  }, [accessToken]);
+  }, [accessToken, isGuest, status]);
 
   const fetchHistory = useCallback(async () => {
     if (!accessToken) return;
@@ -104,9 +185,8 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   }, [fetchStatus, fetchHistory]);
 
   const handleConnect = async () => {
-    if (!accessToken) return;
+    if (!isUserSignedIn || !accessToken) return;
     setLoading(true);
-    setMessage(null);
     try {
       const redirectUri = `${window.location.origin}/auth/drive-callback`;
       const res = await fetchWithAuth(
@@ -119,31 +199,56 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
       const { url } = await res.json();
       window.location.href = url;
     } catch (err) {
-      setMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Failed to connect to Google Drive",
+      useBackupProgressStore.getState().notifyMessage({
+        title: "Connection Failed",
+        phase: err instanceof Error ? err.message : "Failed to connect to Google Drive",
+        status: "failed",
+        autoDismissMs: 4000,
       });
       setLoading(false);
     }
   };
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = () => {
     if (!accessToken) return;
-    if (!window.confirm("Are you sure you want to disconnect Google Drive? Automatic backups will stop.")) return;
+    setIsDisconnectModalOpen(true);
+  };
 
+  const handleConfirmDisconnect = async () => {
+    if (!accessToken) return;
     setLoading(true);
     try {
       const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/disconnect`, {
         method: "POST",
       });
       if (res.ok) {
-        setMessage({ type: "success", text: "Google Drive disconnected successfully." });
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem("notepad_drive_status");
+          } catch {}
+        }
+        setStatus((prev) => (prev ? { ...prev, connected: false } : null));
+        setIsDisconnectModalOpen(false);
         await fetchStatus();
+        useBackupProgressStore.getState().notifyMessage({
+          title: "Google Drive Disconnected",
+          phase: "Google Drive was disconnected successfully.",
+          status: "success",
+          autoDismissMs: 4000,
+        });
+      } else {
+        throw new Error("Failed to disconnect Google Drive");
       }
-    } catch {
-      setMessage({ type: "error", text: "Failed to disconnect Google Drive." });
+    } catch (err) {
+      useBackupProgressStore.getState().notifyMessage({
+        title: "Disconnection Failed",
+        phase: err instanceof Error ? err.message : "Failed to disconnect Google Drive.",
+        status: "failed",
+        autoDismissMs: 4000,
+      });
     } finally {
       setLoading(false);
+      setIsDisconnectModalOpen(false);
     }
   };
 
@@ -165,7 +270,12 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
         await fetchStatus();
       }
     } catch {
-      setMessage({ type: "error", text: "Failed to update backup settings." });
+      useBackupProgressStore.getState().notifyMessage({
+        title: "Settings Update Failed",
+        phase: "Failed to update backup settings.",
+        status: "failed",
+        autoDismissMs: 4000,
+      });
     }
   };
 
@@ -187,31 +297,29 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
         await fetchStatus();
       }
     } catch {
-      setMessage({ type: "error", text: "Failed to update backup frequency." });
+      useBackupProgressStore.getState().notifyMessage({
+        title: "Frequency Update Failed",
+        phase: "Failed to update backup frequency.",
+        status: "failed",
+        autoDismissMs: 4000,
+      });
     }
   };
 
   const handleBackupNow = async () => {
     if (!accessToken) return;
     setBackingUp(true);
-    setMessage(null);
     try {
-      const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/now`, {
-        method: "POST",
+      await startBackup(accessToken, async () => {
+        await fetchStatus();
+        await fetchHistory();
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Backup failed");
-
-      setMessage({
-        type: "success",
-        text: `Backup created successfully (${data.backup?.notesCount || 0} notes backed up).`,
-      });
-      await fetchStatus();
-      await fetchHistory();
     } catch (err) {
-      setMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Manual backup failed",
+      useBackupProgressStore.getState().notifyMessage({
+        title: "Backup Failed",
+        phase: err instanceof Error ? err.message : "Manual backup failed",
+        status: "failed",
+        autoDismissMs: 4000,
       });
     } finally {
       setBackingUp(false);
@@ -232,16 +340,20 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Restore failed");
 
-      setMessage({
-        type: "success",
-        text: `Successfully restored ${data.restore?.restoredCount || 0} notes (${data.restore?.skippedCount || 0} already up-to-date).`,
+      useBackupProgressStore.getState().notifyMessage({
+        title: "Restore Completed",
+        phase: `Restored ${data.restore?.restoredCount || 0} notes (${data.restore?.skippedCount || 0} already up-to-date).`,
+        status: "success",
+        autoDismissMs: 4000,
       });
       setRestoreModalFile(null);
       onRestored?.();
     } catch (err) {
-      setMessage({
-        type: "error",
-        text: err instanceof Error ? err.message : "Restore operation failed",
+      useBackupProgressStore.getState().notifyMessage({
+        title: "Restore Failed",
+        phase: err instanceof Error ? err.message : "Restore operation failed",
+        status: "failed",
+        autoDismissMs: 4000,
       });
     } finally {
       setRestoring(false);
@@ -284,36 +396,76 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
           </span>
         </div>
 
-        {message && (
-          <div
-            className={`${styles.alert} ${
-              message.type === "success" ? styles.alertSuccess : styles.alertError
-            }`}
-          >
-            {message.text}
+        {statusLoading ? (
+          <div className={styles.skeletonContainer}>
+            <div className={styles.row}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div className={styles.skeletonShimmer} style={{ width: "160px", height: "18px" }} />
+                <div className={styles.skeletonShimmer} style={{ width: "220px", height: "14px" }} />
+              </div>
+              <div className={styles.skeletonShimmer} style={{ width: "80px", height: "32px", borderRadius: "4px" }} />
+            </div>
+            <div className={styles.row}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div className={styles.skeletonShimmer} style={{ width: "140px", height: "18px" }} />
+                <div className={styles.skeletonShimmer} style={{ width: "280px", height: "14px" }} />
+              </div>
+              <div className={styles.skeletonShimmer} style={{ width: "40px", height: "22px", borderRadius: "12px" }} />
+            </div>
+            <div className={styles.row}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <div className={styles.skeletonShimmer} style={{ width: "180px", height: "14px" }} />
+              </div>
+              <div className={styles.skeletonShimmer} style={{ width: "110px", height: "32px", borderRadius: "4px" }} />
+            </div>
           </div>
-        )}
-
-        {!status?.connected ? (
-          <div style={{ marginTop: "14px" }}>
-            <p className={styles.cardDescription} style={{ marginBottom: "14px", lineHeight: "1.5" }}>
-              Link your personal Google Drive to schedule automatic encrypted backups. Your notes are protected with
-              end-to-end encryption before upload. Even Google cannot view your notes.
-            </p>
+        ) : !status?.connected ? (
+          <div className={styles.connectRow}>
+            <div className={styles.connectMeta}>
+              <h3 className={styles.label}>Link Google Drive</h3>
+              <p className={styles.cardDescription} style={{ lineHeight: "1.5" }}>
+                Link your personal Google Drive to schedule automatic encrypted backups. Your notes are protected with
+                end-to-end encryption before upload.
+              </p>
+              {!isUserSignedIn && (
+                <p
+                  className={styles.sublabel}
+                  style={{
+                    color: "var(--text-secondary, #64748b)",
+                    marginTop: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span>Sign in to your Notepad Cloud account to connect Google Drive.</span>
+                  {onSignInClick && (
+                    <button
+                      type="button"
+                      onClick={onSignInClick}
+                      className={styles.signInLink}
+                    >
+                      Sign in
+                    </button>
+                  )}
+                </p>
+              )}
+            </div>
             <button
               type="button"
               className={styles.connectBtn}
               onClick={handleConnect}
-              disabled={loading || !accessToken}
+              disabled={loading || !isUserSignedIn}
+              title={
+                !isUserSignedIn
+                  ? "Sign in to your Notepad Cloud account to connect Google Drive"
+                  : undefined
+              }
             >
-              <GoogleDriveLogo style={{ width: "16px", height: "16px" }} />
-              {loading ? "Connecting..." : "Connect Google Drive"}
+              <GoogleDriveLogo style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+              <span>{loading ? "Connecting..." : "Connect Google Drive"}</span>
             </button>
-            {!accessToken && (
-              <p className={styles.sublabel} style={{ color: "#e81123", marginTop: "8px" }}>
-                Sign in to your Notepad Cloud account to connect Google Drive.
-              </p>
-            )}
           </div>
         ) : (
           <div style={{ marginTop: "12px" }}>
@@ -388,13 +540,13 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
                 type="button"
                 className={styles.primaryBtn}
                 onClick={handleBackupNow}
-                disabled={backingUp}
+                disabled={backingUp || backupProgressStatus === "in_progress"}
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                   <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
                   <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V10.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z" />
                 </svg>
-                {backingUp ? "Backing up..." : "Backup Now"}
+                {backingUp || backupProgressStatus === "in_progress" ? "Backing up..." : "Backup Now"}
               </button>
             </div>
           </div>
@@ -425,7 +577,7 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {history.map((entry) => (
+                {history.slice(0, 1).map((entry) => (
                   <tr key={entry.id}>
                     <td>{formatDate(entry.created_at)}</td>
                     <td style={{ textTransform: "capitalize" }}>{entry.backup_type}</td>
@@ -488,6 +640,15 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
           </div>
         </div>
       )}
+
+      {/* Custom Disconnect Confirmation Dialog */}
+      <DisconnectDriveModal
+        isOpen={isDisconnectModalOpen}
+        onClose={() => setIsDisconnectModalOpen(false)}
+        onConfirm={handleConfirmDisconnect}
+        isDisconnecting={loading}
+        googleEmail={status?.googleEmail}
+      />
     </div>
   );
 };

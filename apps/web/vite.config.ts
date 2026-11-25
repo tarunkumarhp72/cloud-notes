@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "node:path";
@@ -6,9 +7,17 @@ import fs from "node:fs";
 
 const rootEnvPath = path.resolve(import.meta.dirname, "../../.env");
 const hasRootEnv = fs.existsSync(rootEnvPath);
+const resolvedEnvDir = hasRootEnv
+  ? path.resolve(import.meta.dirname, "../../")
+  : path.resolve(import.meta.dirname, "./");
 
-export default defineConfig({
-  envDir: hasRootEnv ? path.resolve(import.meta.dirname, "../../") : path.resolve(import.meta.dirname, "./"),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, resolvedEnvDir, "");
+  const apiTarget = env.VITE_API_BASE_URL || `http://localhost:${env.PORT || 3001}`;
+  const webPort = Number(env.VITE_PORT || 3000);
+
+  return {
+    envDir: resolvedEnvDir,
   plugins: [
     react(),
     VitePWA({
@@ -63,10 +72,10 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: webPort,
     proxy: {
       "/auth": {
-        target: "http://localhost:3001",
+        target: apiTarget,
         changeOrigin: true,
         bypass: (req) => {
           if (
@@ -81,15 +90,15 @@ export default defineConfig({
         },
       },
       "/sync": {
-        target: "http://localhost:3001",
+        target: apiTarget,
         changeOrigin: true,
       },
       "/account": {
-        target: "http://localhost:3001",
+        target: apiTarget,
         changeOrigin: true,
       },
       "/api": {
-        target: "http://localhost:3001",
+        target: apiTarget,
         changeOrigin: true,
       },
     },
@@ -98,4 +107,5 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
   },
+  };
 });

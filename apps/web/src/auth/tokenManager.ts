@@ -8,9 +8,10 @@ export function isTokenExpired(token: string): boolean {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return true;
+    const nodeBuffer = (globalThis as Record<string, any>).Buffer;
     const payloadJson = typeof atob === "function"
       ? atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
-      : Buffer.from(parts[1], "base64").toString("utf-8");
+      : nodeBuffer.from(parts[1], "base64").toString("utf-8");
     const payload = JSON.parse(payloadJson);
     if (!payload.exp) return false;
     // Buffer of 30 seconds before expiration

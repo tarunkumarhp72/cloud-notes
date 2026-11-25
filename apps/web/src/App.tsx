@@ -37,6 +37,8 @@ import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { webConfig } from "./config";
 import { getValidAccessToken, fetchWithAuth } from "./auth/tokenManager";
+import { GlobalBackupNotification } from "./components/notifications/GlobalBackupNotification";
+import { useBackupProgressStore } from "./stores/backupProgressStore";
 
 const CodeMirrorEditor = lazy(() =>
   import("./components/editor/CodeMirrorEditor").then((m) => ({
@@ -68,7 +70,29 @@ export const App: React.FC = () => {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [recoveryModalMode, setRecoveryModalMode] = useState<"display" | "recover">("display");
   const [activeRecoveryKey, setActiveRecoveryKey] = useState("");
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(
+    () => typeof window !== "undefined" && window.location.pathname === "/settings"
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handlePopState = () => {
+      setIsSettingsOpen(window.location.pathname === "/settings");
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const path = window.location.pathname;
+    if (path.includes("/auth/")) return;
+    if (isSettingsOpen && path !== "/settings") {
+      window.history.pushState({}, document.title, "/settings");
+    } else if (!isSettingsOpen && path === "/settings") {
+      window.history.pushState({}, document.title, "/");
+    }
+  }, [isSettingsOpen]);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [isReplaceOpen, setIsReplaceOpen] = useState(false);
@@ -372,16 +396,46 @@ export const App: React.FC = () => {
             }),
           });
           if (res.ok) {
+            const data = await res.json().catch(() => ({}));
+            if (data?.googleEmail) {
+              try {
+                localStorage.setItem("notepad_drive_status", JSON.stringify({
+                  connected: true,
+                  googleEmail: data.googleEmail,
+                  autoBackupEnabled: false,
+                  frequency: "daily",
+                  lastBackupAt: null,
+                  nextBackupAt: null,
+                }));
+              } catch {}
+            }
             setIsSettingsOpen(true);
+            useBackupProgressStore.getState().notifyMessage({
+              title: "Google Drive Connected",
+              phase: "Your Google Drive account has been connected successfully.",
+              status: "success",
+              autoDismissMs: 4000,
+            });
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            useBackupProgressStore.getState().notifyMessage({
+              title: "Connection Failed",
+              phase: errData.error || "Failed to complete Google Drive connection.",
+              status: "failed",
+              autoDismissMs: 4000,
+            });
           }
         } catch (err) {
           console.error("Google Drive connection callback error:", err);
+          useBackupProgressStore.getState().notifyMessage({
+            title: "Connection Failed",
+            phase: "Network error during Google Drive authorization.",
+            status: "failed",
+            autoDismissMs: 4000,
+          });
         } finally {
-          window.history.replaceState(
-            {},
-            document.title,
-            window.location.pathname.replace(/\/auth\/drive-callback\/?$/, "/") || "/"
-          );
+          const targetPath = window.location.pathname.replace(/\/auth\/drive-callback\/?$/, "/settings") || "/settings";
+          window.history.replaceState({}, document.title, targetPath);
         }
         return;
       }
@@ -741,6 +795,7 @@ export const App: React.FC = () => {
                 try {
                   localStorage.removeItem("notepad_user");
                   localStorage.removeItem("notepad_token");
+                  localStorage.removeItem("notepad_drive_status");
                 } catch {}
               }}
               onManageVault={() => setShowVaultModal(true)}
@@ -777,12 +832,18 @@ export const App: React.FC = () => {
       {isSettingsOpen ? (
         <SettingsPage
           onBack={() => setIsSettingsOpen(false)}
-          accessToken={localStorage.getItem("notepad_token") || undefined}
+          accessToken={user ? (localStorage.getItem("notepad_token") || undefined) : undefined}
+          isGuest={!user}
+          onSignInClick={() => {
+            setIsSettingsOpen(false);
+            setShowSignIn(true);
+          }}
           onAccountDeleted={() => {
             setUser(null);
             try {
               localStorage.removeItem("notepad_user");
               localStorage.removeItem("notepad_token");
+              localStorage.removeItem("notepad_drive_status");
             } catch {}
             setIsSettingsOpen(false);
           }}
@@ -1010,6 +1071,8 @@ export const App: React.FC = () => {
           setShowSignIn(true);
         }}
       />
+
+      <GlobalBackupNotification accessToken={localStorage.getItem("notepad_token") || undefined} />
     </div>
   );
 };

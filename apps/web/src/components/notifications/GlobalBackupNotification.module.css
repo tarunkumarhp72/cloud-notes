@@ -1,0 +1,200 @@
+.container {
+  position: fixed;
+  bottom: 36px;
+  right: 24px;
+  z-index: 10000;
+  width: 344px;
+  max-width: calc(100vw - 32px);
+  background: var(--bg-surface, #ffffff);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-default, rgba(0, 0, 0, 0.12));
+  border-radius: 10px;
+  box-shadow: var(--card-shadow, 0 8px 24px rgba(0, 0, 0, 0.14));
+  padding: 12px 14px;
+  color: var(--text-primary, #1e293b);
+  font-family: var(--font-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.containerCompact {
+  padding: 10px 14px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.headerCompact {
+  margin-bottom: 4px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appIconBadge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0078d4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.appTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  letter-spacing: 0.1px;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusPill {
+  font-size: 11px;
+  color: var(--text-disabled, #94a3b8);
+  font-weight: 500;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.closeButton:hover {
+  color: var(--text-primary, #000000);
+  background: var(--bg-hover, rgba(0, 0, 0, 0.06));
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fileCount {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent-primary, #0078d4);
+  margin-top: 2px;
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 5px;
+  background: var(--bg-hover, rgba(0, 0, 0, 0.08));
+  border-radius: 4px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: #0078d4;
+  border-radius: 4px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressBarFillSuccess {
+  background: #107c41;
+}
+
+.progressBarFillFailed {
+  background: #d13438;
+}
+
+.progressBarFillCancelled {
+  background: #f7630c;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.06));
+}
+
+.cancelBtn {
+  background: none;
+  border: 1px solid rgba(232, 17, 35, 0.3);
+  color: #e81123;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background: rgba(232, 17, 35, 0.1);
+  border-color: rgba(232, 17, 35, 0.5);
+}
+
+.dismissBtn {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.06));
+  border: 1px solid var(--border-default, rgba(0, 0, 0, 0.1));
+  color: var(--text-primary, #1e293b);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dismissBtn:hover {
+  background: var(--bg-active, rgba(0, 0, 0, 0.12));
+}
+
+.errorMessage {
+  font-size: 12px;
+  color: #e81123;
+  margin-top: 4px;
+  line-height: 1.4;
+  word-break: break-word;
+}
