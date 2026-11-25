@@ -16,7 +16,13 @@ export interface TabData {
 export interface TabsState {
   tabs: TabData[];
   activeTabId: string;
-  createTab: (title?: string, content?: string, isMarkdown?: boolean, isCustomTitle?: boolean) => string;
+  createTab: (
+    title?: string,
+    content?: string,
+    isMarkdown?: boolean,
+    isCustomTitle?: boolean,
+    existingId?: string
+  ) => string;
   closeTab: (id: string) => void;
   selectTab: (id: string) => void;
   updateTabContent: (id: string, content: string) => void;
@@ -94,8 +100,15 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   tabs: [initialTab],
   activeTabId: initialTabId,
 
-  createTab: (title?: string, content = "", isMarkdown = true, isCustomTitle?: boolean) => {
+  createTab: (title?: string, content = "", isMarkdown = true, isCustomTitle?: boolean, existingId?: string) => {
     const { tabs } = get();
+    if (existingId) {
+      const alreadyOpen = tabs.find((t) => t.id === existingId);
+      if (alreadyOpen) {
+        set({ activeTabId: alreadyOpen.id });
+        return alreadyOpen.id;
+      }
+    }
     const hasProvidedTitle = !!title && title !== "Untitled";
     const finalIsCustom = isCustomTitle !== undefined ? isCustomTitle : hasProvidedTitle;
     const defaultTitle = finalIsCustom && hasProvidedTitle ? title : getNextUntitledTitle(tabs);
@@ -103,7 +116,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
       ? title
       : extractTitleFromContent(content, defaultTitle);
 
-    const id = `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const id = existingId || `note-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const newTab: TabData = {
       id,
       title: finalTitle,

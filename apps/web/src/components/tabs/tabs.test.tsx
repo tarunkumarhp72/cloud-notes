@@ -135,6 +135,19 @@ describe("Tabs Management & Store", () => {
     expect(saved?.hasUnsavedChanges).toBe(false);
     expect(saved?.isDirty).toBe(false);
   });
+
+  it("focuses existing tab instead of creating a duplicate when existingId matches", () => {
+    const id1 = useTabsStore.getState().createTab("My Note", "hello", true, true, "note-fixed-1");
+    useTabsStore.getState().createTab("Other Note", "world", true, true, "note-fixed-2");
+
+    expect(useTabsStore.getState().activeTabId).toBe("note-fixed-2");
+    const countBefore = useTabsStore.getState().tabs.length;
+
+    const reopenedId = useTabsStore.getState().createTab("My Note", "hello", true, true, "note-fixed-1");
+    expect(reopenedId).toBe(id1);
+    expect(useTabsStore.getState().tabs.length).toBe(countBefore);
+    expect(useTabsStore.getState().activeTabId).toBe("note-fixed-1");
+  });
 });
 
 describe("TabItem Component Drag and Drop", () => {

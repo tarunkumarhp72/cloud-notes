@@ -1014,7 +1014,11 @@ export const App: React.FC = () => {
             setOpenPageMode(null);
           }}
           onReopenNote={(note) => {
-            const existing = tabs.find((t) => t.id === note.id);
+            const existing = tabs.find(
+              (t) =>
+                t.id === note.id ||
+                (t.title === note.title && t.content === note.content)
+            );
             if (existing) {
               selectTab(existing.id);
               setOpenPageMode(null);
@@ -1025,7 +1029,7 @@ export const App: React.FC = () => {
               setShowLimitModal(true);
               return;
             }
-            createTab(note.title, note.content, note.isMarkdown, note.isCustomTitle);
+            createTab(note.title, note.content, note.isMarkdown, note.isCustomTitle, note.id);
             setOpenPageMode(null);
           }}
           onDeleteNote={async (id) => {
