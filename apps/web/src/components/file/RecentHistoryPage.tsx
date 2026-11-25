@@ -141,9 +141,6 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
               </p>
             </div>
           </div>
-          <span className={styles.savedStatus}>
-            {combinedItems.length} {combinedItems.length === 1 ? "note" : "notes"}
-          </span>
         </header>
 
         {/* Search Bar */}
