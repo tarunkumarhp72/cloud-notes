@@ -189,9 +189,7 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
 
       setMessage({
         type: "success",
-        text: `Backup created successfully (${data.backup?.notesCount || 0} notes, ${(
-          (data.backup?.sizeBytes || 0) / 1024
-        ).toFixed(1)} KB encrypted & compressed).`,
+        text: `Backup created successfully (${data.backup?.notesCount || 0} notes backed up).`,
       });
       await fetchStatus();
       await fetchHistory();
@@ -258,7 +256,7 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
             <div>
               <h2 className={styles.cardTitle}>Google Drive Backup</h2>
               <p className={styles.cardDescription}>
-                End-to-End Encrypted & Compressed Cloud Backups (like WhatsApp)
+                Automatic end-to-end encrypted cloud backup
               </p>
             </div>
           </div>
@@ -285,8 +283,8 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
         {!status?.connected ? (
           <div style={{ marginTop: "14px" }}>
             <p className={styles.cardDescription} style={{ marginBottom: "14px", lineHeight: "1.5" }}>
-              Link your personal Google Drive to schedule automatic encrypted backups. Notes are compressed with GZIP
-              and sealed with AES-256-GCM before upload. Even Google cannot view your notes.
+              Link your personal Google Drive to schedule automatic encrypted backups. Your notes are protected with
+              end-to-end encryption before upload. Even Google cannot view your notes.
             </p>
             <button
               type="button"
