@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import styles from "./GoogleDriveBackup.module.css";
 import { webConfig } from "../../config";
+import { fetchWithAuth, getValidAccessToken } from "../../auth/tokenManager";
 
 export interface GoogleDriveBackupProps {
   accessToken?: string;
@@ -40,9 +41,29 @@ const GoogleDriveLogo: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
-  accessToken,
+  accessToken: propToken,
   onRestored,
 }) => {
+  const [effectiveToken, setEffectiveToken] = useState<string | undefined>(() => {
+    return (
+      propToken ||
+      (typeof window !== "undefined"
+        ? localStorage.getItem("notepad_token") || undefined
+        : undefined)
+    );
+  });
+
+  useEffect(() => {
+    getValidAccessToken().then((tok) => {
+      if (tok) {
+        setEffectiveToken(tok);
+      } else if (propToken) {
+        setEffectiveToken(propToken);
+      }
+    });
+  }, [propToken]);
+
+  const accessToken = effectiveToken;
   const [status, setStatus] = useState<BackupStatus | null>(null);
   const [history, setHistory] = useState<BackupHistoryEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -54,9 +75,7 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   const fetchStatus = useCallback(async () => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/status`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/status`);
       if (res.ok) {
         const data = await res.json();
         setStatus(data);
@@ -69,9 +88,7 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   const fetchHistory = useCallback(async () => {
     if (!accessToken) return;
     try {
-      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/history`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/history`);
       if (res.ok) {
         const data = await res.json();
         setHistory(data.history || []);
@@ -92,11 +109,13 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
     setMessage(null);
     try {
       const redirectUri = `${window.location.origin}/auth/drive-callback`;
-      const res = await fetch(
-        `${webConfig.apiBaseUrl}/api/backup/auth/url?redirect_uri=${encodeURIComponent(redirectUri)}`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+      const res = await fetchWithAuth(
+        `${webConfig.apiBaseUrl}/api/backup/auth/url?redirect_uri=${encodeURIComponent(redirectUri)}`
       );
-      if (!res.ok) throw new Error("Could not initialize Google Drive authorization");
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || "Could not initialize Google Drive authorization");
+      }
       const { url } = await res.json();
       window.location.href = url;
     } catch (err) {
@@ -114,9 +133,8 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
 
     setLoading(true);
     try {
-      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/disconnect`, {
+      const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/disconnect`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (res.ok) {
         setMessage({ type: "success", text: "Google Drive disconnected successfully." });
@@ -132,10 +150,9 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   const handleToggleAutoBackup = async (enabled: boolean) => {
     if (!accessToken || !status) return;
     try {
-      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/settings`, {
+      const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/settings`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -155,10 +172,9 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   const handleFrequencyChange = async (frequency: "daily" | "weekly" | "monthly") => {
     if (!accessToken || !status) return;
     try {
-      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/settings`, {
+      const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/settings`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -180,9 +196,8 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
     setBackingUp(true);
     setMessage(null);
     try {
-      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/now`, {
+      const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/now`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Backup failed");
@@ -207,10 +222,9 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
     if (!accessToken || !restoreModalFile) return;
     setRestoring(true);
     try {
-      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/restore`, {
+      const res = await fetchWithAuth(`${webConfig.apiBaseUrl}/api/backup/restore`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ driveFileId: restoreModalFile.drive_file_id }),

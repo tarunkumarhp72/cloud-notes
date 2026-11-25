@@ -36,6 +36,7 @@ import { useVaultStore } from "./stores/vaultStore";
 import { useTabsStore } from "./stores/tabsStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { webConfig } from "./config";
+import { getValidAccessToken, fetchWithAuth } from "./auth/tokenManager";
 
 const CodeMirrorEditor = lazy(() =>
   import("./components/editor/CodeMirrorEditor").then((m) => ({
@@ -286,32 +287,41 @@ export const App: React.FC = () => {
     return null;
   });
 
-  // Automatically refresh profile on mount to load freshest avatarUrl and displayName
+  // Automatically refresh profile and ensure access token validity on mount
   useEffect(() => {
-    const token = localStorage.getItem("notepad_token");
-    if (!token) return;
-
-    const apiBaseUrl = webConfig.apiBaseUrl;
-    fetch(`${apiBaseUrl}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data?.user) {
-          setUser((prev) => {
-            const updated = {
-              ...prev,
-              ...data.user,
-              avatarUrl: data.user.avatarUrl || prev?.avatarUrl || null,
-            };
-            localStorage.setItem("notepad_user", JSON.stringify(updated));
-            return updated;
-          });
+    async function initAuth() {
+      const token = await getValidAccessToken();
+      if (!token) {
+        if (localStorage.getItem("notepad_user")) {
+          setUser(null);
+          localStorage.removeItem("notepad_user");
         }
-      })
-      .catch((err) => {
+        return;
+      }
+
+      const apiBaseUrl = webConfig.apiBaseUrl;
+      try {
+        const res = await fetchWithAuth(`${apiBaseUrl}/auth/me`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.user) {
+            setUser((prev) => {
+              const updated = {
+                ...prev,
+                ...data.user,
+                avatarUrl: data.user.avatarUrl || prev?.avatarUrl || null,
+              };
+              localStorage.setItem("notepad_user", JSON.stringify(updated));
+              return updated;
+            });
+          }
+        }
+      } catch (err) {
         console.warn("Failed to auto-refresh user profile:", err);
-      });
+      }
+    }
+
+    initAuth();
   }, []);
 
   // Handle Google OAuth callback (?code=...&state=... or ?token=...&user=...)
@@ -350,23 +360,19 @@ export const App: React.FC = () => {
       if (window.location.pathname.includes("/drive-callback") && code) {
         try {
           const redirectUri = `${window.location.origin}/auth/drive-callback`;
-          const token = localStorage.getItem("notepad_token");
-          if (token) {
-            const apiBaseUrl = webConfig.apiBaseUrl;
-            const res = await fetch(`${apiBaseUrl}/api/backup/auth/callback`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                code,
-                redirectUri,
-              }),
-            });
-            if (res.ok) {
-              setIsSettingsOpen(true);
-            }
+          const apiBaseUrl = webConfig.apiBaseUrl;
+          const res = await fetchWithAuth(`${apiBaseUrl}/api/backup/auth/callback`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              code,
+              redirectUri,
+            }),
+          });
+          if (res.ok) {
+            setIsSettingsOpen(true);
           }
         } catch (err) {
           console.error("Google Drive connection callback error:", err);
@@ -769,7 +775,18 @@ export const App: React.FC = () => {
 
       {/* Body: Settings or Editor Surface */}
       {isSettingsOpen ? (
-        <SettingsPage onBack={() => setIsSettingsOpen(false)} />
+        <SettingsPage
+          onBack={() => setIsSettingsOpen(false)}
+          accessToken={localStorage.getItem("notepad_token") || undefined}
+          onAccountDeleted={() => {
+            setUser(null);
+            try {
+              localStorage.removeItem("notepad_user");
+              localStorage.removeItem("notepad_token");
+            } catch {}
+            setIsSettingsOpen(false);
+          }}
+        />
       ) : (
         <div
           className="editorAreaContainer"

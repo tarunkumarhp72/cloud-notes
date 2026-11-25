@@ -18,10 +18,15 @@ const BackArrowIcon: React.FC = () => (
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   onBack,
-  accessToken,
+  accessToken: propToken,
   onAccountDeleted,
 }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const token =
+    propToken ||
+    (typeof window !== "undefined"
+      ? localStorage.getItem("notepad_token") || undefined
+      : undefined);
   const {
     theme,
     fontFamily,
@@ -197,7 +202,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </section>
 
         {/* Google Drive Backup & Restore */}
-        <GoogleDriveBackup accessToken={accessToken} onRestored={onBack} />
+        <GoogleDriveBackup accessToken={token} onRestored={onBack} />
 
         {/* Account & Data */}
         <section className={styles.card}>
@@ -238,7 +243,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           onAccountDeleted?.();
           onBack();
         }}
-        accessToken={accessToken}
+        accessToken={token}
       />
     </div>
   );

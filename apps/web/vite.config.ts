@@ -69,7 +69,13 @@ export default defineConfig({
         target: "http://localhost:3001",
         changeOrigin: true,
         bypass: (req) => {
-          if (req.url && (req.url.startsWith("/auth/callback") || req.url === "/auth/callback")) {
+          if (
+            req.url &&
+            (req.url.startsWith("/auth/callback") ||
+              req.url.startsWith("/auth/drive-callback") ||
+              req.url === "/auth/callback" ||
+              req.url === "/auth/drive-callback")
+          ) {
             return "/index.html";
           }
         },

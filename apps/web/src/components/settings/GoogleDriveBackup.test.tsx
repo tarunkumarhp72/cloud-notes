@@ -78,4 +78,38 @@ describe("GoogleDriveBackup Component", () => {
       expect(screen.getByText("Restore")).toBeDefined();
     });
   });
+
+  it("uses token from localStorage when accessToken prop is not explicitly passed", async () => {
+    const validJwt = `eyJhbGciOiJIUzI1NiJ9.${btoa(
+      JSON.stringify({ sub: "user-1", exp: Math.floor(Date.now() / 1000) + 3600 })
+    )}.mockSig`;
+    localStorage.setItem("notepad_token", validJwt);
+    let calledWithAuth = false;
+    global.fetch = vi.fn().mockImplementation((url: string, options: any) => {
+      const authHeader = options?.headers?.Authorization || options?.headers?.get?.("Authorization");
+      if (authHeader === `Bearer ${validJwt}`) {
+        calledWithAuth = true;
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          connected: false,
+          googleEmail: null,
+          autoBackupEnabled: false,
+          frequency: "daily",
+          lastBackupAt: null,
+          nextBackupAt: null,
+        }),
+      });
+    });
+
+    render(<GoogleDriveBackup />);
+
+    await waitFor(() => {
+      expect(calledWithAuth).toBe(true);
+      const btn = screen.getByRole("button", { name: /Connect Google Drive/i });
+      expect(btn.hasAttribute("disabled")).toBe(false);
+    });
+    localStorage.removeItem("notepad_token");
+  });
 });
