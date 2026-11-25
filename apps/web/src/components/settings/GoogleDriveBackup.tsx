@@ -4,6 +4,7 @@ import { webConfig } from "../../config";
 import { fetchWithAuth, getValidAccessToken } from "../../auth/tokenManager";
 import { useBackupProgressStore } from "../../stores/backupProgressStore";
 import { DisconnectDriveModal } from "./DisconnectDriveModal";
+import { Tooltip } from "../ui/Tooltip";
 
 export interface GoogleDriveBackupProps {
   accessToken?: string;
@@ -386,14 +387,54 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
               </p>
             </div>
           </div>
-          <span
-            className={`${styles.statusBadge} ${
-              status?.connected ? styles.connectedBadge : styles.disconnectedBadge
-            }`}
+          <Tooltip
+            content={status?.connected ? "Connected" : "Not Connected"}
+            position="top"
+            align="end"
           >
-            <span className={styles.statusDot} />
-            {status?.connected ? "Connected" : "Not Connected"}
-          </span>
+            <span
+              role="img"
+              aria-label={status?.connected ? "Connected" : "Not Connected"}
+              style={{ display: "inline-flex", alignItems: "center", cursor: "default", flexShrink: 0 }}
+            >
+              <svg width="28" height="22" viewBox="0 0 36 28" fill="none" aria-hidden="true">
+                <path
+                  d="M21.5 4C17.1 4 13.4 6.9 12.1 10.9C11.4 10.6 10.6 10.4 9.8 10.4C6.6 10.4 4 13 4 16.2C4 19.3 6.5 21.8 9.6 22H23.8C27.5 22 30.5 19 30.5 15.3C30.5 12 28.1 9.2 24.9 8.7C24 5.9 22.9 4 21.5 4Z"
+                  fill="#0078D4"
+                />
+                <path
+                  d="M9.8 10.4C6.6 10.4 4 13 4 16.2C4 19.3 6.5 21.8 9.6 22H18.5L13.6 11.4C12.5 10.7 11.2 10.4 9.8 10.4Z"
+                  fill="#0364B8"
+                />
+                <path
+                  d="M9.6 22H23.8C25.8 22 27.6 21.1 28.8 19.7L20.5 14.5L9.6 22Z"
+                  fill="#28A8EA"
+                />
+                {status?.connected ? (
+                  <>
+                    <circle cx="27" cy="20" r="6.5" fill="#107C10" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <path
+                      d="M24.2 20.1L26.1 22L29.9 18.2"
+                      stroke="#FFFFFF"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <circle cx="27" cy="20" r="6.5" fill="#D13438" stroke="#FFFFFF" strokeWidth="1.5" />
+                    <path
+                      d="M24.8 17.8L29.2 22.2M29.2 17.8L24.8 22.2"
+                      stroke="#FFFFFF"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  </>
+                )}
+              </svg>
+            </span>
+          </Tooltip>
         </div>
 
         {statusLoading ? (
@@ -431,23 +472,21 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
                   className={styles.sublabel}
                   style={{
                     color: "var(--text-secondary, #64748b)",
-                    marginTop: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    flexWrap: "wrap",
+                    marginTop: "6px",
+                    fontSize: "12px",
                   }}
                 >
-                  <span>Sign in to connect Google Drive.</span>
-                  {onSignInClick && (
+                  {onSignInClick ? (
                     <button
                       type="button"
                       onClick={onSignInClick}
                       className={styles.signInLink}
+                      style={{ marginRight: "4px" }}
                     >
                       Sign in
                     </button>
-                  )}
+                  ) : null}
+                  <span>to connect Google Drive.</span>
                 </p>
               )}
             </div>

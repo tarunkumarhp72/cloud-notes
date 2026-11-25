@@ -30,7 +30,7 @@ describe("GoogleDriveBackup Component", () => {
 
     expect(screen.getByText("Google Drive Backup")).toBeDefined();
     await waitFor(() => {
-      expect(screen.getByText("Not Connected")).toBeDefined();
+      expect(screen.getByLabelText("Not Connected")).toBeDefined();
       expect(screen.getByText("Connect Google Drive")).toBeDefined();
     });
   });
@@ -72,7 +72,7 @@ describe("GoogleDriveBackup Component", () => {
     render(<GoogleDriveBackup accessToken="mock-access-token" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Connected")).toBeDefined();
+      expect(screen.getByLabelText("Connected")).toBeDefined();
       expect(screen.getByText("testuser@gmail.com")).toBeDefined();
       expect(screen.getByText("Backup Now")).toBeDefined();
       expect(screen.getByText("Restore")).toBeDefined();
@@ -123,7 +123,7 @@ describe("GoogleDriveBackup Component", () => {
     const btn = screen.getByRole("button", { name: /Connect Google Drive/i });
     expect(btn.hasAttribute("disabled")).toBe(true);
     expect(
-      screen.getByText(/Sign in to connect Google Drive/i)
+      screen.getByText(/to connect Google Drive/i)
     ).toBeDefined();
 
     const signInBtn = screen.getByRole("button", { name: /^sign in$/i });

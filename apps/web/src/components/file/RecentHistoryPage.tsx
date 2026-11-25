@@ -168,7 +168,7 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
 
         {/* Quick Actions Grid */}
         <div className={styles.quickGrid}>
-          <Tooltip content="New Document — Create a new note" position="top">
+          <Tooltip content="Create a new note" position="top" align="start">
             <button type="button" className={styles.quickCard} onClick={onNewDocument}>
               <div className={styles.quickIcon}>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -195,7 +195,7 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
               }
             }}
           />
-          <Tooltip content="Open File from Computer — Import .txt or .md" position="top">
+          <Tooltip content="Import .txt or .md file" position="top" align="end">
             <button
               type="button"
               className={`${styles.quickCard} ${mode === "open" ? styles.quickCardPrimary : ""}`}
