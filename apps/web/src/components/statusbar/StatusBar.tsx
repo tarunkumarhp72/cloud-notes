@@ -62,7 +62,7 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
       <div className={styles.rightGroup}>
         {syncStatus && <SyncIndicator status={syncStatus} onRetry={onRetrySync} />}
-        <span className={styles.staticItem}>{modeLabel}</span>
+        <span className={`${styles.staticItem} ${styles.secondaryMeta}`}>{modeLabel}</span>
         <Tooltip content="Zoom" position="top">
           <button
             type="button"

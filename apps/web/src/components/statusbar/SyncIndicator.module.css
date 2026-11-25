@@ -50,3 +50,9 @@
 .failedIcon {
   color: #d13438;
 }
+
+@media (max-width: 640px) {
+  .syncLabel {
+    display: none;
+  }
+}
