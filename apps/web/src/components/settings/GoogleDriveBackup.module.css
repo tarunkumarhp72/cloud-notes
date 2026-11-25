@@ -445,7 +445,27 @@
     padding: 12px 14px;
   }
 
-  .cardHeader,
+  .cardHeader {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .titleGroup {
+    min-width: 0;
+    flex: 1;
+    gap: 10px;
+  }
+
+  .statusBadge {
+    min-width: auto;
+    height: 22px;
+    padding: 0 8px;
+    font-size: 10.5px;
+    flex-shrink: 0;
+  }
+
   .row,
   .connectRow {
     flex-direction: column;

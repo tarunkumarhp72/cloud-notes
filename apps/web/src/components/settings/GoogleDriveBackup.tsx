@@ -382,7 +382,7 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
             <div>
               <h2 className={styles.cardTitle}>Google Drive Backup</h2>
               <p className={styles.cardDescription}>
-                Automatic end-to-end encrypted cloud backup
+                Encrypted cloud backup
               </p>
             </div>
           </div>
@@ -423,9 +423,8 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
           <div className={styles.connectRow}>
             <div className={styles.connectMeta}>
               <h3 className={styles.label}>Link Google Drive</h3>
-              <p className={styles.cardDescription} style={{ lineHeight: "1.5" }}>
-                Link your personal Google Drive to schedule automatic encrypted backups. Your notes are protected with
-                end-to-end encryption before upload.
+              <p className={styles.cardDescription} style={{ lineHeight: "1.45" }}>
+                Schedule automatic end-to-end encrypted backups to your Google Drive.
               </p>
               {!isUserSignedIn && (
                 <p

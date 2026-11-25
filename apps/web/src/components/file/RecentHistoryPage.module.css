@@ -401,21 +401,72 @@
   font-size: 13px;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 560px) {
+  .page {
+    padding: 14px 12px;
+  }
+
+  .header {
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .title {
+    font-size: 19px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+  }
+
   .docRow {
-    flex-wrap: wrap;
-    padding: 8px 10px;
+    flex-wrap: nowrap;
+    padding: 6px 8px;
     gap: 6px;
   }
 
   .docMainBtn {
-    flex: 1 1 100%;
-    padding: 4px 2px;
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
+    padding: 6px 4px;
+  }
+
+  .docIcon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .docTitle {
+    font-size: 13px;
+  }
+
+  .docSub {
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .badge {
+    display: none;
   }
 
   .rowActions {
-    width: 100%;
-    justify-content: flex-end;
-    margin-left: 0;
+    gap: 6px;
+    margin-left: 4px;
+    flex-shrink: 0;
+  }
+
+  .reopenBtn {
+    min-width: auto;
+    height: 26px;
+    padding: 0 10px;
+    font-size: 11.5px;
+  }
+
+  .removeBtn {
+    width: 26px;
+    height: 26px;
   }
 }
