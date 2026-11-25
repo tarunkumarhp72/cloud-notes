@@ -230,24 +230,30 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
             <button
               type="button"
               className={`${styles.filterPill} ${filterMode === "closed" ? styles.filterActive : ""}`}
+              aria-label="Recently Closed"
               onClick={() => setFilterMode("closed")}
             >
-              Recently Closed
+              <span className={styles.desktopLabel}>Recently Closed</span>
+              <span className={styles.mobileLabel}>Closed</span>
             </button>
             <button
               type="button"
               className={`${styles.filterPill} ${filterMode === "saved" ? styles.filterActive : ""}`}
+              aria-label="Saved Notes"
               onClick={() => setFilterMode("saved")}
             >
-              Saved Notes
+              <span className={styles.desktopLabel}>Saved Notes</span>
+              <span className={styles.mobileLabel}>Saved</span>
             </button>
             {combinedItems.length > 0 && (
               <button
                 type="button"
                 className={styles.clearBtn}
+                aria-label="Clear history"
                 onClick={handleClearAll}
               >
-                Clear history
+                <span className={styles.desktopLabel}>Clear history</span>
+                <span className={styles.mobileLabel}>Clear</span>
               </button>
             )}
           </div>

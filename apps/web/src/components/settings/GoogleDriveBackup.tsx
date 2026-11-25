@@ -382,7 +382,7 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
             <div>
               <h2 className={styles.cardTitle}>Google Drive Backup</h2>
               <p className={styles.cardDescription}>
-                Encrypted cloud backup
+                Encrypted backup
               </p>
             </div>
           </div>
@@ -438,7 +438,7 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
                     flexWrap: "wrap",
                   }}
                 >
-                  <span>Sign in to your Notepad Cloud account to connect Google Drive.</span>
+                  <span>Sign in to connect Google Drive.</span>
                   {onSignInClick && (
                     <button
                       type="button"

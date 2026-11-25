@@ -455,14 +455,20 @@
   .titleGroup {
     min-width: 0;
     flex: 1;
-    gap: 10px;
+    gap: 8px;
+  }
+
+  .driveIcon {
+    width: 22px;
+    height: 22px;
   }
 
   .statusBadge {
     min-width: auto;
-    height: 22px;
-    padding: 0 8px;
-    font-size: 10.5px;
+    height: 20px;
+    padding: 0 7px;
+    font-size: 10px;
+    gap: 4px;
     flex-shrink: 0;
   }
 

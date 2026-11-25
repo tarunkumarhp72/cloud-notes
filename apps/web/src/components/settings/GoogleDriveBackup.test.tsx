@@ -123,7 +123,7 @@ describe("GoogleDriveBackup Component", () => {
     const btn = screen.getByRole("button", { name: /Connect Google Drive/i });
     expect(btn.hasAttribute("disabled")).toBe(true);
     expect(
-      screen.getByText(/Sign in to your Notepad Cloud account to connect Google Drive/i)
+      screen.getByText(/Sign in to connect Google Drive/i)
     ).toBeDefined();
 
     const signInBtn = screen.getByRole("button", { name: /^sign in$/i });

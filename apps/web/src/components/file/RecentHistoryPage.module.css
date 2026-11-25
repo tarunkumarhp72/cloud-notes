@@ -404,6 +404,14 @@
   font-size: 13px;
 }
 
+.desktopLabel {
+  display: inline;
+}
+
+.mobileLabel {
+  display: none;
+}
+
 @media (max-width: 560px) {
   .page {
     padding: 14px 12px;
@@ -459,6 +467,24 @@
 
   .filterGroup {
     width: 100%;
+    gap: 5px;
+    flex-wrap: nowrap;
+  }
+
+  .desktopLabel {
+    display: none;
+  }
+
+  .mobileLabel {
+    display: inline;
+  }
+
+  .filterPill,
+  .clearBtn {
+    height: 25px;
+    padding: 0 9px;
+    font-size: 11px;
+    white-space: nowrap;
   }
 
   .docRow {
