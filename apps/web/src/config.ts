@@ -16,6 +16,7 @@ export interface WebConfig {
   apiBaseUrl: string;
   guestNoteLimit: number;
   userNoteLimit: number;
+  guestMaxNoteChars: number;
   maxNoteChars: number;
   autoSaveDebounceMs: number;
   autoSaveMaxWaitMs: number;
@@ -29,6 +30,7 @@ export const webConfig: WebConfig = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "",
   guestNoteLimit: parseNumber(import.meta.env.VITE_GUEST_NOTE_LIMIT, 10),
   userNoteLimit: parseNumber(import.meta.env.VITE_USER_NOTE_LIMIT, 50),
+  guestMaxNoteChars: parseNumber(import.meta.env.VITE_GUEST_MAX_NOTE_CHARS, 25_000),
   maxNoteChars: parseNumber(import.meta.env.VITE_MAX_NOTE_CHARS, 100_000),
   autoSaveDebounceMs: parseNumber(import.meta.env.VITE_AUTOSAVE_DEBOUNCE_MS, 1000),
   autoSaveMaxWaitMs: parseNumber(import.meta.env.VITE_AUTOSAVE_MAX_WAIT_MS, 10000),

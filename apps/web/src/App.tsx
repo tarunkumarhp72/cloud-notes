@@ -156,6 +156,32 @@ export const App: React.FC = () => {
   const [findQuery, setFindQuery] = useState("");
   const [findMatchCase, setFindMatchCase] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("saved");
+  const [charLimitNotice, setCharLimitNotice] = useState<{ limit: number; isGuest: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!charLimitNotice) return;
+    const timer = setTimeout(() => setCharLimitNotice(null), 6000);
+    return () => clearTimeout(timer);
+  }, [charLimitNotice]);
+
+  useEffect(() => {
+    setCharLimitNotice(null);
+  }, [activeTabId]);
+
+  const handleEditorContentChange = useCallback(
+    (val: string) => {
+      if (!activeTabId) return;
+      const maxCharLimit = user ? webConfig.maxNoteChars : webConfig.guestMaxNoteChars;
+      if (val.length > maxCharLimit) {
+        const trimmed = val.slice(0, maxCharLimit);
+        updateTabContent(activeTabId, trimmed);
+        setCharLimitNotice({ limit: maxCharLimit, isGuest: !user });
+        return;
+      }
+      updateTabContent(activeTabId, val);
+    },
+    [activeTabId, user, updateTabContent]
+  );
   const tipTapRef = useRef<TipTapEditorRef>(null);
   const codeMirrorRef = useRef<CodeMirrorEditorRef>(null);
   const syncEngineRef = useRef<SyncEngine | null>(null);
@@ -1332,11 +1358,7 @@ export const App: React.FC = () => {
               <TipTapEditor
                 ref={tipTapRef}
                 value={activeTab?.content || ""}
-                onChange={(val) => {
-                  if (activeTabId) {
-                    updateTabContent(activeTabId, val);
-                  }
-                }}
+                onChange={handleEditorContentChange}
                 onCursorChange={(line, col, charCount) => {
                   setCursorPos({ line, col, charCount });
                 }}
@@ -1360,11 +1382,7 @@ export const App: React.FC = () => {
               <CodeMirrorEditor
                 ref={codeMirrorRef}
                 value={activeTab?.content || ""}
-                onChange={(val) => {
-                  if (activeTabId) {
-                    updateTabContent(activeTabId, val);
-                  }
-                }}
+                onChange={handleEditorContentChange}
                 onCursorChange={(line, col, charCount) => {
                   setCursorPos({ line, col, charCount });
                 }}
@@ -1375,6 +1393,77 @@ export const App: React.FC = () => {
                 autoCorrect={autoCorrect}
               />
             </Suspense>
+          )}
+          {charLimitNotice && (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                position: "absolute",
+                bottom: "12px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 40,
+                maxWidth: "calc(100% - 24px)",
+                backgroundColor: "var(--bg-surface)",
+                color: "var(--text-primary)",
+                border: "1px solid #d97706",
+                boxShadow: "var(--card-shadow)",
+                borderRadius: "6px",
+                padding: "8px 12px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "12px",
+                lineHeight: 1.4,
+              }}
+            >
+              <span>
+                Limit reached ({charLimitNotice.limit.toLocaleString()} chars). Extra content was removed.
+                {charLimitNotice.isGuest && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCharLimitNotice(null);
+                        setShowSignIn(true);
+                      }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        color: "var(--accent-primary, #0078d4)",
+                        textDecoration: "underline",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        fontSize: "inherit",
+                      }}
+                    >
+                      Sign in
+                    </button>{" "}
+                    for {webConfig.maxNoteChars.toLocaleString()} chars.
+                  </>
+                )}
+              </span>
+              <button
+                type="button"
+                aria-label="Dismiss limit notice"
+                onClick={() => setCharLimitNotice(null)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  lineHeight: 1,
+                  padding: "2px 4px",
+                  flexShrink: 0,
+                }}
+              >
+                ×
+              </button>
+            </div>
           )}
         </div>
       )}
