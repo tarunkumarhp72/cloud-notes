@@ -137,8 +137,8 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
               </h1>
               <p className={styles.subtitle}>
                 {mode === "open"
-                  ? "Browse your saved notes or import a file from your computer."
-                  : "Reopen closed tabs, manage saved notes, or import files from your computer."}
+                  ? "Open saved notes or import local files."
+                  : "Reopen closed tabs or manage saved notes."}
               </p>
             </div>
           </div>
@@ -168,17 +168,19 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
 
         {/* Quick Actions Grid */}
         <div className={styles.quickGrid}>
-          <button type="button" className={styles.quickCard} onClick={onNewDocument}>
-            <div className={styles.quickIcon}>
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z" />
-              </svg>
-            </div>
-            <div className={styles.quickText}>
-              <strong>New Document</strong>
-              <span>Create a new note</span>
-            </div>
-          </button>
+          <Tooltip content="New Document — Create a new note" position="top">
+            <button type="button" className={styles.quickCard} onClick={onNewDocument}>
+              <div className={styles.quickIcon}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2z" />
+                </svg>
+              </div>
+              <div className={styles.quickText}>
+                <strong>New Document</strong>
+                <span>Create a new note</span>
+              </div>
+            </button>
+          </Tooltip>
 
           <input
             ref={fileInputRef}
@@ -193,21 +195,23 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
               }
             }}
           />
-          <button
-            type="button"
-            className={`${styles.quickCard} ${mode === "open" ? styles.quickCardPrimary : ""}`}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <div className={styles.quickIcon}>
-              <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM2.5 3a.5.5 0 0 0-.5.5V6h12v-.5a.5.5 0 0 0-.5-.5H9c-.964 0-1.71-.629-2.174-1.154C6.374 3.334 5.82 3 5.264 3H2.5zM14 7H2v5.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V7z" />
-              </svg>
-            </div>
-            <div className={styles.quickText}>
-              <strong>Open File from Computer</strong>
-              <span>Import .txt or .md from disk</span>
-            </div>
-          </button>
+          <Tooltip content="Open File from Computer — Import .txt or .md" position="top">
+            <button
+              type="button"
+              className={`${styles.quickCard} ${mode === "open" ? styles.quickCardPrimary : ""}`}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div className={styles.quickIcon}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h2.764c.958 0 1.76.56 2.311 1.184C7.985 3.648 8.48 4 9 4h4.5A1.5 1.5 0 0 1 15 5.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 12.5v-9zM2.5 3a.5.5 0 0 0-.5.5V6h12v-.5a.5.5 0 0 0-.5-.5H9c-.964 0-1.71-.629-2.174-1.154C6.374 3.334 5.82 3 5.264 3H2.5zM14 7H2v5.5a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V7z" />
+                </svg>
+              </div>
+              <div className={styles.quickText}>
+                <strong>Open File</strong>
+                <span>Import .txt or .md</span>
+              </div>
+            </button>
+          </Tooltip>
         </div>
 
         {/* Section Header + Filter Pills */}
