@@ -6,7 +6,7 @@
 }
 
 .tooltip {
-  position: absolute;
+  position: fixed;
   z-index: 10000;
   pointer-events: none;
   white-space: nowrap;
@@ -21,93 +21,14 @@
   font-weight: 400;
   line-height: 1.4;
   user-select: none;
+  animation: tooltipFadeIn 0.12s ease-out;
 }
 
-/* Positions */
-.top {
-  bottom: calc(100% + 6px);
-  animation: tooltipFadeInTop 0.12s ease-out;
-}
-
-.bottom {
-  top: calc(100% + 6px);
-  animation: tooltipFadeInBottom 0.12s ease-out;
-}
-
-.left {
-  right: calc(100% + 6px);
-  top: 50%;
-  transform: translateY(-50%);
-  animation: tooltipFadeInLeft 0.12s ease-out;
-}
-
-.right {
-  left: calc(100% + 6px);
-  top: 50%;
-  transform: translateY(-50%);
-  animation: tooltipFadeInRight 0.12s ease-out;
-}
-
-/* Alignments for top/bottom */
-.top.align_center,
-.bottom.align_center {
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.top.align_start,
-.bottom.align_start {
-  left: 0;
-  transform: none;
-}
-
-.top.align_end,
-.bottom.align_end {
-  right: 0;
-  left: auto;
-  transform: none;
-}
-
-@keyframes tooltipFadeInTop {
+@keyframes tooltipFadeIn {
   from {
     opacity: 0;
-    margin-bottom: -3px;
   }
   to {
     opacity: 1;
-    margin-bottom: 0;
-  }
-}
-
-@keyframes tooltipFadeInBottom {
-  from {
-    opacity: 0;
-    margin-top: -3px;
-  }
-  to {
-    opacity: 1;
-    margin-top: 0;
-  }
-}
-
-@keyframes tooltipFadeInLeft {
-  from {
-    opacity: 0;
-    margin-right: -3px;
-  }
-  to {
-    opacity: 1;
-    margin-right: 0;
-  }
-}
-
-@keyframes tooltipFadeInRight {
-  from {
-    opacity: 0;
-    margin-left: -3px;
-  }
-  to {
-    opacity: 1;
-    margin-left: 0;
   }
 }
