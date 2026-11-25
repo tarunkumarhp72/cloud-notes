@@ -37,7 +37,11 @@ import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
 import { RecoveryKeyModal } from "./components/vault/RecoveryKeyModal";
 import { NoteLimitModal } from "./components/tabs/NoteLimitModal";
 import { useVaultStore } from "./stores/vaultStore";
-import { useTabsStore } from "./stores/tabsStore";
+import {
+  useTabsStore,
+  isUnsavedIdInStorage,
+  isCustomTitleInStorage,
+} from "./stores/tabsStore";
 import { useRecentHistoryStore } from "./stores/recentHistoryStore";
 import { useRecycleBinStore } from "./stores/recycleBinStore";
 import { useSettingsStore } from "./stores/settingsStore";
@@ -218,6 +222,10 @@ export const App: React.FC = () => {
               content = first.encryptedEnvelope;
               isMarkdown = true;
             }
+            const restoredCustom = isCustomTitleInStorage(first.id);
+            const restoredUnsaved =
+              isUnsavedIdInStorage(first.id) ||
+              (!restoredCustom && content.trim().length > 0);
             useTabsStore.setState({
               tabs: [
                 {
@@ -226,9 +234,9 @@ export const App: React.FC = () => {
                   title,
                   content,
                   isMarkdown,
-                  isCustomTitle: false,
+                  isCustomTitle: restoredCustom,
                   isDirty: false,
-                  hasUnsavedChanges: false,
+                  hasUnsavedChanges: restoredUnsaved,
                   updatedAt: Date.now(),
                 },
               ],

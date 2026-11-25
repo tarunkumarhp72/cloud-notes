@@ -1,5 +1,54 @@
 import { create } from "zustand";
 
+const UNSAVED_IDS_KEY = "notepad_unsaved_ids";
+const CUSTOM_TITLES_KEY = "notepad_custom_titles";
+
+export function markUnsavedIdInStorage(id: string, unsaved: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(UNSAVED_IDS_KEY);
+    const set = new Set<string>(raw ? JSON.parse(raw) : []);
+    if (unsaved) set.add(id);
+    else set.delete(id);
+    localStorage.setItem(UNSAVED_IDS_KEY, JSON.stringify(Array.from(set)));
+  } catch {}
+}
+
+export function isUnsavedIdInStorage(id: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(UNSAVED_IDS_KEY);
+    if (!raw) return false;
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) && arr.includes(id);
+  } catch {
+    return false;
+  }
+}
+
+export function markCustomTitleInStorage(id: string, isCustom: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(CUSTOM_TITLES_KEY);
+    const set = new Set<string>(raw ? JSON.parse(raw) : []);
+    if (isCustom) set.add(id);
+    else set.delete(id);
+    localStorage.setItem(CUSTOM_TITLES_KEY, JSON.stringify(Array.from(set)));
+  } catch {}
+}
+
+export function isCustomTitleInStorage(id: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = localStorage.getItem(CUSTOM_TITLES_KEY);
+    if (!raw) return false;
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) && arr.includes(id);
+  } catch {
+    return false;
+  }
+}
+
 export interface TabData {
   id: string;
   title: string;
@@ -139,6 +188,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   },
 
   closeTab: (id: string) => {
+    markUnsavedIdInStorage(id, false);
     const { tabs, activeTabId } = get();
     if (tabs.length <= 1) {
       const resetId = `note-${Date.now()}`;
@@ -184,6 +234,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   },
 
   updateTabContent: (id: string, content: string) => {
+    markUnsavedIdInStorage(id, content.trim().length > 0);
     set((state) => ({
       tabs: state.tabs.map((tab) => {
         if (tab.id !== id) return tab;
@@ -219,6 +270,8 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   },
 
   markTabSaved: (id: string, title: string, isCustomTitle = true) => {
+    markUnsavedIdInStorage(id, false);
+    markCustomTitleInStorage(id, isCustomTitle);
     set((state) => ({
       tabs: state.tabs.map((tab) =>
         tab.id === id
