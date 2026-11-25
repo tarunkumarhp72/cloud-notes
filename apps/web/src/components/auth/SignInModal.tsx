@@ -108,7 +108,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             <span className={styles.featureIcon}>🔒</span>
             <div className={styles.featureText}>
               <strong>End-to-End Encrypted</strong>
-              <span>Encrypted on your device with AES-256 before syncing</span>
+              <span>Encrypted on your device before syncing</span>
             </div>
           </div>
           <div className={styles.featureItem} role="listitem">

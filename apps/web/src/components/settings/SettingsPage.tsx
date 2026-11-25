@@ -188,7 +188,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <div className={styles.cardMeta}>
             <h2 className={styles.cardTitle}>About Notepad Cloud</h2>
             <p className={styles.cardDescription}>
-              Version 1.0.0 • Client-side Zero-Knowledge Encryption (AES-256-GCM + Argon2id)
+              Version 1.0.0 • Client-side End-to-End Encrypted Notepad
             </p>
             <p className={styles.cardDescription} style={{ marginTop: "4px" }}>
               Pixel-perfect Windows 11 replica running anywhere.

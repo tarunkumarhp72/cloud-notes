@@ -127,7 +127,7 @@ export const VaultUnlockModal: React.FC<VaultUnlockModalProps> = ({
             </h2>
             <p className={styles.description}>
               {isInitialSetup
-                ? "Set a master passphrase to encrypt your notes using zero-knowledge AES-256-GCM. Your passphrase never leaves this device."
+                ? "Set a master passphrase to protect your notes with end-to-end encryption. Your passphrase never leaves this device."
                 : "Enter your master passphrase to decrypt and edit your notes."}
             </p>
           </div>
