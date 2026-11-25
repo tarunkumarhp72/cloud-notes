@@ -1,0 +1,231 @@
+.page {
+  flex: 1;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg, 10px);
+  box-shadow: var(--card-shadow);
+  padding: 32px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.illustrationWrap {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pulseRing {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(0, 120, 212, 0.14) 0%,
+    rgba(0, 120, 212, 0.02) 70%,
+    transparent 100%
+  );
+  animation: pulseGlow 2.8s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+.floatingDoc {
+  position: relative;
+  z-index: 1;
+  animation: floatDoc 3.2s ease-in-out infinite;
+}
+
+@keyframes floatDoc {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(-1deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(1.5deg);
+  }
+}
+
+.sparkleOne,
+.sparkleTwo {
+  position: absolute;
+  border-radius: 50%;
+  background-color: var(--accent-primary, #0078d4);
+  opacity: 0.45;
+}
+
+.sparkleOne {
+  width: 7px;
+  height: 7px;
+  top: 16px;
+  right: 16px;
+  animation: twinkle 2.2s ease-in-out infinite;
+}
+
+.sparkleTwo {
+  width: 5px;
+  height: 5px;
+  bottom: 20px;
+  left: 16px;
+  animation: twinkle 2.6s ease-in-out 0.6s infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.85;
+  }
+}
+
+.codeBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: rgba(0, 120, 212, 0.1);
+  border: 1px solid rgba(0, 120, 212, 0.25);
+  color: var(--accent-primary, #0078d4);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  max-width: 340px;
+  word-break: break-word;
+}
+
+.pathChip {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.primaryBtn {
+  height: 34px;
+  padding: 0 18px;
+  background-color: var(--accent-primary, #0078d4);
+  border: 1px solid var(--accent-primary, #0078d4);
+  border-radius: var(--radius-sm, 4px);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.12s ease, transform 0.1s ease;
+}
+
+.primaryBtn:hover {
+  background-color: var(--accent-hover, #106ebe);
+}
+
+.primaryBtn:active {
+  transform: scale(0.98);
+}
+
+.secondaryBtn {
+  height: 34px;
+  padding: 0 16px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm, 4px);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.secondaryBtn:hover {
+  background-color: var(--bg-hover);
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 24px 16px;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 19px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    width: 100%;
+  }
+}

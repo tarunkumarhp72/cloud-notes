@@ -16,6 +16,7 @@ import { ToolbarOverflowMenu } from "./components/toolbar/ToolbarOverflowMenu";
 import toolbarStyles from "./components/toolbar/Toolbar.module.css";
 import { SettingsPage } from "./components/settings/SettingsPage";
 import { Tooltip } from "./components/ui/Tooltip";
+import { NotFoundPage, ProtectedRoutePage } from "./components/ui/NotFoundPage";
 import { SettingsIcon } from "./components/icons/SettingsIcon";
 import { TipTapEditorRef } from "./components/editor/TipTapEditor";
 import { FindReplaceBar } from "./components/editor/FindReplaceBar";
@@ -89,6 +90,13 @@ export const App: React.FC = () => {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [recoveryModalMode, setRecoveryModalMode] = useState<"display" | "recover">("display");
   const [activeRecoveryKey, setActiveRecoveryKey] = useState("");
+  const KNOWN_ROUTES = new Set(["/", "/settings", "/open", "/history", "/recycle-bin"]);
+  const isKnownRoute = (pathname: string) =>
+    KNOWN_ROUTES.has(pathname) || pathname.startsWith("/auth/");
+
+  const [isNotFound, setIsNotFound] = useState(
+    () => typeof window !== "undefined" && !isKnownRoute(window.location.pathname)
+  );
   const [isSettingsOpen, setIsSettingsOpen] = useState(
     () => typeof window !== "undefined" && window.location.pathname === "/settings"
   );
@@ -103,12 +111,14 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const handlePopState = () => {
-      setIsSettingsOpen(window.location.pathname === "/settings");
-      if (window.location.pathname === "/open") {
+      const path = window.location.pathname;
+      setIsNotFound(!isKnownRoute(path));
+      setIsSettingsOpen(path === "/settings");
+      if (path === "/open") {
         setOpenPageMode("open");
-      } else if (window.location.pathname === "/history") {
+      } else if (path === "/history") {
         setOpenPageMode("history");
-      } else if (window.location.pathname === "/recycle-bin") {
+      } else if (path === "/recycle-bin") {
         setOpenPageMode("recycle");
       } else {
         setOpenPageMode(null);
@@ -121,7 +131,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const path = window.location.pathname;
-    if (path.includes("/auth/")) return;
+    if (path.includes("/auth/") || isNotFound) return;
     if (isSettingsOpen && path !== "/settings") {
       window.history.pushState({}, document.title, "/settings");
     } else if (!isSettingsOpen && openPageMode === "open" && path !== "/open") {
@@ -133,11 +143,11 @@ export const App: React.FC = () => {
     } else if (
       !isSettingsOpen &&
       !openPageMode &&
-      (path === "/settings" || path === "/history" || path === "/open" || path === "/recycle-bin")
+      path !== "/"
     ) {
       window.history.pushState({}, document.title, "/");
     }
-  }, [isSettingsOpen, openPageMode]);
+  }, [isSettingsOpen, openPageMode, isNotFound]);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1, charCount: 0 });
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [isReplaceOpen, setIsReplaceOpen] = useState(false);
@@ -1034,7 +1044,10 @@ export const App: React.FC = () => {
                   cursor: "pointer",
                 }}
                 aria-label="Settings"
-                onClick={() => setIsSettingsOpen((prev) => !prev)}
+                onClick={() => {
+                  setIsNotFound(false);
+                  setIsSettingsOpen((prev) => !prev);
+                }}
               >
                 <SettingsIcon size={16} />
               </button>
@@ -1043,8 +1056,22 @@ export const App: React.FC = () => {
         }
       />
 
-      {/* Body: Settings or Editor Surface */}
-      {isSettingsOpen ? (
+      {/* Body: 404, Settings, Protected Route, or Editor Surface */}
+      {isNotFound ? (
+        <NotFoundPage
+          path={typeof window !== "undefined" ? window.location.pathname : "/"}
+          onGoHome={() => {
+            setIsNotFound(false);
+            setIsSettingsOpen(false);
+            setOpenPageMode(null);
+          }}
+          onGoHistory={() => {
+            setIsNotFound(false);
+            setIsSettingsOpen(false);
+            setOpenPageMode("history");
+          }}
+        />
+      ) : isSettingsOpen ? (
         <SettingsPage
           onBack={() => setIsSettingsOpen(false)}
           accessToken={user ? (localStorage.getItem("notepad_token") || undefined) : undefined}
@@ -1062,6 +1089,12 @@ export const App: React.FC = () => {
             } catch {}
             setIsSettingsOpen(false);
           }}
+        />
+      ) : openPageMode === "recycle" && !user ? (
+        <ProtectedRoutePage
+          routeName="Recycle Bin"
+          onSignIn={() => setShowSignIn(true)}
+          onBack={() => setOpenPageMode(null)}
         />
       ) : openPageMode === "recycle" && user ? (
         <RecycleBinPage
