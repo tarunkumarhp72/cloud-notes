@@ -16,6 +16,7 @@ export interface RecentHistoryPageProps {
     isCustomTitle: boolean;
   }) => void;
   onDeleteNote?: (id: string) => Promise<void> | void;
+  onClearAll?: () => Promise<void> | void;
   notesLoader?: () => Promise<SavedNoteSummary[]>;
 }
 
@@ -28,6 +29,7 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
   onOpenFileFromDisk,
   onReopenNote,
   onDeleteNote,
+  onClearAll,
   notesLoader = defaultNotesLoader,
 }) => {
   const { items: historyItems, removeHistoryItem, clearHistory } = useRecentHistoryStore();
@@ -101,6 +103,14 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
     setSavedNotes((prev) => prev.filter((n) => n.id !== id));
     if (onDeleteNote) {
       await onDeleteNote(id);
+    }
+  };
+
+  const handleClearAll = async () => {
+    clearHistory();
+    setSavedNotes([]);
+    if (onClearAll) {
+      await onClearAll();
     }
   };
 
@@ -232,11 +242,11 @@ export const RecentHistoryPage: React.FC<RecentHistoryPageProps> = ({
             >
               Saved Notes
             </button>
-            {historyItems.length > 0 && (
+            {combinedItems.length > 0 && (
               <button
                 type="button"
                 className={styles.clearBtn}
-                onClick={clearHistory}
+                onClick={handleClearAll}
               >
                 Clear history
               </button>

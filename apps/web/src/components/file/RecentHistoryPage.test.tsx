@@ -116,4 +116,23 @@ describe("RecentHistoryPage Component", () => {
       expect(screen.queryByText("Meeting Minutes")).toBeNull();
     });
   });
+
+  it("calls onClearAll and clears all notes when Clear history is clicked", async () => {
+    const onClearAll = vi.fn();
+    render(
+      <RecentHistoryPage
+        mode="history"
+        onBack={vi.fn()}
+        onNewDocument={vi.fn()}
+        onOpenFileFromDisk={vi.fn()}
+        onReopenNote={vi.fn()}
+        onClearAll={onClearAll}
+        notesLoader={vi.fn().mockResolvedValue([])}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear history" }));
+    expect(onClearAll).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("No recent or closed notes found.")).toBeDefined();
+  });
 });

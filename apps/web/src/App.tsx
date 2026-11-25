@@ -1033,6 +1033,14 @@ export const App: React.FC = () => {
             setOpenPageMode(null);
           }}
           onDeleteNote={async (id) => {
+            const matchingTab = useTabsStore.getState().tabs.find((t) => t.id === id);
+            if (matchingTab) {
+              closeTab(matchingTab.id);
+              broadcastRef.current?.broadcast({
+                type: "TAB_CLOSED",
+                payload: { noteId: matchingTab.id },
+              });
+            }
             try {
               await deleteNote(id, false);
             } catch (err) {
@@ -1040,6 +1048,20 @@ export const App: React.FC = () => {
             }
             if (syncEngineRef.current && user) {
               await syncEngineRef.current.enqueueMutation(id, "delete", "", 1);
+            }
+          }}
+          onClearAll={async () => {
+            useTabsStore.getState().resetTabs();
+            try {
+              const allNotes = await listNotes();
+              for (const n of allNotes) {
+                await deleteNote(n.id, false);
+                if (syncEngineRef.current && user) {
+                  await syncEngineRef.current.enqueueMutation(n.id, "delete", "", 1);
+                }
+              }
+            } catch (err) {
+              console.warn("Failed to clear all notes from IndexedDB:", err);
             }
           }}
         />
