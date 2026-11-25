@@ -30,6 +30,7 @@ import { useVisualViewport } from "./hooks/useVisualViewport";
 import { exportNoteToFile, readFileAsText, useFileDragAndDrop } from "./components/file/fileIo";
 import { OpenNotesDialog } from "./components/file/OpenNotesDialog";
 import { RecentHistoryPage } from "./components/file/RecentHistoryPage";
+import { RecycleBinPage } from "./components/file/RecycleBinPage";
 import { SaveNoteModal } from "./components/file/SaveNoteModal";
 import { CloseTabConfirmModal } from "./components/tabs/CloseTabConfirmModal";
 import { VaultUnlockModal } from "./components/vault/VaultUnlockModal";
@@ -38,6 +39,7 @@ import { NoteLimitModal } from "./components/tabs/NoteLimitModal";
 import { useVaultStore } from "./stores/vaultStore";
 import { useTabsStore } from "./stores/tabsStore";
 import { useRecentHistoryStore } from "./stores/recentHistoryStore";
+import { useRecycleBinStore } from "./stores/recycleBinStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { webConfig } from "./config";
 import { getValidAccessToken, fetchWithAuth } from "./auth/tokenManager";
@@ -84,10 +86,11 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(
     () => typeof window !== "undefined" && window.location.pathname === "/settings"
   );
-  const [openPageMode, setOpenPageMode] = useState<"open" | "history" | null>(() => {
+  const [openPageMode, setOpenPageMode] = useState<"open" | "history" | "recycle" | null>(() => {
     if (typeof window === "undefined") return null;
     if (window.location.pathname === "/open") return "open";
     if (window.location.pathname === "/history") return "history";
+    if (window.location.pathname === "/recycle-bin") return "recycle";
     return null;
   });
 
@@ -99,6 +102,8 @@ export const App: React.FC = () => {
         setOpenPageMode("open");
       } else if (window.location.pathname === "/history") {
         setOpenPageMode("history");
+      } else if (window.location.pathname === "/recycle-bin") {
+        setOpenPageMode("recycle");
       } else {
         setOpenPageMode(null);
       }
@@ -117,10 +122,12 @@ export const App: React.FC = () => {
       window.history.pushState({}, document.title, "/open");
     } else if (!isSettingsOpen && openPageMode === "history" && path !== "/history") {
       window.history.pushState({}, document.title, "/history");
+    } else if (!isSettingsOpen && openPageMode === "recycle" && path !== "/recycle-bin") {
+      window.history.pushState({}, document.title, "/recycle-bin");
     } else if (
       !isSettingsOpen &&
       !openPageMode &&
-      (path === "/settings" || path === "/history" || path === "/open")
+      (path === "/settings" || path === "/history" || path === "/open" || path === "/recycle-bin")
     ) {
       window.history.pushState({}, document.title, "/");
     }
@@ -737,6 +744,7 @@ export const App: React.FC = () => {
         renderFileDropdown={() => (
           <FileMenu
             isDesktop={isDesktop}
+            isSignedIn={Boolean(user)}
             onNewTab={() => handleNewTab()}
             onNewWindow={() => window.open(window.location.href, "_blank")}
             onNewMarkdownTab={() => handleNewTab("Untitled.md", "", true)}
@@ -747,6 +755,11 @@ export const App: React.FC = () => {
             onRecent={() => {
               setIsSettingsOpen(false);
               setOpenPageMode("history");
+            }}
+            onRecycleBin={() => {
+              if (!user) return;
+              setIsSettingsOpen(false);
+              setOpenPageMode("recycle");
             }}
             onSave={() => {
               if (activeTab) {
@@ -995,9 +1008,23 @@ export const App: React.FC = () => {
             setIsSettingsOpen(false);
           }}
         />
+      ) : openPageMode === "recycle" && user ? (
+        <RecycleBinPage
+          onBack={() => setOpenPageMode(null)}
+          onRestoreNote={async (item) => {
+            const maxLimit = user ? webConfig.userNoteLimit : webConfig.guestNoteLimit;
+            if (tabs.length >= maxLimit) {
+              setShowLimitModal(true);
+              return;
+            }
+            createTab(item.title, item.content, item.isMarkdown, item.isCustomTitle, item.id);
+            setOpenPageMode(null);
+            await performExplicitSave(item.id, item.title, false);
+          }}
+        />
       ) : openPageMode ? (
         <RecentHistoryPage
-          mode={openPageMode}
+          mode={openPageMode === "recycle" ? "history" : openPageMode}
           onBack={() => setOpenPageMode(null)}
           onNewDocument={() => {
             setOpenPageMode(null);
@@ -1034,6 +1061,36 @@ export const App: React.FC = () => {
           }}
           onDeleteNote={async (id) => {
             const matchingTab = useTabsStore.getState().tabs.find((t) => t.id === id);
+            if (user) {
+              // Move to 15-day Recycle Bin for logged-in users
+              const histItem = useRecentHistoryStore.getState().items.find((i) => i.id === id);
+              let noteTitle = matchingTab?.title || histItem?.title || "Untitled";
+              let noteContent = matchingTab?.content ?? histItem?.content ?? "";
+              let noteMarkdown = matchingTab?.isMarkdown ?? histItem?.isMarkdown ?? true;
+              const isCustom = matchingTab?.isCustomTitle ?? (histItem?.status === "saved");
+
+              if (!matchingTab && !histItem) {
+                try {
+                  const all = await listNotes();
+                  const found = all.find((n) => n.id === id);
+                  if (found) {
+                    const parsed = JSON.parse(found.encryptedEnvelope);
+                    noteTitle = parsed.title || "Untitled";
+                    noteContent = parsed.content || "";
+                    noteMarkdown = !!parsed.isMarkdown;
+                  }
+                } catch {}
+              }
+
+              useRecycleBinStore.getState().moveToRecycleBin({
+                id,
+                title: noteTitle,
+                content: noteContent,
+                isMarkdown: noteMarkdown,
+                isCustomTitle: isCustom,
+              });
+            }
+
             if (matchingTab) {
               closeTab(matchingTab.id);
               broadcastRef.current?.broadcast({
@@ -1051,10 +1108,51 @@ export const App: React.FC = () => {
             }
           }}
           onClearAll={async () => {
+            if (user) {
+              const allTabs = useTabsStore.getState().tabs;
+              const allHist = useRecentHistoryStore.getState().items;
+              const seen = new Set<string>();
+              for (const t of allTabs) {
+                if (t.content.trim()) {
+                  seen.add(t.id);
+                  useRecycleBinStore.getState().moveToRecycleBin({
+                    id: t.id,
+                    title: t.title,
+                    content: t.content,
+                    isMarkdown: t.isMarkdown,
+                    isCustomTitle: Boolean(t.isCustomTitle),
+                  });
+                }
+              }
+              for (const h of allHist) {
+                if (!seen.has(h.id)) {
+                  seen.add(h.id);
+                  useRecycleBinStore.getState().moveToRecycleBin({
+                    id: h.id,
+                    title: h.title,
+                    content: h.content,
+                    isMarkdown: h.isMarkdown,
+                    isCustomTitle: h.status === "saved",
+                  });
+                }
+              }
+            }
             useTabsStore.getState().resetTabs();
             try {
               const allNotes = await listNotes();
               for (const n of allNotes) {
+                if (user) {
+                  try {
+                    const parsed = JSON.parse(n.encryptedEnvelope);
+                    useRecycleBinStore.getState().moveToRecycleBin({
+                      id: n.id,
+                      title: parsed.title || "Untitled",
+                      content: parsed.content || "",
+                      isMarkdown: !!parsed.isMarkdown,
+                      isCustomTitle: true,
+                    });
+                  } catch {}
+                }
                 await deleteNote(n.id, false);
                 if (syncEngineRef.current && user) {
                   await syncEngineRef.current.enqueueMutation(n.id, "delete", "", 1);

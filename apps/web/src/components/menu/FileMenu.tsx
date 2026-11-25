@@ -3,11 +3,13 @@ import styles from "./MenuDropdown.module.css";
 
 export interface FileMenuProps {
   isDesktop?: boolean;
+  isSignedIn?: boolean;
   onNewTab?: () => void;
   onNewWindow?: () => void;
   onNewMarkdownTab?: () => void;
   onOpen?: () => void;
   onRecent?: () => void;
+  onRecycleBin?: () => void;
   onSave?: () => void;
   onSaveAs?: () => void;
   onSaveAll?: () => void;
@@ -20,11 +22,13 @@ export interface FileMenuProps {
 
 export const FileMenu: React.FC<FileMenuProps> = ({
   isDesktop = false,
+  isSignedIn = false,
   onNewTab,
   onNewWindow,
   onNewMarkdownTab,
   onOpen,
   onRecent,
+  onRecycleBin,
   onSave,
   onSaveAs,
   onSaveAll,
@@ -86,6 +90,18 @@ export const FileMenu: React.FC<FileMenuProps> = ({
         <span className={styles.label}>Recent / History</span>
         <span className={styles.chevron}>›</span>
       </button>
+
+      {isSignedIn && (
+        <button
+          type="button"
+          role="menuitem"
+          className={styles.item}
+          onClick={onRecycleBin}
+        >
+          <span className={styles.label}>Recycle Bin</span>
+          <span className={styles.chevron}>›</span>
+        </button>
+      )}
 
       <hr className={styles.divider} />
 
