@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
 import { SignInModal } from "./components/auth/SignInModal";
+import { AuthCallbackOverlay } from "./components/auth/AuthCallbackOverlay";
 import { validateGoogleCallback } from "./auth/googleAuth";
 import { AccountMenu, UserProfile } from "./components/header/AccountMenu";
 import { TabStrip } from "./components/tabs/TabStrip";
@@ -156,6 +157,17 @@ export const App: React.FC = () => {
   const [findQuery, setFindQuery] = useState("");
   const [findMatchCase, setFindMatchCase] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("saved");
+  const [authLoadingMode, setAuthLoadingMode] = useState<"signin" | "drive" | null>(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    if (window.location.pathname.includes("/drive-callback") && params.get("code")) {
+      return "drive";
+    }
+    if (params.get("code") && params.get("state")) {
+      return "signin";
+    }
+    return null;
+  });
   const tipTapRef = useRef<TipTapEditorRef>(null);
   const codeMirrorRef = useRef<CodeMirrorEditorRef>(null);
   const syncEngineRef = useRef<SyncEngine | null>(null);
@@ -625,6 +637,7 @@ export const App: React.FC = () => {
             autoDismissMs: 4000,
           });
         } finally {
+          setAuthLoadingMode(null);
           const targetPath = window.location.pathname.replace(/\/auth\/drive-callback\/?$/, "/settings") || "/settings";
           window.history.replaceState({}, document.title, targetPath);
         }
@@ -665,7 +678,14 @@ export const App: React.FC = () => {
           }
         } catch (err) {
           console.error("Google sign in callback error:", err);
+          useBackupProgressStore.getState().notifyMessage({
+            title: "Sign-in Failed",
+            phase: err instanceof Error ? err.message : "Could not complete Google sign-in.",
+            status: "failed",
+            autoDismissMs: 5000,
+          });
         } finally {
+          setAuthLoadingMode(null);
           window.history.replaceState(
             {},
             document.title,
@@ -1490,6 +1510,8 @@ export const App: React.FC = () => {
         isOpen={showSignIn}
         onClose={() => setShowSignIn(false)}
       />
+
+      <AuthCallbackOverlay mode={authLoadingMode} />
 
       <OpenNotesDialog
         isOpen={showOpenDialog}
