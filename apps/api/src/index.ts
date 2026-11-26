@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { handle } from "hono/vercel";
 import { checkDbConnection } from "./db.js";
 import { authRouter } from "./routes/auth.js";
 import { syncRouter } from "./routes/sync.js";
@@ -63,4 +62,4 @@ app.get("/health", async (c) => {
   });
 });
 
-export default handle(app);
+export default app;
