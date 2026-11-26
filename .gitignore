@@ -15,3 +15,16 @@ Thumbs.db
 src-tauri/target/
 e2e-audit.mjs
 apps/api/api/index.mjs
+
+# AI & Planning docs
+.agents/
+qa/
+reference/
+references/
+PLAN.md
+PREFLIGHT.md
+TASKS.md
+GOOGLE_DRIVE_BACKUP_PLAN.md
+GOOGLE_DRIVE_SETUP.md
+Google-Drive.md
+*.plan.md
