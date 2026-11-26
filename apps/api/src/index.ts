@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { checkDbConnection } from "./db.js";
 import { authRouter } from "./routes/auth.js";
 import { syncRouter } from "./routes/sync.js";
@@ -10,6 +11,26 @@ import { rateLimitMiddleware } from "./middleware/rateLimit.js";
 import { config } from "./config.js";
 
 export const app = new Hono();
+
+const allowedOrigin = config.frontendUrl.replace(/\/+$/, "");
+
+app.use(
+  "*",
+  cors({
+    origin: (origin) => {
+      if (!origin) return allowedOrigin;
+      const normalized = origin.replace(/\/+$/, "");
+      if (normalized === allowedOrigin) return origin;
+      if (!config.isProduction && /^http:\/\/localhost:\d+$/.test(normalized)) {
+        return origin;
+      }
+      return "";
+    },
+    credentials: true,
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use("*", cspMiddleware());
 

@@ -640,6 +640,7 @@ export const App: React.FC = () => {
           const apiBaseUrl = webConfig.apiBaseUrl;
           const res = await fetch(`${apiBaseUrl}/auth/google`, {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               code,
