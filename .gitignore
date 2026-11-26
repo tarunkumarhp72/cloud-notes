@@ -13,3 +13,5 @@ apps/*/.env.*
 .DS_Store
 Thumbs.db
 src-tauri/target/
+e2e-audit.mjs
+apps/api/api/index.mjs
