@@ -48,9 +48,17 @@ app.route("/api/account", accountRouter);
 app.route("/backup", backupRouter);
 app.route("/api/backup", backupRouter);
 
-if (!config.isTest) {
+if (!config.isTest && !process.env.VERCEL) {
   startBackupScheduler();
 }
+
+app.get("/", (c) => {
+  return c.json({
+    status: "ok",
+    service: "notepad-api",
+    health: "/health",
+  });
+});
 
 app.get("/health", async (c) => {
   const dbStatus = await checkDbConnection();
