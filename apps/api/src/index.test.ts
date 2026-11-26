@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { app } from "./index";
+import { app } from "./index.js";
 
 describe("API health check", () => {
   it("GET /health returns 200 with service information", async () => {

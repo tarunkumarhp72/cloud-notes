@@ -1,6 +1,6 @@
-import { sql } from "../db";
-import { performBackup, calculateNextBackupDate } from "./backupService";
-import { activeBackupTasks, registerActiveTask, broadcastTaskProgress } from "./activeTasks";
+import { sql } from "../db.js";
+import { performBackup, calculateNextBackupDate } from "./backupService.js";
+import { activeBackupTasks, registerActiveTask, broadcastTaskProgress } from "./activeTasks.js";
 
 export interface ScheduledTaskInfo {
   timer: NodeJS.Timeout;

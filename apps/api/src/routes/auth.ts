@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { z } from "zod";
-import { signAccessToken, verifyAccessToken } from "../auth/jwt";
-import { signRefreshToken, rotateRefreshToken, getRefreshCookieOptions } from "../auth/tokens";
-import { sql } from "../db";
-import { config } from "../config";
+import { signAccessToken, verifyAccessToken } from "../auth/jwt.js";
+import { signRefreshToken, rotateRefreshToken, getRefreshCookieOptions } from "../auth/tokens.js";
+import { sql } from "../db.js";
+import { config } from "../config.js";
 
 export const authRouter = new Hono();
 

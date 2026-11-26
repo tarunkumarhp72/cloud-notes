@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { encryptToken, decryptToken } from "./tokenCrypto";
-import { sealBackupBundle, unsealBackupBundle } from "./backupCrypto";
+import { encryptToken, decryptToken } from "./tokenCrypto.js";
+import { sealBackupBundle, unsealBackupBundle } from "./backupCrypto.js";
 
 describe("Token Cryptography (AES-256-GCM at rest)", () => {
   it("encrypts and decrypts OAuth tokens accurately", () => {

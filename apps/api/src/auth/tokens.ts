@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
-import { getJwtSecretKey } from "./jwt";
-import { config } from "../config";
+import { getJwtSecretKey } from "./jwt.js";
+import { config } from "../config.js";
 
 export interface RefreshTokenPayload {
   sub: string; // userId
@@ -83,7 +83,7 @@ export async function rotateRefreshToken(oldToken: string): Promise<{
 
   // If email was not stored in refresh token, look up the user's real email
   if (!email) {
-    const { sql } = await import("../db");
+    const { sql } = await import("../db.js");
     if (sql) {
       try {
         const rows = await sql`SELECT email FROM users WHERE id = ${userId} LIMIT 1`;
@@ -100,7 +100,7 @@ export async function rotateRefreshToken(oldToken: string): Promise<{
   const next = await signRefreshToken(userId, email, familyId, version + 1);
 
   // Issue fresh access token with user's verified email
-  const { signAccessToken } = await import("./jwt");
+  const { signAccessToken } = await import("./jwt.js");
   const newAccessToken = await signAccessToken(userId, email || "");
 
   return {

@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify, type JWTPayload } from "jose";
-import { config, tokenVerificationCache } from "../config";
+import { config, tokenVerificationCache } from "../config.js";
 
 export function getJwtSecretKey(): Uint8Array {
   return new TextEncoder().encode(config.jwt.secret);

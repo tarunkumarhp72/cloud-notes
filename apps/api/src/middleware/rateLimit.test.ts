@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { Hono } from "hono";
 import { z } from "zod";
-import { rateLimitMiddleware, SlidingWindowRateLimiter } from "./rateLimit";
-import { validateBody } from "./validate";
+import { rateLimitMiddleware, SlidingWindowRateLimiter } from "./rateLimit.js";
+import { validateBody } from "./validate.js";
 
 describe("T-044 API Rate Limiting and Validation", () => {
   describe("SlidingWindowRateLimiter", () => {

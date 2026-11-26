@@ -1,19 +1,19 @@
 import { Hono, type Context } from "hono";
 import { z } from "zod";
-import { getAuthUserId } from "./sync";
-import { sql } from "../db";
-import { config } from "../config";
-import { encryptToken } from "../backup/tokenCrypto";
-import { performBackup } from "../backup/backupService";
-import { performRestore } from "../backup/restoreService";
+import { getAuthUserId } from "./sync.js";
+import { sql } from "../db.js";
+import { config } from "../config.js";
+import { encryptToken } from "../backup/tokenCrypto.js";
+import { performBackup } from "../backup/backupService.js";
+import { performRestore } from "../backup/restoreService.js";
 import {
   activeBackupTasks,
   registerActiveTask,
   broadcastTaskProgress,
   cancelActiveTask,
   type BackupProgressEvent,
-} from "../backup/activeTasks";
-import { scheduleUserBackup, cancelUserScheduledBackup } from "../backup/scheduler";
+} from "../backup/activeTasks.js";
+import { scheduleUserBackup, cancelUserScheduledBackup } from "../backup/scheduler.js";
 
 export const backupRouter = new Hono();
 

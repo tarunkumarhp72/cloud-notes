@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { app } from "../index";
-import { authHandlers } from "./auth";
-import { signAccessToken } from "../auth/jwt";
-import { signRefreshToken, clearTokenRegistry } from "../auth/tokens";
+import { app } from "../index.js";
+import { authHandlers } from "./auth.js";
+import { signAccessToken } from "../auth/jwt.js";
+import { signRefreshToken, clearTokenRegistry } from "../auth/tokens.js";
 
 describe("Auth Endpoints (/auth)", () => {
   beforeEach(() => {

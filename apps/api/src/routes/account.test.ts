@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { Hono } from "hono";
-import { accountRouter } from "./account";
-import { signAccessToken } from "../auth/jwt";
-import { inMemoryNotesStore } from "./sync";
+import { accountRouter } from "./account.js";
+import { signAccessToken } from "../auth/jwt.js";
+import { inMemoryNotesStore } from "./sync.js";
 
 describe("T-045 Account Deletion & Purge Endpoint", () => {
   const app = new Hono();

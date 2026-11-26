@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { config } from "../config";
+import { config } from "../config.js";
 
 /**
  * Derives a 32-byte AES-256-GCM encryption key from server secrets using HKDF (RFC 5869).

@@ -1,7 +1,7 @@
-import { sql } from "../db";
-import { decryptToken, encryptToken } from "./tokenCrypto";
-import { unsealBackupBundle } from "./backupCrypto";
-import { driveClient } from "./driveClient";
+import { sql } from "../db.js";
+import { decryptToken, encryptToken } from "./tokenCrypto.js";
+import { unsealBackupBundle } from "./backupCrypto.js";
+import { driveClient } from "./driveClient.js";
 
 export interface RestoreResult {
   success: boolean;

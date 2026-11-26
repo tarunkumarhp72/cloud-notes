@@ -1,8 +1,8 @@
 import { Hono, type Context } from "hono";
 import { z } from "zod";
-import { verifyAccessToken } from "../auth/jwt";
-import { sql } from "../db";
-import { config } from "../config";
+import { verifyAccessToken } from "../auth/jwt.js";
+import { sql } from "../db.js";
+import { config } from "../config.js";
 
 export const syncRouter = new Hono();
 

@@ -1,14 +1,14 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
-import { checkDbConnection } from "./db";
-import { authRouter } from "./routes/auth";
-import { syncRouter } from "./routes/sync";
-import { accountRouter } from "./routes/account";
-import { backupRouter } from "./routes/backup";
-import { startBackupScheduler } from "./backup/scheduler";
-import { cspMiddleware } from "./security/csp";
-import { rateLimitMiddleware } from "./middleware/rateLimit";
-import { config } from "./config";
+import { checkDbConnection } from "./db.js";
+import { authRouter } from "./routes/auth.js";
+import { syncRouter } from "./routes/sync.js";
+import { accountRouter } from "./routes/account.js";
+import { backupRouter } from "./routes/backup.js";
+import { startBackupScheduler } from "./backup/scheduler.js";
+import { cspMiddleware } from "./security/csp.js";
+import { rateLimitMiddleware } from "./middleware/rateLimit.js";
+import { config } from "./config.js";
 
 export const app = new Hono();
 

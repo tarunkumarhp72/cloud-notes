@@ -1,8 +1,8 @@
-import { sql } from "../db";
-import { decryptToken, encryptToken } from "./tokenCrypto";
-import { sealBackupBundle } from "./backupCrypto";
-import { driveClient } from "./driveClient";
-import type { BackupProgressEvent } from "./activeTasks";
+import { sql } from "../db.js";
+import { decryptToken, encryptToken } from "./tokenCrypto.js";
+import { sealBackupBundle } from "./backupCrypto.js";
+import { driveClient } from "./driveClient.js";
+import type { BackupProgressEvent } from "./activeTasks.js";
 
 export type { BackupProgressEvent };
 

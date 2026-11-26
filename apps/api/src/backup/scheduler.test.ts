@@ -1,19 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { calculateNextBackupDate } from "./backupService";
+import { calculateNextBackupDate } from "./backupService.js";
 import {
   scheduleUserBackup,
   cancelUserScheduledBackup,
   getUserScheduledTask,
   getActiveTaskCount,
   stopBackupScheduler,
-} from "./scheduler";
+} from "./scheduler.js";
 import {
   registerActiveTask,
   cancelActiveTask,
   activeBackupTasks,
   broadcastTaskProgress,
   type BackupProgressEvent,
-} from "./activeTasks";
+} from "./activeTasks.js";
 
 describe("Dynamic Backup Scheduler & Task Management", () => {
   beforeEach(() => {

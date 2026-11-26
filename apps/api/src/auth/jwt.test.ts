@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { signAccessToken, verifyAccessToken } from "./jwt";
+import { signAccessToken, verifyAccessToken } from "./jwt.js";
 import {
   signRefreshToken,
   rotateRefreshToken,
   getRefreshCookieOptions,
   clearTokenRegistry,
-} from "./tokens";
+} from "./tokens.js";
 
 describe("JWT Access Token Engine", () => {
   it("signs and verifies a 15-minute access token", async () => {

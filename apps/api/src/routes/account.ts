@@ -1,8 +1,8 @@
 import { Hono, type Context } from "hono";
 import { deleteCookie } from "hono/cookie";
-import { getAuthUserId } from "./sync";
-import { sql } from "../db";
-import { inMemoryNotesStore } from "./sync";
+import { getAuthUserId } from "./sync.js";
+import { sql } from "../db.js";
+import { inMemoryNotesStore } from "./sync.js";
 
 export const accountRouter = new Hono();
 

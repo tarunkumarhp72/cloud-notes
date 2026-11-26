@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Hono } from "hono";
-import { cspMiddleware } from "./csp";
+import { cspMiddleware } from "./csp.js";
 
 describe("T-043 CSP Middleware", () => {
   it("attaches strict CSP and security headers to response", async () => {

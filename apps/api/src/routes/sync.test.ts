@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { app } from "../index";
-import { signAccessToken } from "../auth/jwt";
-import { inMemoryNotesStore } from "./sync";
+import { app } from "../index.js";
+import { signAccessToken } from "../auth/jwt.js";
+import { inMemoryNotesStore } from "./sync.js";
 
 describe("Sync Endpoints (/sync)", () => {
   const user1 = "01934c2b-88a2-73a1-b84a-923f03b2241b";

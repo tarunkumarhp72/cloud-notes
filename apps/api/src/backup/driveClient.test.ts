@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { GoogleDriveClient } from "./driveClient";
+import { GoogleDriveClient } from "./driveClient.js";
 
 describe("GoogleDriveClient", () => {
   it("refreshes access token via OAuth token endpoint", async () => {

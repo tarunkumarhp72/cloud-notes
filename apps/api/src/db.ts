@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { config } from "./config";
+import { config } from "./config.js";
 
 const connectionString = config.database.url;
 

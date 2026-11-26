@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { app } from "../index";
-import { signAccessToken } from "../auth/jwt";
+import { app } from "../index.js";
+import { signAccessToken } from "../auth/jwt.js";
 
 describe("Backup API Endpoints (/backup & /api/backup)", () => {
   it("rejects unauthenticated requests to /api/backup/status", async () => {

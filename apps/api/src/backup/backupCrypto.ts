@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import zlib from "node:zlib";
-import { config } from "../config";
+import { config } from "../config.js";
 
 const MAGIC_HEADER = Buffer.from("NOTEPAD_ENC_GZ_v1", "utf-8"); // 17 bytes
 const IV_LENGTH = 12; // 96-bit IV standard for AES-GCM
