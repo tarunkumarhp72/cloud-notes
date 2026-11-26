@@ -1076,12 +1076,18 @@ export const App: React.FC = () => {
             <AccountMenu
               user={user}
               onSignInClick={() => setShowSignIn(true)}
-              onSignOut={() => {
+              onSignOut={async () => {
                 setUser(null);
                 try {
                   localStorage.removeItem("notepad_user");
                   localStorage.removeItem("notepad_token");
                   localStorage.removeItem("notepad_drive_status");
+                } catch {}
+                try {
+                  await fetch(`${webConfig.apiBaseUrl}/auth/logout`, {
+                    method: "POST",
+                    credentials: "include",
+                  });
                 } catch {}
               }}
               onManageVault={() => setShowVaultModal(true)}

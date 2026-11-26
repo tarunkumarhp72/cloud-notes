@@ -316,7 +316,11 @@ authRouter.post("/refresh", async (c) => {
 });
 
 authRouter.post("/logout", async (c) => {
-  deleteCookie(c, "refresh_token", { path: "/auth" });
+  deleteCookie(c, "refresh_token", {
+    path: config.cookies.refreshPath,
+    secure: config.cookies.secure,
+    sameSite: config.cookies.sameSite,
+  });
   return c.json({ success: true, message: "Logged out successfully" });
 });
 
