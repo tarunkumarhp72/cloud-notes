@@ -17,6 +17,7 @@ export interface ShortcutActions {
   onSelectAll?: () => void;
   onToggleBold?: () => void;
   onToggleItalic?: () => void;
+  onToggleUnderline?: () => void;
   onZoomIn?: () => void;
   onZoomOut?: () => void;
   onResetZoom?: () => void;
@@ -168,6 +169,12 @@ export function handleShortcutEvent(
       if (key === "i" && actions.onToggleItalic) {
         event.preventDefault?.();
         actions.onToggleItalic();
+        return true;
+      }
+      // Ctrl+U -> Toggle Underline
+      if (key === "u" && actions.onToggleUnderline) {
+        event.preventDefault?.();
+        actions.onToggleUnderline();
         return true;
       }
       // Ctrl+Z -> Undo

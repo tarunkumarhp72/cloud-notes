@@ -33,10 +33,12 @@ export const ClearFormattingButton: React.FC<ClearFormattingButtonProps> = ({
 export interface FormatButtonsProps {
   isBold?: boolean;
   isItalic?: boolean;
+  isUnderline?: boolean;
   isStrikethrough?: boolean;
   showClearFormatting?: boolean;
   onToggleBold?: () => void;
   onToggleItalic?: () => void;
+  onToggleUnderline?: () => void;
   onToggleStrikethrough?: () => void;
   onClearFormatting?: () => void;
   disabled?: boolean;
@@ -45,10 +47,12 @@ export interface FormatButtonsProps {
 export const FormatButtons: React.FC<FormatButtonsProps> = ({
   isBold = false,
   isItalic = false,
+  isUnderline = false,
   isStrikethrough = false,
   showClearFormatting = true,
   onToggleBold,
   onToggleItalic,
+  onToggleUnderline,
   onToggleStrikethrough,
   onClearFormatting,
   disabled = false,
@@ -87,6 +91,24 @@ export const FormatButtons: React.FC<FormatButtonsProps> = ({
             style={{ fontStyle: "italic", fontFamily: "serif", fontSize: "14px", width: "28px", justifyContent: "center" }}
           >
             I
+          </button>
+        </Tooltip>
+      </span>
+
+      {/* Underline */}
+      <span className={styles.tabletUpTool}>
+        <Tooltip content="Underline (Ctrl+U)" position="top">
+          <button
+            type="button"
+            className={`${styles.toolbarBtn} ${isUnderline ? styles.active : ""}`}
+            aria-label="Underline"
+            aria-pressed={isUnderline}
+            disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={onToggleUnderline}
+            style={{ textDecoration: "underline", fontSize: "14px", width: "28px", justifyContent: "center", fontWeight: 600 }}
+          >
+            U
           </button>
         </Tooltip>
       </span>

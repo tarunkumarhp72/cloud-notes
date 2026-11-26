@@ -16,6 +16,7 @@ export interface CodeMirrorEditorRef {
   selectAll: () => void;
   toggleBold: () => void;
   toggleItalic: () => void;
+  toggleUnderline: () => void;
   toggleStrike: () => void;
   setHeading: (level: number) => void;
   setParagraph: () => void;
@@ -299,6 +300,40 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
               changes: { from, to, insert: wrapped },
               selection: from === to
                 ? { anchor: from + 1, head: from + 1 }
+                : { anchor: from, head: from + wrapped.length },
+            });
+          }
+        }
+        view.focus();
+      },
+      toggleUnderline: () => {
+        const view = viewRef.current;
+        if (!view) return;
+        const { from, to } = view.state.selection.main;
+        const text = view.state.sliceDoc(from, to);
+        if (text.startsWith("<u>") && text.endsWith("</u>") && text.length >= 7) {
+          const unwrapped = text.slice(3, -4);
+          view.dispatch({
+            changes: { from, to, insert: unwrapped },
+            selection: { anchor: from, head: from + unwrapped.length },
+          });
+        } else {
+          const prefix = view.state.sliceDoc(Math.max(0, from - 3), from);
+          const suffix = view.state.sliceDoc(to, Math.min(view.state.doc.length, to + 4));
+          if (prefix === "<u>" && suffix === "</u>") {
+            view.dispatch({
+              changes: [
+                { from: from - 3, to: from, insert: "" },
+                { from: to, to: to + 4, insert: "" },
+              ],
+              selection: { anchor: from - 3, head: to - 3 },
+            });
+          } else {
+            const wrapped = `<u>${text}</u>`;
+            view.dispatch({
+              changes: { from, to, insert: wrapped },
+              selection: from === to
+                ? { anchor: from + 3, head: from + 3 }
                 : { anchor: from, head: from + wrapped.length },
             });
           }

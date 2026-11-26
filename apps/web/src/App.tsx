@@ -74,6 +74,7 @@ export const App: React.FC = () => {
   const [headingLevel, setHeadingLevel] = useState<HeadingLevel>("title");
   const [isBold, setIsBold] = useState(false);
   const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [canIndent, setCanIndent] = useState(false);
   const [canOutdent, setCanOutdent] = useState(false);
@@ -728,19 +729,36 @@ export const App: React.FC = () => {
   }, [activeTab?.isMarkdown, markdownMode, activeTabId]);
 
   const handleToggleBold = useCallback(() => {
-    ensureRichText();
-    tipTapRef.current?.toggleBold();
-  }, [ensureRichText]);
+    if (isMarkdownActive) {
+      tipTapRef.current?.toggleBold();
+    } else {
+      codeMirrorRef.current?.toggleBold();
+    }
+  }, [isMarkdownActive]);
 
   const handleToggleItalic = useCallback(() => {
-    ensureRichText();
-    tipTapRef.current?.toggleItalic();
-  }, [ensureRichText]);
+    if (isMarkdownActive) {
+      tipTapRef.current?.toggleItalic();
+    } else {
+      codeMirrorRef.current?.toggleItalic();
+    }
+  }, [isMarkdownActive]);
+
+  const handleToggleUnderline = useCallback(() => {
+    if (isMarkdownActive) {
+      tipTapRef.current?.toggleUnderline();
+    } else {
+      codeMirrorRef.current?.toggleUnderline();
+    }
+  }, [isMarkdownActive]);
 
   const handleToggleStrike = useCallback(() => {
-    ensureRichText();
-    tipTapRef.current?.toggleStrike();
-  }, [ensureRichText]);
+    if (isMarkdownActive) {
+      tipTapRef.current?.toggleStrike();
+    } else {
+      codeMirrorRef.current?.toggleStrike();
+    }
+  }, [isMarkdownActive]);
 
   // Windows Notepad Global Shortcuts Dispatcher
   useNotepadShortcuts({
@@ -774,6 +792,7 @@ export const App: React.FC = () => {
     onSelectAll: handleSelectAll,
     onToggleBold: handleToggleBold,
     onToggleItalic: handleToggleItalic,
+    onToggleUnderline: handleToggleUnderline,
     onTimeDate: () => {
       const now = new Date().toLocaleTimeString() + " " + new Date().toLocaleDateString();
       if (activeTabId) {
@@ -1003,10 +1022,12 @@ export const App: React.FC = () => {
             <FormatButtons
               isBold={isBold}
               isItalic={isItalic}
+              isUnderline={isUnderline}
               isStrikethrough={isStrikethrough}
               showClearFormatting={false}
               onToggleBold={handleToggleBold}
               onToggleItalic={handleToggleItalic}
+              onToggleUnderline={handleToggleUnderline}
               onToggleStrikethrough={handleToggleStrike}
             />
             <span className={toolbarStyles.desktopOnlyTool}>
@@ -1027,6 +1048,7 @@ export const App: React.FC = () => {
                   tipTapRef.current?.clearFormatting();
                   setIsBold(false);
                   setIsItalic(false);
+                  setIsUnderline(false);
                   setIsStrikethrough(false);
                   setHeadingLevel("body");
                 }}
@@ -1035,11 +1057,13 @@ export const App: React.FC = () => {
             <ToolbarOverflowMenu
               isBold={isBold}
               isItalic={isItalic}
+              isUnderline={isUnderline}
               isStrikethrough={isStrikethrough}
               canIndent={canIndent}
               canOutdent={canOutdent}
               onToggleBold={handleToggleBold}
               onToggleItalic={handleToggleItalic}
+              onToggleUnderline={handleToggleUnderline}
               onToggleStrikethrough={handleToggleStrike}
               onToggleBullet={() => {
                 ensureRichText();
@@ -1390,9 +1414,10 @@ export const App: React.FC = () => {
                 onCursorChange={(line, col, charCount) => {
                   setCursorPos({ line, col, charCount });
                 }}
-                onActiveFormatsChange={({ isBold, isItalic, isStrikethrough, headingLevel, canIndent, canOutdent }) => {
+                onActiveFormatsChange={({ isBold, isItalic, isUnderline, isStrikethrough, headingLevel, canIndent, canOutdent }) => {
                   setIsBold(isBold);
                   setIsItalic(isItalic);
+                  setIsUnderline(isUnderline);
                   setIsStrikethrough(isStrikethrough);
                   setHeadingLevel(headingLevel);
                   setCanIndent(canIndent);

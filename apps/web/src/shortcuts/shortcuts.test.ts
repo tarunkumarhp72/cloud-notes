@@ -96,6 +96,26 @@ describe("Shortcuts Dispatcher", () => {
     expect(actions.onRedo).toHaveBeenCalledTimes(1);
   });
 
+  it("handles formatting shortcuts: Ctrl+B, Ctrl+I, Ctrl+U", () => {
+    const actions: ShortcutActions = {
+      onToggleBold: vi.fn(),
+      onToggleItalic: vi.fn(),
+      onToggleUnderline: vi.fn(),
+    };
+
+    const eb = createMockEvent({ key: "b", ctrlKey: true });
+    expect(handleShortcutEvent(eb, actions)).toBe(true);
+    expect(actions.onToggleBold).toHaveBeenCalledTimes(1);
+
+    const ei = createMockEvent({ key: "i", ctrlKey: true });
+    expect(handleShortcutEvent(ei, actions)).toBe(true);
+    expect(actions.onToggleItalic).toHaveBeenCalledTimes(1);
+
+    const eu = createMockEvent({ key: "u", ctrlKey: true });
+    expect(handleShortcutEvent(eu, actions)).toBe(true);
+    expect(actions.onToggleUnderline).toHaveBeenCalledTimes(1);
+  });
+
   it("handles View shortcuts for Zoom: Ctrl++, Ctrl+-, Ctrl+0", () => {
     const actions: ShortcutActions = {
       onZoomIn: vi.fn(),

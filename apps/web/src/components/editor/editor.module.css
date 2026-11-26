@@ -126,6 +126,29 @@
   overflow-wrap: break-word;
 }
 
+.proseContainer :global(.tiptap strong),
+.proseContainer :global(.tiptap b) {
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+}
+
+.proseContainer :global(.tiptap u) {
+  text-decoration: underline !important;
+  text-decoration-thickness: 1.5px !important;
+  text-underline-offset: 2.5px !important;
+}
+
+.proseContainer :global(.tiptap em),
+.proseContainer :global(.tiptap i) {
+  font-style: italic !important;
+}
+
+.proseContainer :global(.tiptap s),
+.proseContainer :global(.tiptap strike),
+.proseContainer :global(.tiptap del) {
+  text-decoration: line-through !important;
+}
+
 /* When Word Wrap is disabled (horizontal scrolling, lines do not wrap) */
 .proseContainer.noWrap {
   overflow-x: auto !important;

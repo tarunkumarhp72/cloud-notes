@@ -32,6 +32,7 @@ describe("TipTapEditor Component & Markdown Serializer", () => {
 
     expect(editorRef.current).toBeDefined();
     expect(typeof editorRef.current?.toggleBold).toBe("function");
+    expect(typeof editorRef.current?.toggleUnderline).toBe("function");
     expect(typeof editorRef.current?.setHeading).toBe("function");
     expect(typeof editorRef.current?.insertTable).toBe("function");
     expect(typeof editorRef.current?.clearFormatting).toBe("function");

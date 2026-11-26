@@ -5,11 +5,13 @@ import { Tooltip } from "../ui/Tooltip";
 export interface ToolbarOverflowMenuProps {
   isBold?: boolean;
   isItalic?: boolean;
+  isUnderline?: boolean;
   isStrikethrough?: boolean;
   canIndent?: boolean;
   canOutdent?: boolean;
   onToggleBold: () => void;
   onToggleItalic: () => void;
+  onToggleUnderline?: () => void;
   onToggleStrikethrough: () => void;
   onToggleBullet: () => void;
   onToggleNumber: () => void;
@@ -33,11 +35,13 @@ const iconBoxStyle: React.CSSProperties = {
 export const ToolbarOverflowMenu: React.FC<ToolbarOverflowMenuProps> = ({
   isBold = false,
   isItalic = false,
+  isUnderline = false,
   isStrikethrough = false,
   canIndent = false,
   canOutdent = false,
   onToggleBold,
   onToggleItalic,
+  onToggleUnderline,
   onToggleStrikethrough,
   onToggleBullet,
   onToggleNumber,
@@ -125,6 +129,18 @@ export const ToolbarOverflowMenu: React.FC<ToolbarOverflowMenuProps> = ({
           >
             <span style={{ ...iconBoxStyle, fontStyle: "italic", fontFamily: "serif", fontSize: "13px" }}>I</span>
             <span>Italic</span>
+          </button>
+
+          <button
+            type="button"
+            role="menuitemcheckbox"
+            aria-checked={isUnderline}
+            className={`${styles.headingItem} ${styles.foldOnlyItem} ${isUnderline ? styles.selected : ""}`}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => runAction(onToggleUnderline)}
+          >
+            <span style={{ ...iconBoxStyle, textDecoration: "underline", fontSize: "13px", fontWeight: 600 }}>U</span>
+            <span>Underline</span>
           </button>
 
           <button

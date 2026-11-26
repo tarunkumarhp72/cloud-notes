@@ -12,6 +12,7 @@ import { findAllMatches } from "./CodeMirrorEditor";
 export interface TipTapEditorRef {
   toggleBold: () => void;
   toggleItalic: () => void;
+  toggleUnderline: () => void;
   toggleStrike: () => void;
   setHeading: (level: 1 | 2 | 3 | 4 | 5 | 6) => void;
   setParagraph: () => void;
@@ -47,6 +48,7 @@ export interface TipTapEditorProps {
   onActiveFormatsChange?: (formats: {
     isBold: boolean;
     isItalic: boolean;
+    isUnderline: boolean;
     isStrikethrough: boolean;
     headingLevel: HeadingLevel;
     canIndent: boolean;
@@ -91,6 +93,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       try {
         const isBold = ed.isActive("bold");
         const isItalic = ed.isActive("italic");
+        const isUnderline = ed.isActive("underline");
         const isStrike = ed.isActive("strike");
         let headingLevel: HeadingLevel = "body";
         if (ed.isActive("heading", { level: 1 })) headingLevel = "title";
@@ -106,6 +109,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         onActiveFormatsChange?.({
           isBold,
           isItalic,
+          isUnderline,
           isStrikethrough: isStrike,
           headingLevel,
           canIndent,
@@ -141,7 +145,7 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
         TableHeader,
         TableCell,
         Markdown.configure({
-          html: false,
+          html: true,
           transformPastedText: true,
           transformCopiedText: true,
         }),
@@ -197,6 +201,10 @@ export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(
       },
       toggleItalic: () => {
         editor?.chain().focus().toggleItalic().run();
+        if (editor) updateActiveFormats(editor);
+      },
+      toggleUnderline: () => {
+        editor?.chain().focus().toggleUnderline().run();
         if (editor) updateActiveFormats(editor);
       },
       toggleStrike: () => {

@@ -16,6 +16,8 @@ export function extractPlainTextFromMarkdown(markdown: string): string {
     .replace(/#{1,6}\s+/g, "") // headers
     .replace(/(\*\*|__)(.*?)\1/g, "$2") // bold
     .replace(/(\*|_)(.*?)\1/g, "$2") // italic
+    .replace(/<u\b[^>]*>(.*?)<\/u>/gi, "$1") // underline HTML
+    .replace(/<ins\b[^>]*>(.*?)<\/ins>/gi, "$1") // underline ins
     .replace(/~~(.*?)~~/g, "$1") // strikethrough
     .replace(/`{1,3}(.*?)`{1,3}/g, "$1") // code
     .replace(/^\s*[-*+]\s+/gm, "") // bullet lists
