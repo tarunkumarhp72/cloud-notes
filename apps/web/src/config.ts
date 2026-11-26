@@ -27,7 +27,7 @@ export const webConfig: WebConfig = {
   googleRedirectUri:
     import.meta.env.VITE_GOOGLE_REDIRECT_URI ||
     (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : ""),
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "",
+  apiBaseUrl: import.meta.env.VITE_API_PROD_URL || "",
   guestNoteLimit: parseNumber(import.meta.env.VITE_GUEST_NOTE_LIMIT, 10),
   userNoteLimit: parseNumber(import.meta.env.VITE_USER_NOTE_LIMIT, 50),
   guestMaxNoteChars: parseNumber(import.meta.env.VITE_GUEST_MAX_NOTE_CHARS, 25_000),

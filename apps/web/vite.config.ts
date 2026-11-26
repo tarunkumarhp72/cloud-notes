@@ -13,7 +13,7 @@ const resolvedEnvDir = hasRootEnv
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, resolvedEnvDir, "");
-  const apiTarget = env.VITE_API_BASE_URL || `http://localhost:${env.PORT || 3001}`;
+  const apiTarget = env.VITE_API_PROD_URL || `http://localhost:${env.PORT || 3001}`;
   const webPort = Number(env.VITE_PORT || 3000);
 
   return {
