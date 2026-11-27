@@ -7,16 +7,30 @@
   --safe-area-inset-right: env(safe-area-inset-right, 0px);
 }
 
+html,
+body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
+#root,
 .appContainer {
-  min-height: 100dvh;
-  height: 100dvh;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   padding-top: var(--safe-area-inset-top);
   padding-bottom: var(--safe-area-inset-bottom);
   padding-left: var(--safe-area-inset-left);
   padding-right: var(--safe-area-inset-right);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -34,45 +48,62 @@
     min-width: 44px;
   }
 
-  /* Specific toolbar buttons */
+  /* Title bar & Tab strip: preserve exact 40px titlebar vertical centerline alignment */
+  header[class*="titleBar"] div[class*="tab"] {
+    height: 34px !important;
+    min-height: 34px !important;
+    padding: 0 8px 0 10px !important;
+  }
+
+  header[class*="titleBar"] button[class*="newTabBtn"] {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    margin-bottom: 2px !important;
+    margin-left: 2px !important;
+    padding: 0 !important;
+  }
+
+  header[class*="titleBar"] button[class*="closeBtn"] {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    padding: 0 !important;
+  }
+
+  header[class*="titleBar"] button[class*="scrollBtn"] {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    margin-bottom: 2px !important;
+    padding: 0 !important;
+  }
+
+  /* Specific toolbar buttons on touch devices */
   div[class*="toolbarGroup"] button,
   div[class*="childrenToolbar"] button,
   div[class*="rightGroup"] button {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 0 10px;
+    height: 30px;
+    min-height: 30px;
+    min-width: 30px;
+    padding: 0 4px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
 
-  /* Tabs on touch devices */
-  div[class*="tab"] {
-    min-height: 44px;
-    padding: 0 12px;
-  }
-
-  /* Close button on tab */
-  button[class*="closeBtn"] {
-    min-height: 36px;
-    min-width: 36px;
-  }
-
-  /* New tab button */
-  button[class*="newTabBtn"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
   /* Caption buttons on touch */
   button[class*="captionBtn"] {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 40px;
+    min-width: 40px;
   }
 
   /* Status bar touch elements */
   footer button,
   div[class*="statusBar"] button {
-    min-height: 36px;
+    min-height: 32px;
   }
 }

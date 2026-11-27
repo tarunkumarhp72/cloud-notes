@@ -100,8 +100,8 @@
 }
 
 .tab {
-  height: 32px;
-  min-width: 90px;
+  height: 34px;
+  min-width: 80px;
   max-width: 180px;
   padding: 0 8px 0 12px;
   display: flex;
@@ -117,6 +117,14 @@
   transition: background-color 0.1s ease, color 0.1s ease;
   position: relative;
   flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .tab {
+    min-width: 60px;
+    max-width: 140px;
+    padding: 0 6px 0 10px;
+  }
 }
 
 .tab.active {
@@ -154,8 +162,8 @@
 }
 
 .closeBtn {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 3px;
   border: none;
   background: transparent;
@@ -182,13 +190,13 @@
 }
 
 .newTabBtn {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 4px;
   border: none;
   background: transparent;
   color: var(--text-secondary);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;

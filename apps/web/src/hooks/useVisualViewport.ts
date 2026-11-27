@@ -18,10 +18,18 @@ export function useVisualViewport(options: VisualViewportOptions = {}): void {
 
     const vv = window.visualViewport;
 
-    const handleResizeOrScroll = () => {
+    const handleViewportChange = () => {
+      // Keep outer document pinned at (0, 0) so titlebar and toolbar never scroll off-screen
+      if (typeof window.scrollTo === "function") {
+        window.scrollTo(0, 0);
+      }
       options.onViewportChange?.(vv.height, vv.offsetTop);
+    };
 
-      // Scroll active editor or caret into visible viewport if active
+    const handleResize = () => {
+      handleViewportChange();
+
+      // Only scroll active editor into view on keyboard resize
       const activeEl = document.activeElement as HTMLElement | null;
       if (!activeEl) return;
 
@@ -38,7 +46,7 @@ export function useVisualViewport(options: VisualViewportOptions = {}): void {
             activeEl.scrollIntoView({
               block: "nearest",
               inline: "nearest",
-              behavior: "smooth",
+              behavior: "auto",
             });
           } catch {
             activeEl.scrollIntoView();
@@ -47,12 +55,12 @@ export function useVisualViewport(options: VisualViewportOptions = {}): void {
       }
     };
 
-    vv.addEventListener("resize", handleResizeOrScroll);
-    vv.addEventListener("scroll", handleResizeOrScroll);
+    vv.addEventListener("resize", handleResize);
+    vv.addEventListener("scroll", handleViewportChange);
 
     return () => {
-      vv.removeEventListener("resize", handleResizeOrScroll);
-      vv.removeEventListener("scroll", handleResizeOrScroll);
+      vv.removeEventListener("resize", handleResize);
+      vv.removeEventListener("scroll", handleViewportChange);
     };
   }, [options.activeElementSelector, options.onViewportChange]);
 }

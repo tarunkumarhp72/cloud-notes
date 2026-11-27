@@ -166,7 +166,7 @@
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 280px) {
   .tabletUpTool {
     display: none;
   }
