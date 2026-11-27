@@ -49,7 +49,14 @@ body {
   }
 
   /* Title bar & Tab strip: preserve exact 40px titlebar vertical centerline alignment */
-  header[class*="titleBar"] div[class*="tab"] {
+  header[class*="titleBar"] div[class*="tabsContainer"] {
+    max-width: none !important;
+    width: auto !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+  }
+
+  header[class*="titleBar"] div[role="tab"] {
     height: 34px !important;
     min-height: 34px !important;
     padding: 0 8px 0 10px !important;
@@ -88,24 +95,31 @@ body {
       height: 34px !important;
     }
 
-    header[class*="titleBar"] div[class*="tab"] {
+    header[class*="titleBar"] div[class*="tabsContainer"] {
+      max-width: none !important;
+      width: auto !important;
+      flex: 1 1 0% !important;
+      min-width: 0 !important;
+    }
+
+    header[class*="titleBar"] div[role="tab"] {
       height: 28px !important;
       min-height: 28px !important;
-      flex: 1 1 100px !important;
-      min-width: 38px !important;
-      max-width: 125px !important;
-      padding: 0 4px 0 6px !important;
+      flex: 0 0 auto !important;
+      min-width: 48px !important;
+      max-width: 140px !important;
+      padding: 0 6px 0 8px !important;
       font-size: 11px !important;
-      flex-shrink: 1 !important;
     }
 
     header[class*="titleBar"] button[class*="newTabBtn"] {
-      width: 24px !important;
-      height: 24px !important;
-      min-width: 24px !important;
-      min-height: 24px !important;
+      width: 26px !important;
+      height: 26px !important;
+      min-width: 26px !important;
+      min-height: 26px !important;
       margin-bottom: 2px !important;
       margin-left: 2px !important;
+      flex-shrink: 0 !important;
     }
 
     header[class*="titleBar"] button[class*="closeBtn"] {

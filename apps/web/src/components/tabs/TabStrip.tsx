@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./TabStrip.module.css";
 import { TabItem } from "./TabItem";
 import { Tooltip } from "../ui/Tooltip";
@@ -38,66 +38,7 @@ export const TabStrip: React.FC<TabStripProps> = ({
   showCaptionControls,
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const leftSectionRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const checkOverflow = useCallback(() => {
-    const container = tabsContainerRef.current;
-    const leftSection = leftSectionRef.current;
-    if (!container) return;
-
-    // Fixed spacing in leftSection: appIcon (~28px) + tabActions (~88px) + padding-right (20px) = ~136px
-    const leftWidth = leftSection ? leftSection.clientWidth : container.clientWidth;
-    const availableForTabs = leftWidth > 0 ? leftWidth - 80 : 0;
-
-    let overflowing = false;
-    if (leftWidth > 0) {
-      overflowing = container.scrollWidth > availableForTabs;
-    } else {
-      // In testing environments without layout engines (jsdom), estimate based on tab count
-      overflowing = tabs.length > 8;
-    }
-
-    setIsOverflowing(overflowing);
-
-    if (!overflowing) {
-      setCanScrollLeft(false);
-      setCanScrollRight(false);
-      return;
-    }
-
-    setCanScrollLeft(container.scrollLeft > 2);
-    setCanScrollRight(container.scrollLeft + container.clientWidth < container.scrollWidth - 2);
-  }, [tabs.length]);
-
-  const handleScroll = useCallback(() => {
-    const container = tabsContainerRef.current;
-    if (!container) return;
-    setCanScrollLeft(container.scrollLeft > 2);
-    setCanScrollRight(container.scrollLeft + container.clientWidth < container.scrollWidth - 2);
-  }, []);
-
-  useEffect(() => {
-    checkOverflow();
-    const container = tabsContainerRef.current;
-    const leftSection = leftSectionRef.current;
-
-    let observer: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(() => checkOverflow());
-      if (leftSection) observer.observe(leftSection);
-      if (container) observer.observe(container);
-    }
-    window.addEventListener("resize", checkOverflow);
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", checkOverflow);
-    };
-  }, [tabs, checkOverflow]);
 
   // Scroll new tab & plus button into view when tabs are added or selected
   const prevTabCountRef = useRef(tabs.length);
@@ -119,25 +60,11 @@ export const TabStrip: React.FC<TabStripProps> = ({
       }
     }
     prevTabCountRef.current = tabs.length;
-    setTimeout(handleScroll, 350);
-  }, [tabs.length, activeTabId, handleScroll]);
-
-  const handleScrollLeft = () => {
-    if (tabsContainerRef.current) {
-      tabsContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
-    }
-  };
-
-  const handleScrollRight = () => {
-    if (tabsContainerRef.current) {
-      tabsContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
-    }
-  };
+  }, [tabs.length, activeTabId]);
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (tabsContainerRef.current && isOverflowing) {
+    if (tabsContainerRef.current) {
       tabsContainerRef.current.scrollLeft += e.deltaY || e.deltaX;
-      handleScroll();
     }
   };
 
@@ -189,7 +116,7 @@ export const TabStrip: React.FC<TabStripProps> = ({
 
   return (
     <header className={styles.titleBar} role="banner">
-      <div ref={leftSectionRef} className={styles.leftSection}>
+      <div className={styles.leftSection}>
         {/* Windows Notepad App Icon */}
         <div className={styles.appIcon} aria-hidden="true">
           <svg width="18" height="18" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -205,10 +132,9 @@ export const TabStrip: React.FC<TabStripProps> = ({
         {/* Tab List */}
         <div
           ref={tabsContainerRef}
-          className={`${styles.tabsContainer} ${isOverflowing ? styles.overflowing : styles.notOverflowing}`}
+          className={styles.tabsContainer}
           role="tablist"
           aria-label="Note tabs"
-          onScroll={handleScroll}
           onWheel={handleWheel}
         >
           {tabs.map((tab, idx) => (
@@ -237,39 +163,6 @@ export const TabStrip: React.FC<TabStripProps> = ({
             </button>
           </Tooltip>
         </div>
-
-        {/* When overflowing: Fixed scroll navigation buttons */}
-        {isOverflowing && (canScrollLeft || canScrollRight) && (
-          <div className={styles.tabActionsFixed}>
-            <Tooltip content="Scroll tabs left" position="bottom" align="center" disabled={!canScrollLeft}>
-              <button
-                type="button"
-                className={styles.scrollBtn}
-                onClick={handleScrollLeft}
-                disabled={!canScrollLeft}
-                aria-label="Scroll tabs left"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-                  <path d="M7 1.5L2.5 5L7 8.5V1.5Z" />
-                </svg>
-              </button>
-            </Tooltip>
-
-            <Tooltip content="Scroll tabs right" position="bottom" align="center" disabled={!canScrollRight}>
-              <button
-                type="button"
-                className={styles.scrollBtn}
-                onClick={handleScrollRight}
-                disabled={!canScrollRight}
-                aria-label="Scroll tabs right"
-              >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
-                  <path d="M3 1.5L7.5 5L3 8.5V1.5Z" />
-                </svg>
-              </button>
-            </Tooltip>
-          </div>
-        )}
       </div>
 
       <div className={styles.rightSection}>
