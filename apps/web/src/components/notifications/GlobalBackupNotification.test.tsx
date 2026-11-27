@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { GlobalBackupNotification } from "./GlobalBackupNotification";
 import { useBackupProgressStore } from "../../stores/backupProgressStore";

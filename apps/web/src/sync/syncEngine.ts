@@ -4,6 +4,8 @@ import {
   incrementOutboxAttempts,
   enqueueOutboxItem,
   getOutboxCount,
+  saveNote,
+  deleteNote,
 } from "@notepad/core";
 
 export type SyncStatus = "idle" | "saving" | "saved" | "offline" | "sync_failed";
@@ -90,6 +92,68 @@ export class SyncEngine {
   ): Promise<void> {
     await enqueueOutboxItem(noteId, action, encryptedEnvelope);
     this.schedulePush(this.config.autoPushDelayMs ?? 2000);
+  }
+
+  public async enqueueMutation(
+    noteId: string,
+    action: "upsert" | "delete" = "upsert",
+    encryptedEnvelope: string = "",
+    _version = 1
+  ): Promise<void> {
+    await this.onLocalNoteSaved(noteId, encryptedEnvelope, action);
+  }
+
+  /**
+   * Pulls remote notes from Supabase sync API and persists them locally into IndexedDB.
+   */
+  public async pull(): Promise<boolean> {
+    if (!this.isOnline || (typeof navigator !== "undefined" && !navigator.onLine)) {
+      return false;
+    }
+
+    const token = this.config.getAccessToken ? await this.config.getAccessToken() : null;
+    if (!token) {
+      return false;
+    }
+
+    const pullUrl = this.config.pullUrl || "/api/sync/pull";
+    const fetchImpl = this.config.fetchFn || fetch;
+
+    try {
+      const response = await fetchImpl(pullUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      if (data && Array.isArray(data.notes)) {
+        for (const n of data.notes) {
+          if (n.deleted) {
+            await deleteNote(n.id, false);
+          } else {
+            await saveNote({
+              id: n.id,
+              encryptedEnvelope: n.encryptedEnvelope,
+              version: n.version || 1,
+              clientUpdatedAt: n.clientUpdatedAt || new Date().toISOString(),
+              deleted: false,
+              syncStatus: "synced",
+            });
+          }
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.warn("Sync pull error:", err);
+      return false;
+    }
   }
 
   public schedulePush(delayMs: number = 2000): void {

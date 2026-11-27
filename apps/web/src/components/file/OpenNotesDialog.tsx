@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { listNotes } from "@notepad/core";
+import { listNotes, saveNote, deleteNote } from "@notepad/core";
+import { webConfig } from "../../config";
 import styles from "./OpenNotesDialog.module.css";
 
 export interface SavedNoteSummary {
@@ -20,6 +21,39 @@ export interface OpenNotesDialogProps {
 
 export const defaultNotesLoader = async (): Promise<SavedNoteSummary[]> => {
   try {
+    // If online and authenticated, attempt a quick sync pull first so notes from other devices (e.g. mobile) are present
+    const token = typeof window !== "undefined" ? localStorage.getItem("notepad_token") : null;
+    if (token && typeof fetch !== "undefined") {
+      try {
+        const apiBaseUrl = webConfig.apiBaseUrl;
+        const pullUrl = apiBaseUrl ? `${apiBaseUrl}/api/sync/pull` : "/api/sync/pull";
+        const res = await fetch(pullUrl, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Array.isArray(data.notes)) {
+            for (const n of data.notes) {
+              if (n.deleted) {
+                await deleteNote(n.id, false);
+              } else {
+                await saveNote({
+                  id: n.id,
+                  encryptedEnvelope: n.encryptedEnvelope,
+                  version: n.version || 1,
+                  clientUpdatedAt: n.clientUpdatedAt || new Date().toISOString(),
+                  deleted: false,
+                  syncStatus: "synced",
+                });
+              }
+            }
+          }
+        }
+      } catch {
+        // Fall back to local notes if network fails
+      }
+    }
+
     const rawNotes = await listNotes();
     return rawNotes.map((n) => {
       let title = "Untitled";

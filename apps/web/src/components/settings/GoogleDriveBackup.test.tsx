@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { GoogleDriveBackup } from "./GoogleDriveBackup";
 
@@ -87,7 +86,7 @@ describe("GoogleDriveBackup Component", () => {
     localStorage.setItem("notepad_user", JSON.stringify({ email: "user@example.com" }));
 
     let calledWithAuth = false;
-    global.fetch = vi.fn().mockImplementation((url: string, options: any) => {
+    global.fetch = vi.fn().mockImplementation((_url: string, options: any) => {
       const authHeader = options?.headers?.Authorization || options?.headers?.get?.("Authorization");
       if (authHeader === `Bearer ${validJwt}`) {
         calledWithAuth = true;

@@ -126,6 +126,11 @@
   align-items: center;
 }
 
+.desktopOnlySettings {
+  display: inline-flex;
+  align-items: center;
+}
+
 .tabletUpTool {
   display: inline-flex;
   align-items: center;
@@ -149,6 +154,10 @@
 @media (max-width: 680px) {
   .desktopOnlyTool {
     display: none;
+  }
+
+  .desktopOnlySettings {
+    display: none !important;
   }
 
   .overflowToolTrigger {

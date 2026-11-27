@@ -24,7 +24,7 @@ import { FindReplaceBar } from "./components/editor/FindReplaceBar";
 import { GoToDialog } from "./components/editor/GoToDialog";
 import { StatusBar } from "./components/statusbar/StatusBar";
 import { CodeMirrorEditorRef } from "./components/editor/CodeMirrorEditor";
-import { listNotes, deleteNote, createNoteEnvelope, openNoteEnvelope } from "@notepad/core";
+import { listNotes, deleteNote, saveNote, createNoteEnvelope } from "@notepad/core";
 import { useNotepadShortcuts } from "./shortcuts/shortcutsDispatcher";
 import { useLocalAutoSave } from "./sync/localAutoSave";
 import { SyncEngine, type SyncStatus } from "./sync/syncEngine";
@@ -178,6 +178,7 @@ export const App: React.FC = () => {
     const apiBaseUrl = webConfig.apiBaseUrl;
     syncEngineRef.current = new SyncEngine({
       pushUrl: apiBaseUrl ? `${apiBaseUrl}/api/sync/push` : "/api/sync/push",
+      pullUrl: apiBaseUrl ? `${apiBaseUrl}/api/sync/pull` : "/api/sync/pull",
       getAccessToken: () => localStorage.getItem("notepad_token") || null,
     });
 
@@ -414,8 +415,23 @@ export const App: React.FC = () => {
       }
     }
 
+    // Persist locally to IndexedDB so note is immediately in local storage
+    try {
+      await saveNote({
+        id: tabId,
+        encryptedEnvelope: envelopePayload,
+        version: 1,
+        clientUpdatedAt: new Date().toISOString(),
+        deleted: false,
+        syncStatus: user ? "pending" : "synced",
+      });
+    } catch (err) {
+      console.warn("Failed to save note locally to IndexedDB:", err);
+    }
+
     if (syncEngineRef.current && user) {
       await syncEngineRef.current.enqueueMutation(tabId, "upsert", envelopePayload, 1);
+      syncEngineRef.current.push();
     }
   };
 
@@ -487,6 +503,49 @@ export const App: React.FC = () => {
     } catch {}
     return null;
   });
+
+  // Pulls remote notes from Supabase sync API and populates IndexedDB & Recent History
+  const syncFromCloud = useCallback(async () => {
+    if (!syncEngineRef.current || !user) return;
+    try {
+      const pulled = await syncEngineRef.current.pull();
+      if (pulled) {
+        const localNotes = await listNotes();
+        for (const n of localNotes) {
+          try {
+            const parsed = JSON.parse(n.encryptedEnvelope);
+            const title = parsed.title || "Untitled";
+            const content = parsed.content || "";
+            const isMarkdown = !!parsed.isMarkdown;
+            useRecentHistoryStore.getState().recordHistoryItem({
+              id: n.id,
+              title,
+              content,
+              isMarkdown,
+              status: "saved",
+            });
+          } catch {
+            useRecentHistoryStore.getState().recordHistoryItem({
+              id: n.id,
+              title: "Encrypted Note",
+              content: n.encryptedEnvelope,
+              isMarkdown: false,
+              status: "saved",
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Cloud notes sync pull error:", err);
+    }
+  }, [user]);
+
+  // Automatically trigger cloud pull whenever a user logs in or mounts
+  useEffect(() => {
+    if (user && syncEngineRef.current) {
+      syncFromCloud();
+    }
+  }, [user, syncFromCloud]);
 
   const [charLimitNotice, setCharLimitNotice] = useState<{ limit: number; isGuest: boolean } | null>(null);
 
@@ -848,17 +907,20 @@ export const App: React.FC = () => {
             onOpen={() => {
               setIsNotFound(false);
               setIsSettingsOpen(false);
+              syncFromCloud();
               setOpenPageMode("open");
             }}
             onRecent={() => {
               setIsNotFound(false);
               setIsSettingsOpen(false);
+              syncFromCloud();
               setOpenPageMode("history");
             }}
             onRecycleBin={() => {
               if (!user) return;
               setIsNotFound(false);
               setIsSettingsOpen(false);
+              syncFromCloud();
               setOpenPageMode("recycle");
             }}
             onSave={() => {
@@ -1115,34 +1177,37 @@ export const App: React.FC = () => {
                 } catch {}
               }}
               onManageVault={() => setShowVaultModal(true)}
+              onSettingsClick={() => setIsSettingsOpen(true)}
               isVaultLocked={isVaultLocked}
             />
 
-            {/* Settings Button */}
-            <Tooltip content="Settings" position="bottom" align="end">
-              <button
-                type="button"
-                style={{
-                  width: "32px",
-                  height: "32px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  background: isSettingsOpen ? "var(--bg-active)" : "none",
-                  border: "none",
-                  borderRadius: "4px",
-                  color: "var(--text-primary)",
-                  cursor: "pointer",
-                }}
-                aria-label="Settings"
-                onClick={() => {
-                  setIsNotFound(false);
-                  setIsSettingsOpen((prev) => !prev);
-                }}
-              >
-                <SettingsIcon size={16} />
-              </button>
-            </Tooltip>
+            {/* Settings Button (Desktop only, hidden on mobile viewports to prevent compression) */}
+            <span className={toolbarStyles.desktopOnlySettings}>
+              <Tooltip content="Settings" position="bottom" align="end">
+                <button
+                  type="button"
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: isSettingsOpen ? "var(--bg-active)" : "none",
+                    border: "none",
+                    borderRadius: "4px",
+                    color: "var(--text-primary)",
+                    cursor: "pointer",
+                  }}
+                  aria-label="Settings"
+                  onClick={() => {
+                    setIsNotFound(false);
+                    setIsSettingsOpen((prev) => !prev);
+                  }}
+                >
+                  <SettingsIcon size={16} />
+                </button>
+              </Tooltip>
+            </span>
           </div>
         }
       />
