@@ -92,7 +92,7 @@ body {
   /* Squeezed mobile tabs for viewports <= 600px */
   @media (max-width: 600px) {
     header[class*="titleBar"] {
-      height: 34px !important;
+      height: 32px !important;
     }
 
     header[class*="titleBar"] div[class*="tabsContainer"] {
@@ -103,31 +103,31 @@ body {
     }
 
     header[class*="titleBar"] div[role="tab"] {
-      height: 28px !important;
-      min-height: 28px !important;
+      height: 26px !important;
+      min-height: 26px !important;
       flex: 0 0 auto !important;
-      min-width: 48px !important;
-      max-width: 140px !important;
+      min-width: 44px !important;
+      max-width: 130px !important;
       padding: 0 6px 0 8px !important;
       font-size: 11px !important;
     }
 
     header[class*="titleBar"] button[class*="newTabBtn"] {
-      width: 26px !important;
-      height: 26px !important;
-      min-width: 26px !important;
-      min-height: 26px !important;
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px !important;
+      min-height: 24px !important;
       margin-bottom: 2px !important;
       margin-left: 2px !important;
       flex-shrink: 0 !important;
     }
 
     header[class*="titleBar"] button[class*="closeBtn"] {
-      width: 16px !important;
-      height: 16px !important;
-      min-width: 16px !important;
-      min-height: 16px !important;
-      font-size: 12px !important;
+      width: 14px !important;
+      height: 14px !important;
+      min-width: 14px !important;
+      min-height: 14px !important;
+      font-size: 11px !important;
     }
 
     header[class*="titleBar"] button[class*="scrollBtn"] {
@@ -137,6 +137,42 @@ body {
       min-height: 24px !important;
       margin-bottom: 2px !important;
     }
+  }
+
+  /* Compact Recent & History page elements on touch/mobile */
+  button[class*="filterPill"],
+  button[class*="clearBtn"] {
+    min-height: 24px !important;
+    height: 24px !important;
+    min-width: unset !important;
+    padding: 0 9px !important;
+    font-size: 11px !important;
+    border-radius: 4px !important;
+    line-height: 22px !important;
+  }
+
+  button[class*="reopenBtn"],
+  button[class*="removeBtn"] {
+    min-width: 26px !important;
+    max-width: 26px !important;
+    width: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    border-radius: 4px !important;
+  }
+
+  button[class*="reopenBtn"] svg,
+  button[class*="removeBtn"] svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+
+  button[class*="quickCard"] {
+    min-height: 36px !important;
+    height: auto !important;
+    padding: 6px 10px !important;
   }
 
   /* Avatar button must remain a perfect 32px circle on touch devices */
