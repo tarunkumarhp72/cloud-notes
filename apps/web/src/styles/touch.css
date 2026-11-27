@@ -91,9 +91,12 @@ body {
     header[class*="titleBar"] div[class*="tab"] {
       height: 28px !important;
       min-height: 28px !important;
+      flex: 1 1 100px !important;
+      min-width: 38px !important;
       max-width: 125px !important;
-      padding: 0 4px 0 8px !important;
+      padding: 0 4px 0 6px !important;
       font-size: 11px !important;
+      flex-shrink: 1 !important;
     }
 
     header[class*="titleBar"] button[class*="newTabBtn"] {

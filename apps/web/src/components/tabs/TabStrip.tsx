@@ -99,18 +99,28 @@ export const TabStrip: React.FC<TabStripProps> = ({
     };
   }, [tabs, checkOverflow]);
 
-  // Smoothly scroll active tab into view when activeTabId changes
+  // Scroll new tab & plus button into view when tabs are added or selected
+  const prevTabCountRef = useRef(tabs.length);
   useEffect(() => {
     const container = tabsContainerRef.current;
     if (!container) return;
-    const activeEl = container.querySelector(`[aria-selected="true"]`) as HTMLElement;
-    if (activeEl) {
-      if (typeof activeEl.scrollIntoView === "function") {
+
+    if (tabs.length > prevTabCountRef.current) {
+      // Smoothly scroll container all the way to the right so both the new tab and the '+' button are fully visible
+      setTimeout(() => {
+        if (container) {
+          container.scrollTo({ left: container.scrollWidth, behavior: "smooth" });
+        }
+      }, 50);
+    } else {
+      const activeEl = container.querySelector(`[aria-selected="true"]`) as HTMLElement;
+      if (activeEl && typeof activeEl.scrollIntoView === "function") {
         activeEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
       }
-      setTimeout(handleScroll, 350);
     }
-  }, [activeTabId, handleScroll]);
+    prevTabCountRef.current = tabs.length;
+    setTimeout(handleScroll, 350);
+  }, [tabs.length, activeTabId, handleScroll]);
 
   const handleScrollLeft = () => {
     if (tabsContainerRef.current) {
