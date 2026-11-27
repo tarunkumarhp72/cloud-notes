@@ -5,23 +5,23 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "https://cloud-notes-api-seven.vercel.app/api/$1"
     },
     {
       "source": "/auth/(.*)",
-      "destination": "/api/auth/$1"
+      "destination": "https://cloud-notes-api-seven.vercel.app/auth/$1"
     },
     {
       "source": "/sync/(.*)",
-      "destination": "/api/sync/$1"
+      "destination": "https://cloud-notes-api-seven.vercel.app/sync/$1"
     },
     {
       "source": "/account/(.*)",
-      "destination": "/api/account/$1"
+      "destination": "https://cloud-notes-api-seven.vercel.app/account/$1"
     },
     {
       "source": "/health",
-      "destination": "/api/health"
+      "destination": "https://cloud-notes-api-seven.vercel.app/health"
     },
     {
       "source": "/(.*)",

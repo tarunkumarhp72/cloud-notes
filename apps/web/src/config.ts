@@ -22,12 +22,22 @@ export interface WebConfig {
   autoSaveMaxWaitMs: number;
 }
 
+function getApiBaseUrl(): string {
+  if (import.meta.env.VITE_API_PROD_URL) {
+    return import.meta.env.VITE_API_PROD_URL.replace(/\/+$/, "");
+  }
+  if (typeof window !== "undefined" && window.location.hostname.includes("vercel.app")) {
+    return "https://cloud-notes-api-seven.vercel.app";
+  }
+  return "";
+}
+
 export const webConfig: WebConfig = {
   googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || "",
   googleRedirectUri:
     import.meta.env.VITE_GOOGLE_REDIRECT_URI ||
     (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : ""),
-  apiBaseUrl: import.meta.env.VITE_API_PROD_URL || "",
+  apiBaseUrl: getApiBaseUrl(),
   guestNoteLimit: parseNumber(import.meta.env.VITE_GUEST_NOTE_LIMIT, 10),
   userNoteLimit: parseNumber(import.meta.env.VITE_USER_NOTE_LIMIT, 50),
   guestMaxNoteChars: parseNumber(import.meta.env.VITE_GUEST_MAX_NOTE_CHARS, 25_000),
