@@ -6,6 +6,10 @@
 .avatarBtn {
   width: 32px;
   height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 32px;
+  max-height: 32px;
   border-radius: 50%;
   border: 1px solid transparent;
   background-color: transparent;
@@ -13,8 +17,11 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  padding: 0;
+  padding: 0 !important;
   color: var(--text-primary);
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
   transition: background-color 0.1s ease, border-color 0.1s ease;
 }
 
@@ -31,6 +38,10 @@
 .avatarCircle {
   width: 28px;
   height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  max-width: 28px;
+  max-height: 28px;
   border-radius: 50%;
   background-color: var(--bg-hover);
   display: flex;
@@ -40,28 +51,35 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
+  flex-shrink: 0;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
 }
 
 .avatarImg {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: 50%;
 }
 
 .flyout {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 280px;
+  width: max-content;
+  min-width: 160px;
+  max-width: min(280px, calc(100vw - 20px));
   background-color: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   box-shadow: var(--card-shadow);
-  padding: 16px 12px 10px;
+  padding: 8px 6px;
   z-index: 500;
   display: flex;
   flex-direction: column;
   animation: flyoutFade 0.12s ease-out;
+  box-sizing: border-box;
 }
 
 @keyframes flyoutFade {
@@ -79,7 +97,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 4px 14px 4px;
+  padding: 4px 6px 12px 6px;
+  min-width: 200px;
 }
 
 .profileAvatar {
@@ -133,9 +152,10 @@
 .menuItem {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 10px;
   width: 100%;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border: none;
   background-color: transparent;
   color: var(--text-primary);
@@ -144,6 +164,7 @@
   cursor: pointer;
   text-align: left;
   transition: background-color 0.1s ease;
+  white-space: nowrap;
 }
 
 .menuItem:hover {

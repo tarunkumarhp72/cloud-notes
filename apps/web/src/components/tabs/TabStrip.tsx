@@ -212,10 +212,8 @@ export const TabStrip: React.FC<TabStripProps> = ({
               onReorder={onReorderTabs}
             />
           ))}
-        </div>
 
-        {/* When NOT overflowing: '+' button is placed immediately next to the tabs */}
-        {!isOverflowing && (
+          {/* '+' button placed immediately after the last tab, moving right as tabs are added */}
           <Tooltip content="New tab (Ctrl+N)" position="bottom" align="start">
             <button
               type="button"
@@ -228,10 +226,10 @@ export const TabStrip: React.FC<TabStripProps> = ({
               </svg>
             </button>
           </Tooltip>
-        )}
+        </div>
 
-        {/* When overflowing: Fixed Action Controls with scroll navigation & New Tab button on the right */}
-        {isOverflowing && (
+        {/* When overflowing: Fixed scroll navigation buttons */}
+        {isOverflowing && (canScrollLeft || canScrollRight) && (
           <div className={styles.tabActionsFixed}>
             <Tooltip content="Scroll tabs left" position="bottom" align="center" disabled={!canScrollLeft}>
               <button
@@ -257,20 +255,6 @@ export const TabStrip: React.FC<TabStripProps> = ({
               >
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
                   <path d="M3 1.5L7.5 5L3 8.5V1.5Z" />
-                </svg>
-              </button>
-            </Tooltip>
-
-            {/* New Tab (+) Button */}
-            <Tooltip content="New tab (Ctrl+N)" position="bottom" align="start">
-              <button
-                type="button"
-                className={styles.newTabBtn}
-                onClick={onNewTab}
-                aria-label="New tab (Ctrl+N)"
-              >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M6 1v10M1 6h10" strokeLinecap="round" />
                 </svg>
               </button>
             </Tooltip>

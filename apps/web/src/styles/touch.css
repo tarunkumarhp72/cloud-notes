@@ -122,6 +122,21 @@ body {
     }
   }
 
+  /* Avatar button must remain a perfect 32px circle on touch devices */
+  button[class*="avatarBtn"] {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+  }
+
   /* Specific toolbar buttons on touch devices */
   div[class*="toolbarGroup"] button,
   div[class*="childrenToolbar"] button,
