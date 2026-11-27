@@ -183,6 +183,12 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   useEffect(() => {
     fetchStatus();
     fetchHistory();
+
+    // If store is stuck in "in_progress" without an active network controller, reset to idle
+    const store = useBackupProgressStore.getState();
+    if (store.status === "in_progress" && !store.activeAbortController) {
+      store.dismiss();
+    }
   }, [fetchStatus, fetchHistory]);
 
   const handleConnect = async () => {

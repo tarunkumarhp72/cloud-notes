@@ -13,7 +13,11 @@ import {
   cancelActiveTask,
   type BackupProgressEvent,
 } from "../backup/activeTasks.js";
-import { scheduleUserBackup, cancelUserScheduledBackup } from "../backup/scheduler.js";
+import {
+  scheduleUserBackup,
+  cancelUserScheduledBackup,
+  runScheduledBackups,
+} from "../backup/scheduler.js";
 
 export const backupRouter = new Hono();
 
@@ -306,7 +310,7 @@ backupRouter.post("/now", async (c) => {
     return c.json({ error: "A backup is already in progress for this account" }, 409);
   }
 
-  const wait = c.req.query("wait") === "true";
+  const wait = c.req.query("wait") !== "false";
   const activeTask = registerActiveTask(userId, "manual");
 
   const backupPromise = performBackup(
@@ -464,6 +468,15 @@ backupRouter.post("/cancel", async (c) => {
   }
 
   return c.json({ success: true, message: "Active backup cancelled safely" });
+});
+
+/**
+ * GET /api/backup/cron
+ * Triggers autonomous backup sweep for due scheduled users.
+ */
+backupRouter.get("/cron", async (c) => {
+  const result = await runScheduledBackups();
+  return c.json({ success: true, ...result });
 });
 
 /**

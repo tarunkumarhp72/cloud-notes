@@ -93,7 +93,7 @@ export const useBackupProgressStore = create<BackupProgressState>((set, get) => 
       phase: "Preparing backup...",
       totalNotes: 0,
       processedNotes: 0,
-      percent: 0,
+      percent: 10,
       errorMessage: null,
       fileName: null,
       backupId: null,
@@ -102,6 +102,36 @@ export const useBackupProgressStore = create<BackupProgressState>((set, get) => 
     });
 
     let sseActive = true;
+    let progressTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // Smooth progress simulation while request is in flight
+    const simulationSteps = [
+      { delay: 350, percent: 30, phase: "Connecting to Google Drive..." },
+      { delay: 750, percent: 55, phase: "Packaging and encrypting notes with AES-256-GCM..." },
+      { delay: 1200, percent: 80, phase: "Uploading encrypted vault to Google Drive..." },
+      { delay: 1800, percent: 92, phase: "Finalizing backup..." },
+    ];
+
+    let currentStep = 0;
+    const triggerSimulation = () => {
+      if (currentStep < simulationSteps.length && get().status === "in_progress") {
+        const nextStep = simulationSteps[currentStep++];
+        progressTimer = setTimeout(() => {
+          if (get().status === "in_progress") {
+            set({
+              percent: Math.max(get().percent, nextStep.percent),
+              phase: nextStep.phase,
+            });
+            triggerSimulation();
+          }
+        }, nextStep.delay);
+      }
+    };
+    triggerSimulation();
+
+    const cleanupSimulation = () => {
+      if (progressTimer) clearTimeout(progressTimer);
+    };
 
     // 1. Establish SSE streaming listener using fetch + ReadableStream with Bearer token
     const startSseStream = async () => {
@@ -133,6 +163,7 @@ export const useBackupProgressStore = create<BackupProgressState>((set, get) => 
                 try {
                   const eventData = JSON.parse(trimmed.slice(5).trim());
                   if (eventData.status && eventData.status !== "idle") {
+                    cleanupSimulation();
                     set({
                       status: eventData.status,
                       phase: eventData.phase || get().phase,
@@ -149,7 +180,7 @@ export const useBackupProgressStore = create<BackupProgressState>((set, get) => 
                       onCompleted?.();
                       const t = setTimeout(() => {
                         set({ isVisible: false, dismissTimer: null });
-                      }, 5000);
+                      }, 4000);
                       set({ dismissTimer: t });
                     } else if (eventData.status === "failed" || eventData.status === "cancelled") {
                       sseActive = false;
@@ -172,9 +203,9 @@ export const useBackupProgressStore = create<BackupProgressState>((set, get) => 
     // Start SSE stream in background
     startSseStream();
 
-    // 2. Initiate backup via POST /api/backup/now
+    // 2. Initiate backup via POST /api/backup/now?wait=true
     try {
-      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/now`, {
+      const res = await fetch(`${webConfig.apiBaseUrl}/api/backup/now?wait=true`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -183,23 +214,47 @@ export const useBackupProgressStore = create<BackupProgressState>((set, get) => 
         signal: abortController.signal,
       });
 
-      const data = await res.json();
+      cleanupSimulation();
+      sseActive = false;
+
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         set({
           status: "failed",
           phase: "Backup failed",
-          errorMessage: data.error || "Failed to initiate backup",
+          errorMessage: data.error || "Failed to complete backup",
+          activeAbortController: null,
         });
-        sseActive = false;
+      } else {
+        const backup = data.backup || {};
+        const count = backup.notesCount ?? backup.notes_count ?? get().totalNotes;
+        set({
+          status: "success",
+          phase: "Backup completed successfully",
+          percent: 100,
+          totalNotes: count,
+          processedNotes: count,
+          fileName: backup.fileName ?? backup.file_name ?? null,
+          backupId: backup.fileId ?? backup.drive_file_id ?? null,
+          activeAbortController: null,
+        });
+
+        onCompleted?.();
+        const t = setTimeout(() => {
+          set({ isVisible: false, dismissTimer: null });
+        }, 4000);
+        set({ dismissTimer: t });
       }
     } catch (err: any) {
+      cleanupSimulation();
+      sseActive = false;
       if (err.name !== "AbortError") {
         set({
           status: "failed",
           phase: "Backup failed",
           errorMessage: err.message || "Network request failed",
+          activeAbortController: null,
         });
-        sseActive = false;
       }
     }
   },
