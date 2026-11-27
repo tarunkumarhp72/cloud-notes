@@ -254,3 +254,47 @@
 .captionBtn svg {
   stroke-width: 1px;
 }
+
+@media (max-width: 600px) {
+  .titleBar {
+    height: 34px;
+    padding: 0 0 0 6px;
+  }
+
+  .appIcon {
+    width: 18px;
+    height: 18px;
+    margin-bottom: 5px;
+    margin-right: 2px;
+  }
+
+  .tab {
+    height: 28px;
+    min-height: 28px;
+    min-width: 50px;
+    max-width: 125px;
+    padding: 0 4px 0 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .newTabBtn {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
+    margin-left: 2px;
+  }
+
+  .closeBtn {
+    width: 16px;
+    height: 16px;
+    font-size: 12px;
+  }
+
+  .scrollBtn {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 2px;
+  }
+}
+

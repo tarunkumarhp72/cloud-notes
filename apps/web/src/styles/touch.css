@@ -82,6 +82,46 @@ body {
     padding: 0 !important;
   }
 
+  /* Squeezed mobile tabs for viewports <= 600px */
+  @media (max-width: 600px) {
+    header[class*="titleBar"] {
+      height: 34px !important;
+    }
+
+    header[class*="titleBar"] div[class*="tab"] {
+      height: 28px !important;
+      min-height: 28px !important;
+      max-width: 125px !important;
+      padding: 0 4px 0 8px !important;
+      font-size: 11px !important;
+    }
+
+    header[class*="titleBar"] button[class*="newTabBtn"] {
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px !important;
+      min-height: 24px !important;
+      margin-bottom: 2px !important;
+      margin-left: 2px !important;
+    }
+
+    header[class*="titleBar"] button[class*="closeBtn"] {
+      width: 16px !important;
+      height: 16px !important;
+      min-width: 16px !important;
+      min-height: 16px !important;
+      font-size: 12px !important;
+    }
+
+    header[class*="titleBar"] button[class*="scrollBtn"] {
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px !important;
+      min-height: 24px !important;
+      margin-bottom: 2px !important;
+    }
+  }
+
   /* Specific toolbar buttons on touch devices */
   div[class*="toolbarGroup"] button,
   div[class*="childrenToolbar"] button,

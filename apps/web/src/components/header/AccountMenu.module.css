@@ -158,3 +158,14 @@
   color: var(--text-secondary);
   flex-shrink: 0;
 }
+
+.mobileOnlyMenuItem {
+  display: none !important;
+}
+
+@media (max-width: 680px) {
+  .mobileOnlyMenuItem {
+    display: flex !important;
+  }
+}
+

@@ -53,10 +53,17 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
 
   const handleToggle = () => {
     if (!user) {
-      if (onSettingsClick) {
+      const isMobile =
+        typeof window !== "undefined" &&
+        window.matchMedia &&
+        window.matchMedia("(max-width: 680px)").matches;
+
+      if (isMobile && onSettingsClick) {
         setIsOpen((prev) => !prev);
       } else if (onSignInClick) {
         onSignInClick();
+      } else if (onSettingsClick) {
+        setIsOpen((prev) => !prev);
       }
       return;
     }
@@ -150,7 +157,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
               {onSettingsClick && (
                 <button
                   type="button"
-                  className={styles.menuItem}
+                  className={`${styles.menuItem} ${styles.mobileOnlyMenuItem}`}
                   onClick={() => {
                     setIsOpen(false);
                     onSettingsClick();
@@ -202,7 +209,7 @@ export const AccountMenu: React.FC<AccountMenuProps> = ({
               {onSettingsClick && (
                 <button
                   type="button"
-                  className={styles.menuItem}
+                  className={`${styles.menuItem} ${styles.mobileOnlyMenuItem}`}
                   onClick={() => {
                     setIsOpen(false);
                     onSettingsClick();
