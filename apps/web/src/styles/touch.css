@@ -154,10 +154,10 @@ body {
     box-sizing: border-box !important;
   }
 
-  /* Specific toolbar buttons on touch devices */
-  div[class*="toolbarGroup"] button,
-  div[class*="childrenToolbar"] button,
-  div[class*="rightGroup"] button {
+  /* Specific toolbar buttons on touch devices (only direct buttons, not flyout/dropdown items) */
+  div[class*="toolbarGroup"] > button,
+  div[class*="childrenToolbar"] > button,
+  div[class*="rightGroup"] > button {
     height: 30px;
     min-height: 30px;
     min-width: 30px;
@@ -165,6 +165,25 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* All dropdown and flyout menu items must strictly be left-aligned on touch/mobile */
+  div[class*="flyout"] button,
+  div[class*="dropdown"] button,
+  div[class*="dropdownFlyout"] button:not([class*="categoryBtn"]),
+  div[role="dialog"] button[class*="menuItem"],
+  div[role="menu"] button,
+  button[class*="menuItem"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 38px !important;
+    padding-left: 10px !important;
+    padding-right: 12px !important;
+    box-sizing: border-box !important;
   }
 
   /* Caption buttons on touch */
