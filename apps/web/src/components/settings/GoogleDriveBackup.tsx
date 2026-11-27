@@ -57,14 +57,19 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   const [hasUserSession, setHasUserSession] = useState<boolean>(() => {
     if (isGuest) return false;
     if (typeof window !== "undefined") {
-      return Boolean(localStorage.getItem("notepad_user"));
+      return Boolean(localStorage.getItem("notepad_user") || localStorage.getItem("notepad_token"));
     }
     return false;
   });
 
   const [effectiveToken, setEffectiveToken] = useState<string | undefined>(() => {
     if (isGuest) return undefined;
-    if (typeof window !== "undefined" && !localStorage.getItem("notepad_user") && !propToken) {
+    if (
+      typeof window !== "undefined" &&
+      !localStorage.getItem("notepad_user") &&
+      !localStorage.getItem("notepad_token") &&
+      !propToken
+    ) {
       return undefined;
     }
     return (
@@ -81,7 +86,9 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
       setHasUserSession(false);
       return;
     }
-    const hasUser = typeof window !== "undefined" && Boolean(localStorage.getItem("notepad_user"));
+    const hasUser =
+      typeof window !== "undefined" &&
+      Boolean(localStorage.getItem("notepad_user") || localStorage.getItem("notepad_token"));
     setHasUserSession(hasUser);
     if (!hasUser && !propToken) {
       setEffectiveToken(undefined);
@@ -314,10 +321,14 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
   };
 
   const handleBackupNow = async () => {
-    if (!accessToken) return;
+    let token = accessToken;
+    if (!token && typeof window !== "undefined") {
+      token = (await getValidAccessToken()) || localStorage.getItem("notepad_token") || undefined;
+    }
+    if (!token) return;
     setBackingUp(true);
     try {
-      await startBackup(accessToken, async () => {
+      await startBackup(token, async () => {
         await fetchStatus();
         await fetchHistory();
       });
@@ -330,6 +341,8 @@ export const GoogleDriveBackup: React.FC<GoogleDriveBackupProps> = ({
       });
     } finally {
       setBackingUp(false);
+      fetchStatus();
+      fetchHistory();
     }
   };
 
